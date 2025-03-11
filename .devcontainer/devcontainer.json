@@ -1,0 +1,14 @@
+{
+    "name": "CMG Dev Container",
+    "dockerFile": "Dockerfile",
+    "forwardPorts": [3000],
+    "postCreateCommand": "",
+    "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
+    "customizations" : { "vscode" : { "extensions": [
+        "hashicorp.terraform", 
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "googlecloudtools.cloudcode",
+        "golang.go"
+    ]
+    }}
+}
