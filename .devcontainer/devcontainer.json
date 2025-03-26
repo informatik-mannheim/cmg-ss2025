@@ -7,7 +7,6 @@
     "customizations" : { "vscode" : { "extensions": [
         "hashicorp.terraform", 
         "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "googlecloudtools.cloudcode",
         "golang.go"
     ]
     }}
