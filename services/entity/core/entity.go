@@ -25,7 +25,9 @@ func (s *EntityService) Set(entity ports.Entity, ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	s.notifier.EntityChanged(entity, ctx)
+	if s.notifier != nil {
+		s.notifier.EntityChanged(entity, ctx)
+	}
 	return nil
 }
 
