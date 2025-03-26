@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/entity/ports"
 )
 
 type Handler struct {

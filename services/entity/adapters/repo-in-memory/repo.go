@@ -3,7 +3,7 @@ package repo_in_memory
 import (
 	"context"
 
-	"gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/entity/ports"
 )
 
 type Repo struct {

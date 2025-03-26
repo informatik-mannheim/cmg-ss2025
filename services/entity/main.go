@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	handler_http "gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/adapters/handler-http"
-	repo "gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/adapters/repo-in-memory"
-	"gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/core"
+	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/entity/adapters/handler-http"
+	repo "github.com/informatik-mannheim/cmg-ss2025/services/entity/adapters/repo-in-memory"
+	"github.com/informatik-mannheim/cmg-ss2025/services/entity/core"
 )
 
 func main() {

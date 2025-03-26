@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/core"
-	"gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/entity/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/entity/ports"
 )
 
 type MockRepo struct {

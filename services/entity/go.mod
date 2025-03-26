@@ -1,4 +1,4 @@
-module gitty.informatik.hs-mannheim.de/steger/cmg-ws202425/services/entity
+module github.com/informatik-mannheim/cmg-ss2025/services/entity
 
 go 1.23.1
 
