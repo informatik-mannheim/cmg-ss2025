@@ -1,3 +1,3 @@
 # cmg-ss2025
 
-Cloud-native Microservices mit Go - SS 2025
+Cloud-native Microservices mit Go - SoSe 2025
