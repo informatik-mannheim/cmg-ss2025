@@ -7,9 +7,14 @@ import (
 	"log"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 )
+
+// json struct
+type SortedNumbers struct {
+	Even []int `json:"even"`
+	Odd  []int `json:"odd"`
+}
 
 func main() {
 	http.HandleFunc("/", OddEvenHandler)
@@ -42,24 +47,21 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	odd, even := SplitOddEven(numbers)
-	// Sort the odd and even slices
-	sort.Ints(even)
-	sort.Ints(odd)
+	result := SplitOddEven(numbers)
 
-	// Check if the slices are empty
-	if len(odd) == 0 && len(even) == 0 {
-		http.Error(w, "No numbers provided", http.StatusBadRequest)
-		return
-	}
+	// Format output as plain text
+	evenStr := strings.Replace(fmt.Sprint(result.Even), " ", ",", -1)
+	oddStr := strings.Replace(fmt.Sprint(result.Odd), " ", ",", -1)
 
-	response := fmt.Sprintf("even: %v, odd: %v", formatSlice(even), formatSlice(odd))
-	w.Write([]byte(response))
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "even: %s, odd: %s", evenStr, oddStr)
 
 }
 
-func SplitOddEven(numbers []int) (odd []int, even []int) {
+func SplitOddEven(numbers []int) SortedNumbers {
 	// Initialize odd and even slices
+	even, odd := []int{}, []int{}
 	for _, number := range numbers {
 		if number%2 == 0 {
 			even = append(even, number)
@@ -67,16 +69,12 @@ func SplitOddEven(numbers []int) (odd []int, even []int) {
 			odd = append(odd, number)
 		}
 	}
-	return odd, even
-}
+	sort.Ints(even)
+	sort.Ints(odd)
 
-// Extended function to make the output like the expected output
-
-// Converts a slice of ints to a formatted string: [1,2,3]
-func formatSlice(nums []int) string {
-	strs := make([]string, len(nums))
-	for i, v := range nums {
-		strs[i] = strconv.Itoa(v)
+	result := SortedNumbers{
+		Even: even,
+		Odd:  odd,
 	}
-	return "[" + strings.Join(strs, ",") + "]"
+	return result
 }
