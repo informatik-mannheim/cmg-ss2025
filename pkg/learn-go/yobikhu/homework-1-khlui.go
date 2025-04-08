@@ -7,9 +7,13 @@ import (
 	"log"
 	"net/http"
 	"sort"
-	"strconv"
-	"strings"
 )
+
+// json struct
+type SortedNumbers struct {
+	Even []int `json:"even"`
+	Odd  []int `json:"odd"`
+}
 
 func main() {
 	http.HandleFunc("/", OddEvenHandler)
@@ -28,6 +32,16 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//check if the content type is application/json
+	fmt.Println(r.Header.Get("Content-Type"))
+	if r.Header.Get("Content-Type") != "application/json" {
+		if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
+			http.Error(w, "Unsupported Media Type", http.StatusUnsupportedMediaType)
+			return
+		}
+
+	}
+
 	// Read the request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -42,23 +56,28 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	odd, even := SplitOddEven(numbers)
-	// Sort the odd and even slices
-	sort.Ints(even)
-	sort.Ints(odd)
+	even, odd := SplitEvenOdd(numbers)
 
-	// Check if the slices are empty
-	if len(odd) == 0 && len(even) == 0 {
-		http.Error(w, "No numbers provided", http.StatusBadRequest)
+	// put the calculation into SortedNumbers struct
+	result := SortedNumbers{
+		Even: even,
+		Odd:  odd,
+	}
+
+	response, err := json.Marshal(result)
+	if err != nil {
+		http.Error(w, "Error in creating JSON response", http.StatusInternalServerError)
 		return
 	}
 
-	response := fmt.Sprintf("even: %v, odd: %v", formatSlice(even), formatSlice(odd))
-	w.Write([]byte(response))
+	// Set header and write response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
 
 }
 
-func SplitOddEven(numbers []int) (odd []int, even []int) {
+func SplitEvenOdd(numbers []int) (even, odd []int) {
 	// Initialize odd and even slices
 	for _, number := range numbers {
 		if number%2 == 0 {
@@ -67,16 +86,7 @@ func SplitOddEven(numbers []int) (odd []int, even []int) {
 			odd = append(odd, number)
 		}
 	}
-	return odd, even
-}
-
-// Extended function to make the output like the expected output
-
-// Converts a slice of ints to a formatted string: [1,2,3]
-func formatSlice(nums []int) string {
-	strs := make([]string, len(nums))
-	for i, v := range nums {
-		strs[i] = strconv.Itoa(v)
-	}
-	return "[" + strings.Join(strs, ",") + "]"
+	sort.Ints(even)
+	sort.Ints(odd)
+	return
 }
