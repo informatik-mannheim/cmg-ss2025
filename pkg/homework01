@@ -1,0 +1,12 @@
+Task
+Write a Go-program that listens on port 8080 for a PUT request with a body containing an array of Integers in a JSON
+format, and converts them to a string -> integer map that holds odd and even number separately in sorted slices. The result
+shall be returned in the body of the response as text.
+
+Create an issue for yourself
+Create a new branch in the format #-<ISSUE_NAME>
+Create a user specific directory in the pkg/learn-go directory
+Implement the solution including tests in that directory
+Test your solution by running go test ./...
+File a pull request (PR), review someone else’s PR, and wait for someone to review your PR
+Merge the PR to main & Close the issue
