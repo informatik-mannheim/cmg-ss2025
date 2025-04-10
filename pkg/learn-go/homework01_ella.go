@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"slices"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 		var m []int
 		err = json.Unmarshal(b, &m) //Unmarshals content from byte slice b into int slice m
 		if err != nil {
-			http.Error(w, "Not an Array of Integers", 400) //Bad Request from Client side
+			http.Error(w, "Not an Array of Integers", http.StatusBadRequest) //Bad Request from Client side
 			return
 		}
 
@@ -42,6 +43,8 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				nums["Odd"] = append(nums["Odd"], num)
 			}
+			slices.Sort(nums["Even"]) //Sort by asc
+			slices.Sort(nums["Odd"])
 		}
 		responseText, _ = json.Marshal(nums) //Marshals content from map -> byte slice
 	} else {http.Error(w, "Not in JSON Format", 405)//Status method not allowed
