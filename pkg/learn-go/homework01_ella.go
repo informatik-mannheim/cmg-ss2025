@@ -35,6 +35,7 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 			"Even": {}, //empty slice
 			"Odd":  {},
 		}
+		
 		for _, num := range m {
 			if num%2 == 0 { //even-odd check with modolo
 				nums["Even"] = append(nums["Even"], num)
@@ -48,6 +49,6 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Not a PUT Request", 405) //Status method not allowed
 	}
-	w.Header().Set("Content-Type", "text")
+	w.Header().Set("Content-Type", "text/plain")
 	w.Write(responseText)
 }
