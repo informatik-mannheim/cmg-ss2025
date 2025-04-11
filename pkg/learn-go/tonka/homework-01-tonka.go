@@ -19,7 +19,7 @@ type SortedNumbers struct {
 func main() {
 	server := &http.Server{Addr: ":8080"}
 
-	http.HandleFunc("/", Handler)
+	http.HandleFunc("/", handler)
 
 	// graceful shutdown
 	go func() {
@@ -35,7 +35,7 @@ func main() {
 	log.Print("Done")
 }
 
-func Handler(response http.ResponseWriter, request *http.Request) {
+func handler(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPut {
 		http.Error(response, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -44,10 +44,11 @@ func Handler(response http.ResponseWriter, request *http.Request) {
 	var numbers []int
 	decoder := json.NewDecoder(request.Body)
 	if err := decoder.Decode(&numbers); err != nil {
+		log.Print("Error while decoding request body: ", err)
 		http.Error(response, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	sortedNumbers := SeperateAndSort(numbers)
+	sortedNumbers := seperateAndSort(numbers)
 
 	response.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(response).Encode(sortedNumbers)
@@ -55,7 +56,7 @@ func Handler(response http.ResponseWriter, request *http.Request) {
 	log.Print("Request processed successfully")
 }
 
-func SeperateAndSort(numbers []int) SortedNumbers {
+func seperateAndSort(numbers []int) SortedNumbers {
 	evenSlice, oddSlice := []int{}, []int{}
 	sortedInput := numbers
 
