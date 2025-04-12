@@ -1,0 +1,108 @@
+openapi: 3.1.1
+info:
+  title: Carbon Intensity API
+  description: API for getting carbon intensity data.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /entity/carbon-intensity-provider/{zone}:
+    get:
+      summary: Get carbon intensity data by zone
+      tags:
+        - Carbon Intensity
+      parameters:
+        - name: Zone
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The zone for which to get carbon intensity data (e.g. DE, TH, US-NY-NYIS).
+      responses:
+        '200':
+          description: Carbon intensity data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  zone:
+                    type: string
+                    description: The zone for which the data is provided.
+                    example: DE
+                  carbonIntensity:
+                    type: number
+                    description: The carbon intensity value.
+                    example: 140
+                  datetime:
+                    type: string
+                    format: date-time
+                    description: The date and time when the data was recorded.
+                    example: "2025-04-12T10:00:00.000Z"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: The date and time when the data was last updated.
+                    example: "2025-04-12T10:44:09.273Z"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: The date and time when the data was created.
+                    example: "2025-04-09T10:43:49.807Z"
+                  emissionFactorType:
+                    type: string
+                    description: The type of emission factor used.
+                    example: "lifecycle"
+                  isEstimated:
+                    type: boolean
+                    description: Indicates if the data is estimated.
+                    example: true
+                  estimationMethod:
+                    type: string
+                    description: The method used for estimation.
+                    example: "FORECASTS_HIERARCHY"
+        '404':
+          description: Zone not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    CarbonIntensityData:
+      type: object
+      required:
+        - zone
+        - carbonIntensity
+        - datetime
+        - updatedAt
+        - createdAt
+      properties:
+        zone:
+          type: string
+          example: DE
+        carbonIntensity:
+          type: number
+          example: 140
+        datetime:
+          type: string
+          format: date-time
+          example: "2025-04-12T10:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-04-12T10:44:09.273Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-04-09T10:43:49.807Z"
+        emissionFactorType:
+          type: string
+          example: "lifecycle"
+        isEstimated:
+          type: boolean
+          example: true
+        estimationMethod:
+          type: string
+          example: "FORECASTS_HIERARCHY"
+  
