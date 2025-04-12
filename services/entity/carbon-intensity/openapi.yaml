@@ -7,13 +7,13 @@ servers:
   - url: http://localhost:8080
     description: Local development server
 paths:
-  /entity/carbon-intensity-provider/{zone}:
+  /carbon-intensity/{zone}:
     get:
       summary: Get carbon intensity data by zone
       tags:
         - Carbon Intensity
       parameters:
-        - name: Zone
+        - name: zone
           in: path
           required: true
           schema:
