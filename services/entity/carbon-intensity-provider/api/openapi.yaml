@@ -10,6 +10,8 @@ paths:
   /carbon-intensity/{zone}:
     get:
       summary: Get carbon intensity data by zone
+      security:
+        - BearerAuth: []
       tags:
         - Carbon Intensity
       parameters:
@@ -68,6 +70,11 @@ paths:
           description: Internal server error
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     CarbonIntensityData:
       type: object
@@ -105,4 +112,3 @@ components:
         estimationMethod:
           type: string
           example: "FORECASTS_HIERARCHY"
-  
