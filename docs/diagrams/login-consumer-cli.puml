@@ -1,35 +1,43 @@
-@startuml login-consumer-cli
+@startuml register-consumer-cli
 
 skinparam Shadowing false
-skinparam ParticipantPadding 20
+skinparam ParticipantPadding 80
 skinparam BoxPadding 10
 
-actor "GCLS Consumer CLI" as CLI
+actor "Consumer" as User
+participant "GCLS Consumer CLI" as CLI
 participant "Consumer Gateway" as Gateway
 participant "User Management Service" as UserMgmt
 
 == Registration Flow ==
 
+User -> CLI: run register command
 CLI -> Gateway: POST /auth/register\n{username, password, role}
 Gateway -> UserMgmt: Forward registration data
 UserMgmt --> Gateway: 201 Created
 Gateway --> CLI: 201 Created
+CLI --> User: Registration successful
 
-note over CLI: User account is now registered and can log in
+note over User: User account is now registered and can log in
 
 == Login Flow ==
 
+User -> CLI: run login command
 CLI -> Gateway: POST /auth/login\n{username, password}
 Gateway -> UserMgmt: Forward login data
 UserMgmt --> Gateway: 200 OK + {token}
 Gateway --> CLI: 200 OK + {token}
+CLI --> User: Login successful
 
-note over CLI: JWT is stored locally and used in Authorization header for future requests
+note over User: JWT is stored locally and used in Authorization header for future requests
 
 == Fetch Current User Info ==
+
+User -> CLI: run user info command
 CLI -> Gateway: GET /me\nAuthorization: Bearer <token>
 Gateway -> UserMgmt: Forward request with token
-UserMgmt --> Gateway: 200 OK + { id, username, role }
+UserMgmt --> Gateway: 200 OK + {id, username, role}
 Gateway --> CLI: 200 OK + user info
+CLI --> User: Display user info
 
 @enduml
