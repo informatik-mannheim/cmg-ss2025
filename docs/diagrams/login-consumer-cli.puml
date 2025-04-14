@@ -1,4 +1,4 @@
-@startuml register-consumer-cli
+@startuml login-consumer-cli
 
 skinparam Shadowing false
 skinparam ParticipantPadding 80
