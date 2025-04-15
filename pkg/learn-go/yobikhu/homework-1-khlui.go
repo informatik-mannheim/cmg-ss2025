@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"sort"
-	"strings"
 )
 
 // json struct
@@ -47,21 +45,29 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := SplitOddEven(numbers)
+	even, odd := SplitEvenOdd(numbers)
 
-	// Format output as plain text
-	evenStr := strings.Replace(fmt.Sprint(result.Even), " ", ",", -1)
-	oddStr := strings.Replace(fmt.Sprint(result.Odd), " ", ",", -1)
+	// put the calculation into SortedNumbers struct
+	result := SortedNumbers{
+		Even: even,
+		Odd:  odd,
+	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	response, err := json.Marshal(result)
+	if err != nil {
+		http.Error(w, "Error in creating JSON response", http.StatusInternalServerError)
+		return
+	}
+
+	// Set header and write response
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "even: %s, odd: %s", evenStr, oddStr)
+	w.Write(response)
 
 }
 
-func SplitOddEven(numbers []int) SortedNumbers {
+func SplitEvenOdd(numbers []int) (even, odd []int) {
 	// Initialize odd and even slices
-	even, odd := []int{}, []int{}
 	for _, number := range numbers {
 		if number%2 == 0 {
 			even = append(even, number)
@@ -71,10 +77,5 @@ func SplitOddEven(numbers []int) SortedNumbers {
 	}
 	sort.Ints(even)
 	sort.Ints(odd)
-
-	result := SortedNumbers{
-		Even: even,
-		Odd:  odd,
-	}
-	return result
+	return
 }
