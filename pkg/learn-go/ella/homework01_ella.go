@@ -79,7 +79,7 @@ func sortNums(m []int) map[string][]int {
 			nums["Odd"] = append(nums["Odd"], num)
 		}
 	}
-	// Sort each list after insertion (can be optimized by sorting once after the loop)
+	// Sort each list after insertion
 	slices.Sort(nums["Even"])
 	slices.Sort(nums["Odd"])
 	// Return the categorized and sorted map
