@@ -27,7 +27,7 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 			// Read the entire request body
 			b, err := io.ReadAll(r.Body)
 			if err != nil {
-				http.Error(w, "Error reading Body", 500) // Internal server error
+				http.Error(w, "Error reading Body", http.StatusBadRequest) 
 				return
 			}
 
@@ -49,12 +49,12 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			// If the content type is not JSON
-			http.Error(w, "Not in JSON Format", 405)
+			http.Error(w, "Not in JSON Format",  http.StatusBadRequest)
 		}
 
 	} else {
 		// If the method is not PUT
-		http.Error(w, "Not a PUT Request", 405)
+		http.Error(w, "Not a PUT Request",  http.StatusBadRequest)
 	}
 
 	// Set response type to plain text (even though we're sending JSON)
