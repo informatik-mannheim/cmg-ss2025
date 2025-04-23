@@ -27,11 +27,11 @@ paths:
                   $ref: '#/components/schemas/Worker'
               example:
                 - workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                  workerStatus: "Running"
+                  workerStatus: "RUNNING"
                 - workerId: "06842e74-1121-4700-b6d5-6558c8af6198"
-                  workerStatus: "Stopped"
+                  workerStatus: "COMPLETED"
                 - workerId: "06842e74-1121-4700-b6d5-6558c8af6199"
-                  workerStatus: "Ready"
+                  workerStatus: "AVAILABLE"
         '500':
           description: Internal server error
           content:
@@ -58,7 +58,7 @@ paths:
                 $ref: '#/components/schemas/Worker'
               example:
                 workerId: "90bb1e74-22f1-4b91-bf0b-fd17e542cb3e"
-                workerStatus: "Ready"
+                workerStatus: "AVAILABLE"
         '500':
           description: Internal server error
           content:
@@ -95,11 +95,11 @@ paths:
                   $ref: '#/components/schemas/Worker'
               example:
                 - workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                  workerStatus: "Ready"
+                  workerStatus: "AVAILABLE"
                 - workerId: "06842e74-1121-4700-b6d5-6558c8af6198"
-                  workerStatus: "Ready"
+                  workerStatus: "AVAILABLE"
                 - workerId: "06842e74-1121-4700-b6d5-6558c8af6199"
-                  workerStatus: "Ready"
+                  workerStatus: "AVAILABLE"
         '404':
           description: Worker was not found
           content:
@@ -137,11 +137,11 @@ paths:
                   workerStatus:
                     type: string
                     enum:
-                      - Ready
-                      - Running
-                      - Stopped
+                      - AVAILABLE
+                      - RUNNING
+                      - COMPLETED
               example:
-                workerStatus: "Ready"
+                workerStatus: "AVAILABLE"
         '404':
           description: Worker was not found
           content:
@@ -157,7 +157,7 @@ paths:
     patch:
       tags:
         - worker
-      description: Updates the status of a specific worker to "Ready", "Running" or "Stopped".
+      description: Updates the status of a specific worker to "AVAILABLE", "RUNNING" or "COMPLETED".
       operationId: updateWorkerStatus
       parameters:
         - name: workerId
@@ -177,9 +177,9 @@ paths:
                 workerStatus:
                   type: string
                   enum:
-                    - Ready
-                    - Running
-                    - Stopped
+                    - AVAILABLE
+                    - RUNNING
+                    - COMPLETED
               required:
                 - workerStatus
             example:
@@ -193,7 +193,7 @@ paths:
                 $ref: '#/components/schemas/Worker'
               example:
                 workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                workerStatus: "Running"
+                workerStatus: "RUNNING"
         '404':
           description: Worker was not found
           content:
@@ -215,7 +215,7 @@ paths:
                   message:
                     type: string
               example:
-                message: "Invalid value for workerStatus. Allowed values are 'Ready', 'Running' or 'Stopped'."
+                message: "Invalid value for workerStatus. Allowed values are 'AVAILABLE', 'RUNNING' or 'COMPLETED'."
 
 components:
   schemas:
@@ -229,9 +229,9 @@ components:
         workerStatus:
           type: string
           enum:
-            - Ready
-            - Running
-            - Stopped
+            - AVAILABLE
+            - RUNNING
+            - COMPLETED
       example:
         workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-        workerStatus: "Running"
+        workerStatus: "RUNNING"
