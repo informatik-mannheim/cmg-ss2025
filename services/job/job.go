@@ -12,23 +12,42 @@ const (
 	StatusCancelled JobStatus = "cancelled"
 )
 
+type JobPriority int
+
+// Easier to compare later on
+const (
+	Low JobPriority = iota
+	Middle
+	High
+)
+
+// Json tags helps by (de-)serializing, json:"id" -> "id":"1234", functionality imported by "encoding/json" package
+// If fields value ist empty/nil and its tagged with omitepty, json ignores it
+
 type Job struct {
-	ID             string         `json:"id"`                       // UUID
-	UserID         string         `json:"userId"`                   // Referenz auf den Nutzer
-	JobName        string         `json:"jobName"`                  // Freier Name für den Job
-	Payload        string         `json:"payload"`                  // Eingabedaten oder Code
-	Priority       string         `json:"priority"`                 // z.B. "low", "normal", "high"
-	Status         JobStatus      `json:"status"`                   // Aktueller Status
-	WorkerID       string         `json:"workerId,omitempty"`       // ID des ausführenden Workers
-	Constraints    JobConstraints `json:"constraints"`              // Region, Laufzeit etc.
-	Result         *string        `json:"result,omitempty"`         // Optionales Ergebnis (z. B. URL, Text)
-	CreatedAt      time.Time      `json:"createdAt"`                // Zeitstempel der Erstellung
-	StartedAt      *time.Time     `json:"startedAt,omitempty"`      // Startzeit
-	CompletedAt    *time.Time     `json:"completedAt,omitempty"`    // Abschlusszeit
-	EstimatedStart *time.Time     `json:"estimatedStart,omitempty"` // Optional geplant vom Scheduler
+	ID                   string         `json:"id"`
+	UserID               string         `json:"userId"`
+	JobName              string         `json:"jobName"`
+	Payload              string         `json:"payload"`
+	AdjustmentParameters []string       `json:"parameters"`
+	Priority             JobPriority    `json:"priority"`
+	Status               JobStatus      `json:"status"`
+	WorkerID             string         `json:"workerId,omitempty"`
+	Constraints          JobConstraints `json:"constraints"`
+	Result               *string        `json:"result,omitempty"` // e.g buffered result
+	ErrorMessage         *string        `json:"errorMessage,omitempty"`
+	RetryCount           int            `json:"retryCount"`
+	MaxRetries           int            `json:"maxRetries"`
+	CreatedAt            time.Time      `json:"createdAt"`
+	StartedAt            *time.Time     `json:"startedAt,omitempty"`
+	CompletedAt          *time.Time     `json:"completedAt,omitempty"`
+	LastUpdatedAt        time.Time      `json:"lastUpdatedAt"`
+	UsedCarbonItensity   int            `json:"UsedCarbonItensity`
+	// AvailableJobs		 bool ja/nein?
+	// Filterung mithilfe von Query Parametern?
 }
 
 type JobConstraints struct {
-	MaxRuntime       int      `json:"maxRuntime"`       // in Sekunden
-	PreferredRegions []string `json:"preferredRegions"` // z. B. ["eu-central", "us-west"]
+	MaxRuntime       int      `json:"maxRuntime"`       // e.g in seconds
+	PreferredRegions []string `json:"preferredRegions"` // city, continent?
 }
