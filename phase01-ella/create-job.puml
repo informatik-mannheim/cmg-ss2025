@@ -1,0 +1,24 @@
+@startuml
+actor "User"
+
+
+== Create Job ==
+User -> CLI: create job <image-id>
+CLI -> "Consumer Gateway": POST\n/jobs <image-id, {token}>
+"Consumer Gateway" -> Job: POST\n/jobs  <image-id, {token}>
+
+== Schedule Job ==
+"Job Scheduler" -> Job: GET\n/available-jobs <job-id, image-id, {token}>
+"Job Scheduler" -> "Carbon Intensity Pr.": GET\n/carbonIntensityData
+"Job Scheduler" -> "Worker Registry": POST\n/job <job-id, image-id,{token}>
+
+== Execute Job ==
+"Worker Gateway" -> "Worker Registry": GET\n/available-jobs <job-id, image-id, {token}}>
+"GCLS Worker Daemon" -> "Worker Gateway": GET\n/available-jobs
+"Worker Gateway" -> "GCLS Worker Daemon": start job <job-id, image-id,{token}>
+"GCLS Worker Daemon" -> "Job": POST\n/job/statusreport <job-id, image-id,{token}>
+"Consumer Gateway" -> "Job": GET\n/job/status <job-id, image-id,{token}>
+"Consumer Gateway" -> "CLI": POST\n/job/status <image-id, job-id>
+"CLI" -> "User": POST\n/job/status <image-id, job-id>
+
+@enduml
