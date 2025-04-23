@@ -1,0 +1,172 @@
+openapi: 3.0.3
+info:
+  title: GCLS Job Microservice API
+  description: REST API zur Verwaltung von Jobs innerhalb der Green Compute Load Shifting Plattform.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+  /jobs:
+    post:
+      summary: Neuen Job erstellen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreateRequest'
+      responses:
+        '201':
+          description: Job erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+    get:
+      summary: Alle Jobs eines Benutzers abrufen
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: ID des Nutzers
+      responses:
+        '200':
+          description: Liste von Jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+
+  /jobs/{jobId}:
+    get:
+      summary: Job-Details abrufen
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job-Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          description: Job nicht gefunden
+    delete:
+      summary: Job abbrechen oder löschen
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job erfolgreich gelöscht
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /jobs/{jobId}/retry:
+    post:
+      summary: Fehlgeschlagenen Job erneut starten
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job erneut eingeplant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+
+components:
+  schemas:
+    JobCreateRequest:
+      type: object
+      required:
+        - userId
+        - jobName
+        - payload
+        - priority
+        - constraints
+      properties:
+        userId:
+          type: string
+        jobName:
+          type: string
+        payload:
+          type: string
+        priority:
+          type: string
+          enum: [low, normal, high]
+        constraints:
+          $ref: '#/components/schemas/JobConstraints'
+
+    JobConstraints:
+      type: object
+      properties:
+        maxRuntime:
+          type: integer
+          format: int32
+        preferredRegions:
+          type: array
+          items:
+            type: string
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        jobName:
+          type: string
+        payload:
+          type: string
+        priority:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed, failed, cancelled]
+        workerId:
+          type: string
+          nullable: true
+        result:
+          type: string
+          nullable: true
+        constraints:
+          $ref: '#/components/schemas/JobConstraints'
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        estimatedStart:
+          type: string
+          format: date-time
+          nullable: true
