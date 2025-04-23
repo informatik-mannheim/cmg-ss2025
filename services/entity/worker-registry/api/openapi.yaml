@@ -8,6 +8,7 @@ info:
   version: 1.0.0
   title: Worker Registry API
   description: The API for the Worker Registry
+
 paths:
   /worker:
     get:
@@ -26,27 +27,28 @@ paths:
                   $ref: '#/components/schemas/Worker'
               example:
                 - workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                  workerName: "Worker 1"
                   workerStatus: "Running"
                 - workerId: "06842e74-1121-4700-b6d5-6558c8af6198"
-                  workerName: "Worker 2"
                   workerStatus: "Stopped"
+                - workerId: "06842e74-1121-4700-b6d5-6558c8af6199"
+                  workerStatus: "Ready"
         '500':
-            description: "Internal server error"
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Internal server error"
+
     post:
       tags:
         - worker
-      description: Saves a new Worker in the Worker Registry.
+      description: Registers a new Worker in the Worker Registry. Creates a unique Id and marks newly created worker as "Ready".
       operationId: saveWorker
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NewWorker'
-            example:
-              workerName: "Worker 1"
-              workerStatus: "Running"
       responses:
         '201':
           description: Worker successfully saved.
@@ -56,10 +58,9 @@ paths:
                 $ref: '#/components/schemas/Worker'
               example:
                 workerId: "90bb1e74-22f1-4b91-bf0b-fd17e542cb3e"
-                workerName: "Worker 1"
-                workerStatus: "Running"
-        '400':
-          description: Worker could not be saved.
+                workerStatus: "Ready"
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -67,35 +68,49 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Worker does already exist or cannot be saved."
+              example:
+                message: "Internal server error"
 
-  /worker/{workerId}:
+  /worker/{status}:
     get:
       tags:
         - worker
-      description: Returns the worker with the specified workerId
-      operationId: getWorkerById
+      description: Returns all workers with the specified status
+      operationId: getAllWorkersByStatus
       parameters:
-        - name: workerId
+        - name: status
           in: path
-          description: The identifier of the worker.
+          description: The status of the workers.
           required: true
           schema:
             type: string
-            format: uuid
       responses:
         '200':
-          description: A single worker
+          description: All registered workers with specified status
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Worker'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
               example:
-                workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                workerName: "Worker 1"
-                workerStatus: "Running"
+                - workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
+                  workerStatus: "Ready"
+                - workerId: "06842e74-1121-4700-b6d5-6558c8af6198"
+                  workerStatus: "Ready"
+                - workerId: "06842e74-1121-4700-b6d5-6558c8af6199"
+                  workerStatus: "Ready"
         '404':
-          description: Worker was not found.
+          description: Worker was not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Worker not found"
 
   /worker/{workerId}/status:
     get:
@@ -122,17 +137,27 @@ paths:
                   workerStatus:
                     type: string
                     enum:
+                      - Ready
                       - Running
                       - Stopped
               example:
-                workerStatus: "Running"
+                workerStatus: "Ready"
         '404':
-          description: Worker was not found.
+          description: Worker was not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Worker not found"
 
     patch:
       tags:
         - worker
-      description: Updates the status of a specific worker to "Running" or "Stopped".
+      description: Updates the status of a specific worker to "Ready", "Running" or "Stopped".
       operationId: updateWorkerStatus
       parameters:
         - name: workerId
@@ -152,6 +177,7 @@ paths:
                 workerStatus:
                   type: string
                   enum:
+                    - Ready
                     - Running
                     - Stopped
               required:
@@ -167,10 +193,18 @@ paths:
                 $ref: '#/components/schemas/Worker'
               example:
                 workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                workerName: "Worker 1"
                 workerStatus: "Running"
         '404':
-          description: Worker was not found.
+          description: Worker was not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Worker not found"
         '400':
           description: Invalid worker status provided.
           content:
@@ -180,7 +214,8 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Invalid value for workerStatus. Allowed values are 'Running' or 'Stopped'."
+              example:
+                message: "Invalid value for workerStatus. Allowed values are 'Ready', 'Running' or 'Stopped'."
 
 components:
   schemas:
@@ -191,22 +226,12 @@ components:
         workerId:
           type: string
           format: uuid
-        workerName:
-          type: string
         workerStatus:
           type: string
+          enum:
+            - Ready
+            - Running
+            - Stopped
       example:
         workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-        workerName: "Worker 1"
         workerStatus: "Running"
-    NewWorker:
-      type: object
-      description: Payload to create a new worker
-      required:
-        - workerName
-        - workerStatus
-      properties:
-        workerName:
-          type: string
-        workerStatus:
-          type: string
