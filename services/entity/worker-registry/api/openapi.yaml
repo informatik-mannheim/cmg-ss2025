@@ -10,15 +10,22 @@ info:
   description: The API for the Worker Registry
 
 paths:
-  /worker:
+  /workers:
     get:
       tags:
         - worker
-      description: Returns all registered workers.
-      operationId: getAllWorkers
+      description: Returns all registered workers or those with a specified status.
+      operationId: getWorkers
+      parameters:
+        - name: status
+          in: query
+          description: Filter workers by their status. Comma-separated values allowed.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: All registered workers
+          description: Registered workers
           content:
             application/json:
               schema:
@@ -32,6 +39,17 @@ paths:
                   workerStatus: "COMPLETED"
                 - workerId: "06842e74-1121-4700-b6d5-6558c8af6199"
                   workerStatus: "AVAILABLE"
+        '404':
+          description: No workers found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "No workers found"
         '500':
           description: Internal server error
           content:
@@ -43,11 +61,11 @@ paths:
                     type: string
               example:
                 message: "Internal server error"
-
+  /worker:
     post:
       tags:
         - worker
-      description: Registers a new Worker in the Worker Registry. Creates a unique Id and marks newly created worker as "Ready".
+      description: Registers a new Worker in the Worker Registry. Creates a unique Id and marks newly created worker as "AVAILABLE".
       operationId: saveWorker
       responses:
         '201':
@@ -71,48 +89,7 @@ paths:
               example:
                 message: "Internal server error"
 
-  /worker/{status}:
-    get:
-      tags:
-        - worker
-      description: Returns all workers with the specified status
-      operationId: getAllWorkersByStatus
-      parameters:
-        - name: status
-          in: path
-          description: The status of the workers.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: All registered workers with specified status
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Worker'
-              example:
-                - workerId: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
-                  workerStatus: "AVAILABLE"
-                - workerId: "06842e74-1121-4700-b6d5-6558c8af6198"
-                  workerStatus: "AVAILABLE"
-                - workerId: "06842e74-1121-4700-b6d5-6558c8af6199"
-                  workerStatus: "AVAILABLE"
-        '404':
-          description: Worker was not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "Worker not found"
-
-  /worker/{workerId}/status:
+  /worker/status:
     get:
       tags:
         - worker
@@ -120,7 +97,7 @@ paths:
       operationId: getWorkerStatus
       parameters:
         - name: workerId
-          in: path
+          in: query
           description: The identifier of the worker.
           required: true
           schema:
@@ -161,29 +138,18 @@ paths:
       operationId: updateWorkerStatus
       parameters:
         - name: workerId
-          in: path
+          in: query
           description: The identifier of the worker.
           required: true
           schema:
             type: string
             format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                workerStatus:
-                  type: string
-                  enum:
-                    - AVAILABLE
-                    - RUNNING
-                    - COMPLETED
-              required:
-                - workerStatus
-            example:
-              workerStatus: "Running"
+        - name: status
+          in: query
+          description: The new status for the worker.
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Worker status updated successfully.
