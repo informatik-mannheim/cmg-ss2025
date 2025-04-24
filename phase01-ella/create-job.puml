@@ -14,8 +14,6 @@ note over "Consumer Gateway": creates job-id\nfor job
 note over Job: Job scheduling happens here ... 
 
 == Create Job: Feedback to User ==
-"GCLS Worker Daemon" -> "Worker Gateway": POST\n/job/status=200 <job-id, image-id,{token}>
-"Worker Gateway" -> "Job": PATCH\n/job/status=200 <job-id, image-id,{token}>
 "Consumer Gateway" -> "Job": GET\n/job/status <job-id, image-id,{token}>
 "CLI" -> "Consumer Gateway": GET\n/job/status <image-id, job-id>
 "User" -> "CLI": GET\n/job/status <image-id, job-id>
