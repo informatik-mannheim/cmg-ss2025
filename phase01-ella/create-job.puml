@@ -5,20 +5,19 @@ actor "User"
 == Create Job ==
 User -> CLI: create job <image-id>
 CLI -> "Consumer Gateway": POST\n/jobs <image-id, {token}>
-"Consumer Gateway" -> Job: POST\n/jobs  <image-id, {token}>
+note right of CLI: token was issued\nduring Login
+note over "Consumer Gateway": creates job-id\nfor job
+"Consumer Gateway" -> Job: POST\n/jobs  <image-id, {token}, job-id>
+
 
 == Schedule Job ==
-"Job Scheduler" -> Job: GET\n/available-jobs <job-id, image-id, {token}>
-"Job Scheduler" -> "Carbon Intensity Pr.": GET\n/carbonIntensityData
-"Job Scheduler" -> "Worker Registry": POST\n/job <job-id, image-id,{token}>
+note over Job: Job scheduling happens here ... 
 
-== Execute Job ==
-"Worker Gateway" -> "Worker Registry": GET\n/available-jobs <job-id, image-id, {token}}>
-"GCLS Worker Daemon" -> "Worker Gateway": GET\n/available-jobs
-"Worker Gateway" -> "GCLS Worker Daemon": start job <job-id, image-id,{token}>
-"GCLS Worker Daemon" -> "Job": POST\n/job/statusreport <job-id, image-id,{token}>
+== Create Job: Feedback to User ==
+"GCLS Worker Daemon" -> "Worker Gateway": POST\n/job/status=200 <job-id, image-id,{token}>
+"Worker Gateway" -> "Job": PATCH\n/job/status=200 <job-id, image-id,{token}>
 "Consumer Gateway" -> "Job": GET\n/job/status <job-id, image-id,{token}>
-"Consumer Gateway" -> "CLI": POST\n/job/status <image-id, job-id>
-"CLI" -> "User": POST\n/job/status <image-id, job-id>
+"CLI" -> "Consumer Gateway": GET\n/job/status <image-id, job-id>
+"User" -> "CLI": GET\n/job/status <image-id, job-id>
 
 @enduml
