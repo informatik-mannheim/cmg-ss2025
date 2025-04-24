@@ -20,4 +20,28 @@ Gateway -> Worker: OK + workerId + token
 
 note over Worker: Use token + workerId for authenticated requests
 
+== Job Request durch Worker ==
+
+loop Wiederhole bis Job empfangen
+    Worker -> Gateway: Request job + token + workerId
+    Gateway -> UserManagement: Validate token
+    alt Token gültig
+        UserManagement -> Gateway: OK
+
+        Gateway -> JobService: Get a job with workerId
+        alt Job vorhanden
+            JobService -> Gateway: OK + job
+            Gateway -> Worker: 200 OK + job
+            break
+        else Kein Job vorhanden
+            JobService -> Gateway: No job found
+            Gateway -> Worker: No job found
+        end
+    else Token ungültig
+        UserManagement -> Gateway: Unauthorized
+        Gateway -> Worker: Unauthorized
+        break
+    end
+end
+
 @enduml
