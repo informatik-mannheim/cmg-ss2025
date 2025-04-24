@@ -1,163 +1,150 @@
 openapi: 3.0.3
 info:
-  title: GCLS Job Microservice API
-  description: REST API zur Verwaltung von Jobs innerhalb der Green Compute Load Shifting Plattform.
-  version: 1.0.0
-
+  title: Job Microservice API
+  description: API which handles Informations of assigned Consumer-Jobs in a Queue
+  version: .0.0
 servers:
-  - url: http://localhost:8080/api
-
+  - url: http://127.0.0.1:25555
+    description: Job-Microservice
 paths:
   /jobs:
-    post:
-      summary: Neuen Job erstellen
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/JobCreateRequest'
-      responses:
-        '201':
-          description: Job erfolgreich erstellt
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
     get:
-      summary: Alle Jobs eines Benutzers abrufen
+      summary: Get jobs
+      description: Retrieve a list of jobs with optional filtering.
       parameters:
-        - in: query
-          name: userId
+        - name: status
+          in: query
+          required: false
+          description: Filter jobs by status
           schema:
             type: string
-          required: true
-          description: ID des Nutzers
+            enum: [queued, running, completed, failed, cancelled]
+        - name: userId
+          in: query
+          required: false
+          description: Filter jobs by user ID
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          description: Filter jobs by priority
+          schema:
+            type: integer
+            enum: [0, 1, 2]
+        - name: imageId
+          in: query
+          required: false
+          description: Filter jobs by image ID
+          schema:
+            type: string
       responses:
-        '200':
-          description: Liste von Jobs
+        200:
+          description: A list of jobs
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Job'
-
-  /jobs/{jobId}:
-    get:
-      summary: Job-Details abrufen
-      parameters:
-        - in: path
-          name: jobId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Job-Details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-        '404':
-          description: Job nicht gefunden
-    delete:
-      summary: Job abbrechen oder löschen
-      parameters:
-        - in: path
-          name: jobId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Job erfolgreich gelöscht
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-  /jobs/{jobId}/retry:
     post:
-      summary: Fehlgeschlagenen Job erneut starten
+      summary: Create a new job
+      description: Add a new job to the queue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreate'
+      responses:
+        201:
+          description: Job created successfully
+  /jobs/{jobId}:
+    put:
+      summary: Update a job
+      description: Update an existing job identified by its ID.
       parameters:
-        - in: path
-          name: jobId
+        - name: jobId
+          in: path
           required: true
+          description: The ID of the job to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobUpdate'
+      responses:
+        200:
+          description: Job updated successfully
+    delete:
+      summary: Delete a job
+      description: Delete a job identified by its ID.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job to delete
           schema:
             type: string
       responses:
-        '200':
-          description: Job erneut eingeplant
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-
+        204:
+          description: Job deleted successfully
 components:
   schemas:
-    JobCreateRequest:
-      type: object
-      required:
-        - userId
-        - jobName
-        - payload
-        - priority
-        - constraints
-      properties:
-        userId:
-          type: string
-        jobName:
-          type: string
-        payload:
-          type: string
-        priority:
-          type: string
-          enum: [low, normal, high]
-        constraints:
-          $ref: '#/components/schemas/JobConstraints'
-
-    JobConstraints:
-      type: object
-      properties:
-        maxRuntime:
-          type: integer
-          format: int32
-        preferredRegions:
-          type: array
-          items:
-            type: string
-
     Job:
       type: object
       properties:
-        id:
-          type: string
-        userId:
+        jobId:
           type: string
         jobName:
           type: string
-        payload:
+        userId:
           type: string
+        imageId:
+          type: string
+        imageName:
+          type: string
+        imageVersion:
+          type: string
+        parameters:
+          type: array
+          items:
+            type: string
         priority:
-          type: string
+          type: integer
+          enum: [0, 1, 2]
         status:
           type: string
           enum: [queued, running, completed, failed, cancelled]
-        workerId:
-          type: string
-          nullable: true
-        result:
-          type: string
-          nullable: true
-        constraints:
-          $ref: '#/components/schemas/JobConstraints'
         createdAt:
           type: string
           format: date-time
+        workerId:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        computeLocation:
+          type: string
+          nullable: true
+        carbonItensity:
+          type: integer
+          nullable: true
+        jobsavailable:
+          type: boolean
+        numberOfJobsAvailable:
+          type: integer
+        constraints:
+          $ref: '#/components/schemas/JobConstraints'
+        result:
+          type: string
+          nullable: true
+        maxRetries:
+          type: integer
         startedAt:
           type: string
           format: date-time
@@ -166,7 +153,56 @@ components:
           type: string
           format: date-time
           nullable: true
-        estimatedStart:
+        lastUpdatedAt:
           type: string
           format: date-time
-          nullable: true
+    JobCreate:
+      type: object
+      required:
+        - userId
+        - imageId
+        - imageName
+        - imageVersion
+        - parameters
+        - priority
+      properties:
+        userId:
+          type: string
+        imageId:
+          type: string
+        imageName:
+          type: string
+        imageVersion:
+          type: string
+        parameters:
+          type: array
+          items:
+            type: string
+        priority:
+          type: integer
+          enum: [0, 1, 2]
+    JobUpdate:
+      type: object
+      properties:
+        imageId:
+          type: string
+        imageName:
+          type: string
+        imageVersion:
+          type: string
+        parameters:
+          type: array
+          items:
+            type: string
+        priority:
+          type: integer
+          enum: [0, 1, 2]
+    JobConstraints:
+      type: object
+      properties:
+        maxRuntime:
+          type: integer
+        preferredLocation:
+          type: array
+          items:
+            type: string
