@@ -11,13 +11,13 @@ Worker_Registry -> Worker_Gateway: POST /run-job\n<job-id, worker-id>
 Worker_Gateway -> Job: GET /job-payload\n<job-id>
 Worker_Gateway -> Worker_Daemon: POST /run-job\n<job-id, job-payload>
 Worker_Gateway -> Worker_Registry: POST /worker/status\n<worker-id, status:"COMPUTING">
-Worker_Gateway -> Job: POST /job/status\n<job-id, status:"RUNNING">
-Job -> Consumer_Gateway: POST /job/status\n<job-id, status:"RUNNING">
+Worker_Gateway -> Job: POST /job/{job-id}/status\n<job-id, status:"RUNNING">
+Job -> Consumer_Gateway: POST /job/{job-id}/status\n<job-id, status:"RUNNING">
 Consumer_Gateway -> Consumer_CLI: showJobStatus(job-id, status:"RUNNING")
 
 Worker_Daemon -> Worker_Gateway: POST /result\n<job-id, status, result>
 Worker_Gateway -> Worker_Registry: POST /worker/status\n<worker-id, status:"AVAILABLE">
-Worker_Gateway -> Job: POST /job/status\n<job-id, status:"COMPLETED", result>
-Job -> Consumer_Gateway: POST /job/status\n<job-id, status:"COMPLETED">
+Worker_Gateway -> Job: POST /job/{job-id}/status\n<job-id, status:"COMPLETED", result>
+Job -> Consumer_Gateway: POST /job/{job-id}/status\n<job-id, status:"COMPLETED">
 Consumer_Gateway -> Consumer_CLI: showJobStatus(job-id, status:"COMPLETED")
 @enduml
