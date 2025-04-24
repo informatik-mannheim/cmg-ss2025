@@ -4,18 +4,27 @@ actor "User"
 
 == Create Job ==
 User -> CLI: create job <image-id>
-CLI -> "Consumer Gateway": POST\n/jobs <image-id, {token}>
+CLI -> "Consumer Gateway": POST\n/jobs <image-id>\nHeader: Authorization:<token>
 note right of CLI: token was issued\nduring Login
 note over "Consumer Gateway": creates job-id\nfor job
-"Consumer Gateway" -> Job: POST\n/jobs  <image-id, {token}, job-id>
+"Consumer Gateway" -> Job: POST\n/jobs Body:\n <image-id, job-id>\nHeader: Authorization:<token>
+note right of Job: adds job to queue
+Job --> "Consumer Gateway": 200 OK\nBody:<job-id>
+"Consumer Gateway" -> CLI: 200 OK\nBody:<job-id>
+"CLI" -> User: Job is waiting for execution, ID is <job-id>
 
 
 == Schedule Job ==
 note over Job: Job scheduling happens here ... 
 
 == Create Job: Feedback to User ==
-"Consumer Gateway" -> "Job": GET\n/job/status <job-id, image-id,{token}>
-"CLI" -> "Consumer Gateway": GET\n/job/status <image-id, job-id>
-"User" -> "CLI": GET\n/job/status <image-id, job-id>
+"User" -> "CLI": get status <job-id>
+
+"CLI" -> "Consumer Gateway": GET\n/job/{job-id}/status \nHeader: Authorization:<token>
+"Consumer Gateway" -> "Job": GET\n/job/{job-id}/status \nHeader: Authorization:<token>
+note right of Job: List of all jobs with\ncorresponding status
+"Job" -> "Consumer Gateway": 200 OK\nBody: "Status: successfully executed"
+"Consumer Gateway"->"CLI": 200 OK\nBody: "Status: successfully executed"
+"CLI"->"User": Job successfully executed
 
 @enduml
