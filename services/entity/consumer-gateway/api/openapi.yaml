@@ -8,5 +8,63 @@ info:
    - url: 
 
 
-paths: /jobs
-  /auth/login
+paths: 
+  /jobs:
+
+    post: 
+
+      summary: Create new Job
+      description: Submits a new Job using image-id, job-id, token
+      security:
+        - bearerAuth: [] # JWT
+
+      requestBody:
+        required: true
+        content: 
+        application/json:
+          schema:
+            $ref: "#/components/CreateJobRequest" # must use the specified schema
+
+      responses: 
+        "201":
+          description: Job successfully created
+
+        "400":
+          description: Bad request 
+
+        "401":
+          description: Unauthorized
+
+
+
+
+
+paths: 
+  /jobs/{job-id}/status:
+  get: 
+
+    summary: Get the status of a job
+    
+    parameters:
+      - name: job-id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    requestBody:
+      required: true
+      content: 
+      application/json:
+        schema:
+          $ref: "component/CreateJobRequest" #must be built like the specified schema
+
+    responses: 
+      "201":
+        description: Job successfully created
+
+      "400":
+        description: Bad request 
+
+      "401":
+        description: Unauthorized
