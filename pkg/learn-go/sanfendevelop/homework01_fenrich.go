@@ -25,7 +25,7 @@ func decodeRequest(r *http.Request) (RequestData, error) {
 	var data RequestData
 	// if the contents cannot be assigned, error is returned
 	// e. g. float input 1.1, 1.2
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&data.Numbers); err != nil {
 		return RequestData{}, err
 	}
 	return data, nil
