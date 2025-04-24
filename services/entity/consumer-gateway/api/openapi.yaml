@@ -6,7 +6,7 @@ info:
   description: API for creating and monitoring a job
 
 servers:
-  - url: https://something.com
+  - url: https://localhost:8081
 
 paths: 
   /jobs:
