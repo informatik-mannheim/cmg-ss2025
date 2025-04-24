@@ -1,0 +1,23 @@
+@startuml
+JobScheduler -> WorkerRegistry : Give me free Workers
+WorkerRegistry --> JobScheduler : list of free Workers
+
+==If there are free Workers, continue==
+
+JobScheduler -> Job : Give me jobs waiting to run
+Job --> JobScheduler : list of jobs waiting to run
+
+==If there are jobs waiting to run, continue==
+
+JobScheduler -> CarbonIntensityProvider : Give me best location for carbon intensity
+
+==CarbonIntensityProvider request...==
+
+CarbonIntensityProvider --> JobScheduler : location of best carbon intensity
+
+JobScheduler -> Job : Job Y is assigned to Worker X
+Job --> JobScheduler : OK
+
+JobScheduler -> WorkerRegistry : Worker X is now working
+WorkerRegistry --> JobScheduler : OK
+@enduml
