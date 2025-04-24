@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"sort"
-	"strings"
 )
 
 // json struct
@@ -33,9 +31,7 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	//check if the content type is application/json
-	fmt.Println(r.Header.Get("Content-Type"))
 	if r.Header.Get("Content-Type") != "application/json" {
 		if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
 			http.Error(w, "Unsupported Media Type", http.StatusUnsupportedMediaType)
@@ -43,7 +39,6 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
-
 
 	// Read the request body
 	body, err := io.ReadAll(r.Body)
@@ -82,23 +77,6 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 
 func SplitEvenOdd(numbers []int) (even, odd []int) {
 	// Initialize odd and even slices
-
-	result := SplitOddEven(numbers)
-
-	// Format output as plain text
-	evenStr := strings.Replace(fmt.Sprint(result.Even), " ", ",", -1)
-	oddStr := strings.Replace(fmt.Sprint(result.Odd), " ", ",", -1)
-
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "even: %s, odd: %s", evenStr, oddStr)
-
-}
-
-func SplitOddEven(numbers []int) SortedNumbers {
-	// Initialize odd and even slices
-	even, odd := []int{}, []int{}
-
 	for _, number := range numbers {
 		if number%2 == 0 {
 			even = append(even, number)
@@ -109,10 +87,4 @@ func SplitOddEven(numbers []int) SortedNumbers {
 	sort.Ints(even)
 	sort.Ints(odd)
 	return
-
-	result := SortedNumbers{
-		Even: even,
-		Odd:  odd,
-	}
-	return result
 }
