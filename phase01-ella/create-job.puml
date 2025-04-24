@@ -11,20 +11,27 @@ note over "Consumer Gateway": creates job-id\nfor job
 note right of Job: adds job to queue
 Job --> "Consumer Gateway": 200 OK\nBody:<job-id>
 "Consumer Gateway" -> CLI: 200 OK\nBody:<job-id>
-"CLI" -> User: Job is waiting for execution, ID is <job-id>
+"CLI" -> User: Job <job-id> is waiting for execution
+note right of Job: Job got executed
+Job --> "Consumer Gateway": 200 OK\nBody:<job-id>
+"Consumer Gateway" -> CLI: 200 OK\nBody:<job-id>
+"CLI" -> User: Job <job-id> has been completed
 
 
-== Schedule Job ==
-note over Job: Job scheduling happens here ... 
+== Status requested by user ==
 
-== Create Job: Feedback to User ==
 "User" -> "CLI": get status <job-id>
-
 "CLI" -> "Consumer Gateway": GET\n/job/{job-id}/status \nHeader: Authorization:<token>
 "Consumer Gateway" -> "Job": GET\n/job/{job-id}/status \nHeader: Authorization:<token>
 note right of Job: List of all jobs with\ncorresponding status
-"Job" -> "Consumer Gateway": 200 OK\nBody: "Status: successfully executed"
-"Consumer Gateway"->"CLI": 200 OK\nBody: "Status: successfully executed"
-"CLI"->"User": Job successfully executed
+"Job" -> "Consumer Gateway": 200 OK\nBody: {"Status: Running"}
+"Consumer Gateway"->"CLI": 200 OK\nBody: {"Status: Running"}
+"CLI"->"User": Job <job-id> is still running
+
+== Status automatically sent ==
+"Job" -> "Consumer Gateway": POST\n/job/{job-id}/status "Status: Completed"
+"CLI" -> "Consumer Gateway": GET\n/job/{job-id}/status 
+note right of CLI: check every 5 seconds
+"CLI" -> "User": Job <job-id> is completed
 
 @enduml
