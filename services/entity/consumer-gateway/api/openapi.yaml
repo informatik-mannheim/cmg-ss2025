@@ -1,0 +1,12 @@
+openapi: 3.1.1
+
+info:
+  title: API for the consumer gateway
+  description: API for creating and monitoring a job
+
+  servers:
+   - url: 
+
+
+paths: /jobs
+  /auth/login
