@@ -21,33 +21,38 @@ const (
 	High
 )
 
-// Json tags helps by (de-)serializing, json:"id" -> "id":"1234", functionality imported by "encoding/json" package
-// If fields value ist empty/nil and its tagged with omitepty, json ignores it
-
-type Job struct {
-	ID                   string         `json:"id"`
-	UserID               string         `json:"userId"`
-	JobName              string         `json:"jobName"`
-	Payload              string         `json:"payload"`
-	AdjustmentParameters []string       `json:"parameters"`
-	Priority             JobPriority    `json:"priority"`
-	Status               JobStatus      `json:"status"`
-	WorkerID             string         `json:"workerId,omitempty"`
-	Constraints          JobConstraints `json:"constraints"`
-	Result               *string        `json:"result,omitempty"` // e.g buffered result
-	ErrorMessage         *string        `json:"errorMessage,omitempty"`
-	RetryCount           int            `json:"retryCount"`
-	MaxRetries           int            `json:"maxRetries"`
-	CreatedAt            time.Time      `json:"createdAt"`
-	StartedAt            *time.Time     `json:"startedAt,omitempty"`
-	CompletedAt          *time.Time     `json:"completedAt,omitempty"`
-	LastUpdatedAt        time.Time      `json:"lastUpdatedAt"`
-	UsedCarbonItensity   int            `json:"UsedCarbonItensity`
-	// AvailableJobs		 bool ja/nein?
-	// Filterung mithilfe von Query Parametern?
+type JobConstraints struct {
+	MaxRuntime        int      `json:"maxRuntime"`        // e.g in seconds
+	PreferredLocation []string `json:"preferredLocation"` // city, continent?
 }
 
-type JobConstraints struct {
-	MaxRuntime       int      `json:"maxRuntime"`       // e.g in seconds
-	PreferredRegions []string `json:"preferredRegions"` // city, continent?
+// Json tags helps by (de-)serializing, json:"id" -> "id":"1234", functionality imported by "encoding/json" package
+// If fields value ist empty/nil (needs pointer) and its tagged with omitempty, json ignores it
+
+type Job struct {
+	JobID                 string      `json:"jobId"`
+	JobName               string      `json:"jobName"`
+	UserID                string      `json:"userId"`
+	ImageID               string      `json:"imageId"`
+	ImageName             string      `json:"imageName"`
+	ImageVersion          string      `json:"imageVersion"` // e.g :latest
+	AdjustmentParameters  []string    `json:"parameters"`
+	Priority              JobPriority `json:"priority"` // 0,1,2
+	Status                JobStatus   `json:"status"`
+	CreatedAt             time.Time   `json:"createdAt"`
+	WorkerID              *string     `json:"workerId,omitempty"`
+	ErrorMessage          *string     `json:"errorMessage,omitempty"`
+	ComputeLocation       *string     `json:"computeLocation,omitempty"`
+	CarbonItensity        *int        `json:"carbonItensity,omitempty"` // grams CO2 per kWH
+	JobsAvailable         bool        `json:"jobsavailable"`
+	NumberOfJobsAvailable int         `json:"numberOfJobsAvailable"`
+
+	// Optional fields:
+
+	Constraints   *JobConstraints `json:"constraints,omitempty"`
+	Result        *string         `json:"result,omitempty"` // perhaps some containers will provide a result
+	MaxRetries    int             `json:"maxRetries"`
+	StartedAt     *time.Time      `json:"startedAt,omitempty"`
+	CompletedAt   *time.Time      `json:"completedAt,omitempty"`
+	LastUpdatedAt time.Time       `json:"lastUpdatedAt"`
 }
