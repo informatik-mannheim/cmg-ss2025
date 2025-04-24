@@ -31,15 +31,6 @@ func OddEvenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//check if the content type is application/json
-	if r.Header.Get("Content-Type") != "application/json" {
-		if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
-			http.Error(w, "Unsupported Media Type", http.StatusUnsupportedMediaType)
-			return
-		}
-
-	}
-
 	// Read the request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
