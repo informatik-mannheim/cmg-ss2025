@@ -134,10 +134,6 @@ components:
         carbonItensity:
           type: integer
           nullable: true
-        jobsavailable:
-          type: boolean
-        numberOfJobsAvailable:
-          type: integer
         constraints:
           $ref: '#/components/schemas/JobConstraints'
         result:
