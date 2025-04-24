@@ -18,6 +18,12 @@ func main() {
 
 // processes PUT request and responds with sorted map as string
 func handler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Invalid Content-Type. Expected application/json", http.StatusUnsupportedMediaType)
+		return
+	}
+
 	if r.Method != http.MethodPut {
 		http.Error(w, "This method is not allowed", http.StatusMethodNotAllowed)
 		return
@@ -37,7 +43,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	result := SeparateEvenOdd(numbers)
 
-	response := fmt.Sprintf("even : %v, odd : %v", result["even"], result["odd"])
+	response := fmt.Sprintf("even : %s, odd : %s", formatSliceWithComma(result["even"]), formatSliceWithComma(result["odd"]))
 	w.Header().Set("Content-Type", "text/plain")
 	_, _ = w.Write([]byte(response))
 }
@@ -55,4 +61,19 @@ func SeparateEvenOdd(numbers []int) map[string][]int {
 	sort.Ints(result["even"])
 	sort.Ints(result["odd"])
 	return result
+}
+
+func formatSliceWithComma(nums []int) string {
+	if len(nums) == 0 {
+		return "[]"
+	}
+	s := "["
+	for i, n := range nums {
+		if i > 0 {
+			s += ", "
+		}
+		s += fmt.Sprintf("%d", n)
+	}
+	s += "]"
+	return s
 }

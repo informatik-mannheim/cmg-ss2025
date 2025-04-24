@@ -20,7 +20,7 @@ func TestHandler(t *testing.T) {
 			method:       http.MethodPut,
 			body:         `[29, 8, 3, 4]`,
 			wantStatus:   http.StatusOK,
-			wantResponse: "even : [4 8], odd : [3 29]",
+			wantResponse: "even : [4, 8], odd : [3, 29]",
 		},
 		{
 			name:         "Invalid JSON",
@@ -48,6 +48,7 @@ func TestHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(tt.method, "/", strings.NewReader(tt.body))
+			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
 			handler(w, req)
