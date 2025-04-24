@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Job Microservice API
-  description: API which handles Informations of assigned Consumer-Jobs in a Queue
-  version: .0.0
+  description: API which handles information of assigned Consumer-Jobs in a Queue
+  version: 1.0.0
 servers:
-  - url: http://127.0.0.1:25555
+  - url: http://localhost:8080
     description: Job-Microservice
 paths:
   /jobs:
@@ -60,6 +60,23 @@ paths:
         201:
           description: Job created successfully
   /jobs/{jobId}:
+    get:
+      summary: Get a specific job
+      description: Retrieve a job by its ID.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job to retrieve
+          schema:
+            type: string
+      responses:
+        200:
+          description: A single job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
     put:
       summary: Update a job
       description: Update an existing job identified by its ID.
@@ -92,6 +109,53 @@ paths:
       responses:
         204:
           description: Job deleted successfully
+  /jobs/{jobId}/workerId:
+    patch:
+      summary: Update worker ID
+      description: Update the worker ID of a job identified by its ID.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workerId:
+                  type: string
+      responses:
+        200:
+          description: Worker ID updated successfully
+  /jobs/{jobId}/status:
+    patch:
+      summary: Update job status
+      description: Update the status of a job identified by its ID.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [queued, running, completed, failed, cancelled]
+      responses:
+        200:
+          description: Job status updated successfully
 components:
   schemas:
     Job:
@@ -103,12 +167,8 @@ components:
           type: string
         userId:
           type: string
-        imageId:
-          type: string
-        imageName:
-          type: string
-        imageVersion:
-          type: string
+        image:
+          $ref: '#/components/schemas/ContainerImage'
         parameters:
           type: array
           items:
@@ -156,20 +216,14 @@ components:
       type: object
       required:
         - userId
-        - imageId
-        - imageName
-        - imageVersion
+        - image
         - parameters
         - priority
       properties:
         userId:
           type: string
-        imageId:
-          type: string
-        imageName:
-          type: string
-        imageVersion:
-          type: string
+        image:
+          $ref: '#/components/schemas/ContainerImage'
         parameters:
           type: array
           items:
@@ -180,12 +234,8 @@ components:
     JobUpdate:
       type: object
       properties:
-        imageId:
-          type: string
-        imageName:
-          type: string
-        imageVersion:
-          type: string
+        image:
+          $ref: '#/components/schemas/ContainerImage'
         parameters:
           type: array
           items:
@@ -202,3 +252,12 @@ components:
           type: array
           items:
             type: string
+    ContainerImage:
+      type: object
+      properties:
+        imageId:
+          type: string
+        imageName:
+          type: string
+        imageVersion:
+          type: string
