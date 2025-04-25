@@ -6,7 +6,7 @@ info:
   description: API for creating and monitoring a job
 
 servers:
-  - url: https://localhost:8081
+  - url: https://localhost:8080
 
 paths: 
   /jobs:
@@ -23,6 +23,8 @@ paths:
               type: object
               properties:
                 image_id:
+                  type: string
+                location:
                   type: string
               required:
                 - image_id
@@ -64,7 +66,7 @@ paths:
                     type: string
                   status:
                     type: string
-                    enum: [pending, scheduled, running, completed, failed]
+                    enum: [cancelled, queued, running, completed, failed]
                   started_at:
                     type: string
                     format: date-time
