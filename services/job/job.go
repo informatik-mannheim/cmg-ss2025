@@ -5,7 +5,8 @@ import "time"
 type JobStatus string
 
 const (
-	StatusQueued    JobStatus = "queued"
+	StatusQueued JobStatus = "queued" //default
+	//StatusScheduled JobStatus = "scheduled"
 	StatusRunning   JobStatus = "running"
 	StatusCompleted JobStatus = "completed"
 	StatusFailed    JobStatus = "failed"
@@ -36,7 +37,7 @@ type ContainerImage struct {
 // If fields value ist empty/nil (needs pointer) and its tagged with omitempty, json ignores it
 
 type Job struct {
-	JobID                string         `json:"jobId"`
+	ID                   string         `json:"id"` //UUID package
 	JobName              string         `json:"jobName"`
 	UserID               string         `json:"userId"`
 	Image                ContainerImage `json:"image"`
@@ -44,11 +45,12 @@ type Job struct {
 	Priority             JobPriority    `json:"priority"` // 0,1,2
 	Status               JobStatus      `json:"status"`
 	CreatedAt            time.Time      `json:"createdAt"`
-	LastUpdatedAt        time.Time      `json:"lastUpdatedAt"`
-	WorkerID             *string        `json:"workerId,omitempty"`
+	UpdatedAt            time.Time      `json:"updatedAt"`
+	WorkerID             *string        `json:"workerId,omitempty"` //remove pointers and emitempty
 	ErrorMessage         *string        `json:"errorMessage,omitempty"`
-	ComputeLocation      *string        `json:"computeLocation,omitempty"`
+	ComputeLocation      *string        `json:"computeLocation,omitempty"` //definition
 	CarbonIntensity      *int           `json:"carbonIntensity,omitempty"` // grams CO2 per kWH
+	//RessourceProfit
 
 	// Optional fields:
 	Constraints *JobConstraints `json:"constraints,omitempty"`
