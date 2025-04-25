@@ -37,7 +37,7 @@ type ContainerImage struct {
 // If fields value ist empty/nil (needs pointer) and its tagged with omitempty, json ignores it
 
 type Job struct {
-	ID                   string         `json:"id"` //UUID package
+	ID                   string         `json:"id"` //UUID generater - package
 	JobName              string         `json:"jobName"`
 	UserID               string         `json:"userId"`
 	Image                ContainerImage `json:"image"`
