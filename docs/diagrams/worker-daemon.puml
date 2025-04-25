@@ -11,37 +11,16 @@ participant "Worker Registry" as Registry
 
 == Worker Daemon Registration ==
 
-Worker -> Gateway: Register me as a new worker
-Gateway -> Registry: POST /workers
-Registry -> Gateway: OK + workerId
-Gateway -> UserManagement: Create authorization Token
-UserManagement -> Gateway: OK + token
-Gateway -> Worker: OK + workerId + token
+Worker -> Gateway: Register with key
 
-note over Worker: Use token + workerId for authenticated requests
-
-== Job Request durch Worker ==
-
-loop Wiederhole bis Job empfangen
-    Worker -> Gateway: Request job + token + workerId
-    Gateway -> UserManagement: Validate token
-    alt Token gültig
-        UserManagement -> Gateway: OK
-
-        Gateway -> JobService: Get a job with workerId
-        alt Job vorhanden
-            JobService -> Gateway: OK + job
-            Gateway -> Worker: 200 OK + job
-            break
-        else Kein Job vorhanden
-            JobService -> Gateway: No job found
-            Gateway -> Worker: No job found
-        end
-    else Token ungültig
-        UserManagement -> Gateway: Unauthorized
-        Gateway -> Worker: Unauthorized
-        break
-    end
+alt "Key is valid"
+    Gateway -> UserManagement: Create authorization Token
+    UserManagement -> Gateway: OK + token
+    Gateway -> Registry: POST /workers + token
+    Registry -> Gateway: OK
+    Gateway -> Worker: OK + token
+else "Key is invalid"
+    Gateway -> Worker: 401 Unauthorized
 end
 
 @enduml
