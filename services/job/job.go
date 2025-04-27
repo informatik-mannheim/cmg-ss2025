@@ -5,8 +5,8 @@ import "time"
 type JobStatus string
 
 const (
-	StatusQueued JobStatus = "queued" //default
-	//StatusScheduled JobStatus = "scheduled"
+	StatusQueued    JobStatus = "queued"    // default value for new job
+	StatusScheduled JobStatus = "scheduled" // is set as soon as a worker has been assigned (by the job-scheduler)
 	StatusRunning   JobStatus = "running"
 	StatusCompleted JobStatus = "completed"
 	StatusFailed    JobStatus = "failed"
@@ -22,40 +22,27 @@ const (
 	High
 )
 
-type JobConstraints struct {
-	MaxRuntime        int      `json:"maxRuntime"`        // e.g in seconds
-	PreferredLocation []string `json:"preferredLocation"` // city, continent?
-}
-
 type ContainerImage struct {
-	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Version string `json:"version"`
 }
 
 // Json tags helps by (de-)serializing, json:"id" -> "id":"1234", functionality imported by "encoding/json" package
-// If fields value ist empty/nil (needs pointer) and its tagged with omitempty, json ignores it
 
 type Job struct {
-	ID                   string         `json:"id"` //UUID generater - package
-	JobName              string         `json:"jobName"`
-	UserID               string         `json:"userId"`
-	Image                ContainerImage `json:"image"`
-	AdjustmentParameters []string       `json:"parameters"`
-	Priority             JobPriority    `json:"priority"` // 0,1,2
-	Status               JobStatus      `json:"status"`
-	CreatedAt            time.Time      `json:"createdAt"`
-	UpdatedAt            time.Time      `json:"updatedAt"`
-	WorkerID             *string        `json:"workerId,omitempty"` //remove pointers and emitempty
-	ErrorMessage         *string        `json:"errorMessage,omitempty"`
-	ComputeLocation      *string        `json:"computeLocation,omitempty"` //definition
-	CarbonIntensity      *int           `json:"carbonIntensity,omitempty"` // grams CO2 per kWH
-	//RessourceProfit
-
-	// Optional fields:
-	Constraints *JobConstraints `json:"constraints,omitempty"`
-	Result      *string         `json:"result,omitempty"` // perhaps some containers will provide a result
-	MaxRetries  *int            `json:"maxRetries,omitempty"`
-	StartedAt   *time.Time      `json:"startedAt,omitempty"`
-	CompletedAt *time.Time      `json:"completedAt,omitempty"`
+	ID                   string            `json:"id"`      // generated as UUID
+	JobName              string            `json:"jobName"` //set by User
+	UserID               string            `json:"userId"`  //
+	Image                ContainerImage    `json:"image"`
+	AdjustmentParameters map[string]string `json:"parameters"` // e.g key(-p) : value (8080:8080)
+	Priority             JobPriority       `json:"priority"`   // 0,1,2
+	Status               JobStatus         `json:"status"`
+	CreatedAt            time.Time         `json:"createdAt"`
+	UpdatedAt            time.Time         `json:"updatedAt"`
+	Result               string            `json:"result"` // perhaps some containers will provide a result
+	WorkerID             string            `json:"workerId"`
+	ErrorMessage         string            `json:"errorMessage"`
+	ComputeZone          string            `json:"computeZone"`     // Zone key we get from Electricity Maps API, e.g "DE" (germany)
+	CarbonIntensity      int               `json:"carbonIntensity"` // CO2eq/kWh which are emitted while executing job
+	CarbonSaving         int               `json:"carbonSavings"`   // consumption savings compared to the actual consumer location
 }
