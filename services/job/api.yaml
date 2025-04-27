@@ -19,34 +19,64 @@ paths:
           schema:
             type: string
             enum: [queued, running, completed, failed, cancelled]
-        - name: userId
-          in: query
-          required: false
-          description: Filter jobs by user ID
-          schema:
-            type: string
-        - name: priority
-          in: query
-          required: false
-          description: Filter jobs by priority
-          schema:
-            type: integer
-            enum: [0, 1, 2]
-        - name: imageId
-          in: query
-          required: false
-          description: Filter jobs by image ID
-          schema:
-            type: string
       responses:
         200:
-          description: A list of jobs
+          description: A list of jobs.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Job'
+        204:
+          description: No jobs found matching the criteria.
+        400:
+          description: Bad Request. Invalid query parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The 'status' query parameter is invalid."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to view these jobs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
     post:
       summary: Create a new job
       description: Add a new job to the queue.
@@ -58,13 +88,78 @@ paths:
               $ref: '#/components/schemas/JobCreate'
       responses:
         201:
-          description: Job created successfully
+          description: Job created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        400:
+          description: Bad Request. The client must correct the request details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The parameters field is required."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to create a job.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        409:
+          description: Conflict. Job with the provided identifier already exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Conflict"
+                  message: "A job with this identifier already exists."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
   /jobs/{jobId}:
     get:
       summary: Get a specific job
       description: Retrieve a job by its ID.
       parameters:
-        - name: jobId
+        - name: ID
           in: path
           required: true
           description: The ID of the job to retrieve
@@ -72,11 +167,72 @@ paths:
             type: string
       responses:
         200:
-          description: A single job
+          description: A single job.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Job'
+        400:
+          description: Bad Request. Invalid job ID format.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The job ID format is invalid."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to access this job.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        404:
+          description: Not Found. The job with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "A job with the specified ID does not exist."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
     put:
       summary: Update a job
       description: Update an existing job identified by its ID.
@@ -95,7 +251,74 @@ paths:
               $ref: '#/components/schemas/JobUpdate'
       responses:
         200:
-          description: Job updated successfully
+          description: Job updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        204:
+          description: Job updated successfully, no content to return.
+        400:
+          description: Bad Request. Invalid data provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "Invalid job details provided."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to update this job.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        404:
+          description: Not Found. The job with the specified ID does not exist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "The specified job does not exist."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
     delete:
       summary: Delete a job
       description: Delete a job identified by its ID.
@@ -108,7 +331,82 @@ paths:
             type: string
       responses:
         204:
-          description: Job deleted successfully
+          description: Job deleted successfully. No content is returned.
+        400:
+          description: Bad Request. Invalid job ID format provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The job ID format is invalid."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to delete this job.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        404:
+          description: Not Found. The job with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "A job with the specified ID does not exist."
+        409:
+          description: Conflict. The job cannot be deleted because of its current state.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Conflict"
+                  message: "The job is currently running and cannot be deleted."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
   /jobs/{jobId}/workerId:
     patch:
       summary: Update worker ID
@@ -131,7 +429,88 @@ paths:
                   type: string
       responses:
         200:
-          description: Worker ID updated successfully
+          description: Worker ID updated successfully. The response may include updated job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        204:
+          description: Worker ID updated successfully, no content to return.
+        400:
+          description: Bad Request. Invalid input data for updating the worker ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The worker ID format is invalid."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to update the worker ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        404:
+          description: Not Found. The job with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "A job with the specified ID does not exist."
+        409:
+          description: Conflict. The worker ID cannot be updated due to a conflict with the job's current state.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Conflict"
+                  message: "The job is currently locked for editing."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
   /jobs/{jobId}/status:
     patch:
       summary: Update job status
@@ -155,13 +534,94 @@ paths:
                   enum: [queued, running, completed, failed, cancelled]
       responses:
         200:
-          description: Job status updated successfully
+          description: Job status updated successfully. The updated job details may be included.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        204:
+          description: Job status updated successfully, no content to return.
+        400:
+          description: Bad Request. Invalid status value provided.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The provided status is invalid or unsupported."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        403:
+          description: Forbidden. You do not have permission to update the job status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        404:
+          description: Not Found. The job with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "A job with the specified ID does not exist."
+        409:
+          description: Conflict. The job status cannot be updated due to a conflict with the current job state.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Conflict"
+                  message: "The job cannot be moved to 'completed' from the current status."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
 components:
   schemas:
     Job:
       type: object
       properties:
-        jobId:
+        ID:
           type: string
         jobName:
           type: string
@@ -173,12 +633,9 @@ components:
           type: array
           items:
             type: string
-        priority:
-          type: integer
-          enum: [0, 1, 2]
         status:
           type: string
-          enum: [queued, running, completed, failed, cancelled]
+          enum: [queued, scheduled, running, completed, failed, cancelled]
         createdAt:
           type: string
           format: date-time
@@ -194,43 +651,28 @@ components:
         carbonItensity:
           type: integer
           nullable: true
-        constraints:
-          $ref: '#/components/schemas/JobConstraints'
         result:
           type: string
           nullable: true
-        maxRetries:
-          type: integer
         startedAt:
           type: string
           format: date-time
           nullable: true
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-        lastUpdatedAt:
+        updatedAt:
           type: string
           format: date-time
     JobCreate:
       type: object
       required:
-        - userId
         - image
         - parameters
-        - priority
       properties:
-        userId:
-          type: string
         image:
           $ref: '#/components/schemas/ContainerImage'
         parameters:
-          type: array
-          items:
+          type: object
+          additionalProperties:
             type: string
-        priority:
-          type: integer
-          enum: [0, 1, 2]
     JobUpdate:
       type: object
       properties:
@@ -240,23 +682,9 @@ components:
           type: array
           items:
             type: string
-        priority:
-          type: integer
-          enum: [0, 1, 2]
-    JobConstraints:
-      type: object
-      properties:
-        maxRuntime:
-          type: integer
-        preferredLocation:
-          type: array
-          items:
-            type: string
     ContainerImage:
       type: object
       properties:
-        imageId:
-          type: string
         imageName:
           type: string
         imageVersion:
