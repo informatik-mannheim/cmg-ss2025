@@ -13,15 +13,6 @@ const (
 	StatusCancelled JobStatus = "cancelled"
 )
 
-type JobPriority int
-
-// Easier to compare later on
-const (
-	Low JobPriority = iota
-	Middle
-	High
-)
-
 type ContainerImage struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -32,17 +23,16 @@ type ContainerImage struct {
 type Job struct {
 	ID                   string            `json:"id"`      // generated as UUID
 	JobName              string            `json:"jobName"` //set by User
-	UserID               string            `json:"userId"`  //
+	UserID               string            `json:"userId"`
 	Image                ContainerImage    `json:"image"`
 	AdjustmentParameters map[string]string `json:"parameters"` // e.g key(-p) : value (8080:8080)
-	Priority             JobPriority       `json:"priority"`   // 0,1,2
 	Status               JobStatus         `json:"status"`
 	CreatedAt            time.Time         `json:"createdAt"`
 	UpdatedAt            time.Time         `json:"updatedAt"`
 	Result               string            `json:"result"` // perhaps some containers will provide a result
 	WorkerID             string            `json:"workerId"`
 	ErrorMessage         string            `json:"errorMessage"`
-	ComputeZone          string            `json:"computeZone"`     // Zone key we get from Electricity Maps API, e.g "DE" (germany)
+	ComputeZone          string            `json:"computeZone"`     // zone key we get from Electricity Maps API, e.g "DE" (germany)
 	CarbonIntensity      int               `json:"carbonIntensity"` // CO2eq/kWh which are emitted while executing job
 	CarbonSaving         int               `json:"carbonSavings"`   // consumption savings compared to the actual consumer location
 }
