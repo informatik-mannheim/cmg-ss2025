@@ -1,0 +1,63 @@
+openapi: 3.0.3
+info:
+  title: Entity Service API
+  description: API for getting and putting entities that consist of an id, an integer, and a string.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /entity/{id}:
+    get:
+      summary: Get an entity by ID
+      tags:
+        - Entity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entity details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Id:
+                    type: string
+                    description: the id of the entity
+                  IntProp:
+                    type: integer
+                    description: an integer property
+                  StringProp:
+                    type: string
+                    description: a string property
+        '404':
+          description: entity not found  
+  /entity:
+    put:
+      summary: Update/Create an entity by ID
+      tags:
+        - Entity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Id:
+                  type: string
+                  description: the id of the entity
+                IntProp:
+                  type: integer
+                  description: an integer property
+                StringProp:
+                  type: string
+                  description: a string property
+      responses:
+        '200':
+          description: Entity updated
