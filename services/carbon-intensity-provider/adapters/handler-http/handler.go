@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/informatik-mannheim/cmg-ss2025/servicescarbon-intensity-provider/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
 type Handler struct {
