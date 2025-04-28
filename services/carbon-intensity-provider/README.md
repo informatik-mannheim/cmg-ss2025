@@ -1,9 +1,9 @@
-# carbon-intensity-provider Service
+# Carbon Intensity Provider Service
 
-The carbon-intensity-provider service is an example service that demonstrates the folder structure of a microservice following the ports & adapters architecture.
+This service provides an API to store and retrieve carbon intensity data, following the Ports & Adapters (Hexagonal) architecture.
 
 > **WARNING**
-> The implementation is in an early stage. Many things are still missing. Use with care.
+> The implementation is in an early stage. Some functionality may be missing or subject to change.
 
 ## Usage
 

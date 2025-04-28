@@ -77,7 +77,7 @@ func TestCarbonIntensityProvider_Set(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewCarbonIntensityProvidertyProvidertyProvider(tt.fields.repo, tt.fields.notifier)
+			s := core.NewCarbonIntensityProvider(tt.fields.repo, tt.fields.notifier)
 
 			if err := s.Set(tt.args.carbonIntensityProvider, tt.args.ctx); (err != nil) != tt.wantErr {
 				t.Errorf("CarbonIntensityProvider.Set() error = %v, wantErr %v", err, tt.wantErr)
