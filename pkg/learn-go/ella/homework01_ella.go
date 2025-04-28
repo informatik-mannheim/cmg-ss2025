@@ -21,9 +21,7 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 	// Ensure the request uses PUT method
 	if r.Method == "PUT" {
 
-		// Check that the content type is application/json
-		if r.Header.Get("Content-Type") == "application/json" {
-
+	
 			// Read the entire request body
 			b, err := io.ReadAll(r.Body)
 			if err != nil {
@@ -51,11 +49,6 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 			// If the content type is not JSON
 			http.Error(w, "Not in JSON Format",  http.StatusBadRequest)
 		}
-
-	} else {
-		// If the method is not PUT
-		http.Error(w, "Not a PUT Request",  http.StatusBadRequest)
-	}
 
 	// Set response type to plain text (even though we're sending JSON)
 	w.Header().Set("Content-Type", "text/plain")
