@@ -1,7 +1,6 @@
 package ports
 
 type CarbonIntensityProvider struct {
-	Id         string
-	IntProp    int
-	StringProp string
+	Zone             string `json:"zone"`
+	CaarbonIntensity int64  `json:"carbon_intensity"`
 }
