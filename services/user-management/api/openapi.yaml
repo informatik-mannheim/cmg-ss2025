@@ -21,24 +21,23 @@ paths:
             schema:
               type: object
               required:
-                - username
-                - password
+                
                 - role
               properties:
-                username:
-                  type: string
-                  example: my_name
-                password:
-                  type: string
-                  format: password
-                  example: securepass
                 role:
                   type: string
                   enum: [consumer, provider]
-                  example: consumer
       responses:
         '201':
-          description: User created successfully
+          description: User created successfully + JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                    example: some secret
         '400':
           description: Invalid request
 
@@ -57,13 +56,8 @@ paths:
                 - username
                 - password
               properties:
-                username:
+                secret:
                   type: string
-                  example: my_name
-                password:
-                  type: string
-                  format: password
-                  example: securepass
       responses:
         '200':
           description: JWT issued
@@ -78,32 +72,6 @@ paths:
         '401':
           description: Invalid credentials
 
-  /me:
-    get:
-      summary: Get info about the authenticated user
-      tags:
-        - User
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Current user info
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    example: user-abc123
-                  username:
-                    type: string
-                    example: my_name
-                  role:
-                    type: string
-                    example: consumer
-        '401':
-          description: Invalid or missing token
 
 components:
   securitySchemes:

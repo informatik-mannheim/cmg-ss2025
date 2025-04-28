@@ -37,33 +37,6 @@ paths:
                     type: number
                     description: The carbon intensity value.
                     example: 140
-                  datetime:
-                    type: string
-                    format: date-time
-                    description: The date and time when the data was recorded.
-                    example: "2025-04-12T10:00:00.000Z"
-                  updatedAt:
-                    type: string
-                    format: date-time
-                    description: The date and time when the data was last updated.
-                    example: "2025-04-12T10:44:09.273Z"
-                  createdAt:
-                    type: string
-                    format: date-time
-                    description: The date and time when the data was created.
-                    example: "2025-04-09T10:43:49.807Z"
-                  emissionFactorType:
-                    type: string
-                    description: The type of emission factor used.
-                    example: "lifecycle"
-                  isEstimated:
-                    type: boolean
-                    description: Indicates if the data is estimated.
-                    example: true
-                  estimationMethod:
-                    type: string
-                    description: The method used for estimation.
-                    example: "FORECASTS_HIERARCHY"
         '404':
           description: Zone not found
         '500':
@@ -91,24 +64,3 @@ components:
         carbonIntensity:
           type: number
           example: 140
-        datetime:
-          type: string
-          format: date-time
-          example: "2025-04-12T10:00:00.000Z"
-        updatedAt:
-          type: string
-          format: date-time
-          example: "2025-04-12T10:44:09.273Z"
-        createdAt:
-          type: string
-          format: date-time
-          example: "2025-04-09T10:43:49.807Z"
-        emissionFactorType:
-          type: string
-          example: "lifecycle"
-        isEstimated:
-          type: boolean
-          example: true
-        estimationMethod:
-          type: string
-          example: "FORECASTS_HIERARCHY"
