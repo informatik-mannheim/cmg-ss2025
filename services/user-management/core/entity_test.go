@@ -5,47 +5,47 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/entity/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/entity/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 type MockRepo struct {
-	entity      ports.Entity
-	requestedId string
-	err         *error
+	userManagement ports.UserManagement
+	requestedId    string
+	err            *error
 }
 
-func (m *MockRepo) Store(entity ports.Entity, ctx context.Context) error {
-	m.entity = entity
+func (m *MockRepo) Store(userManagement ports.UserManagement, ctx context.Context) error {
+	m.userManagement = userManagement
 	if m.err != nil {
 		return *m.err
 	}
 	return nil
 }
 
-func (m *MockRepo) FindById(id string, ctx context.Context) (ports.Entity, error) {
+func (m *MockRepo) FindById(id string, ctx context.Context) (ports.UserManagement, error) {
 	m.requestedId = id
 	if m.err != nil {
-		return ports.Entity{}, *m.err
+		return ports.UserManagement{}, *m.err
 	}
-	return m.entity, nil
+	return m.userManagement, nil
 }
 
 var _ ports.Repo = (*MockRepo)(nil)
 
 type MockNotifier struct {
-	entity    ports.Entity
-	callcount int
+	userManagement ports.UserManagement
+	callcount      int
 }
 
-func (m *MockNotifier) EntityChanged(entity ports.Entity, ctx context.Context) {
-	m.entity = entity
+func (m *MockNotifier) UserManagementChanged(userManagement ports.UserManagement, ctx context.Context) {
+	m.userManagement = userManagement
 	m.callcount++
 }
 
 var _ ports.Notifier = (*MockNotifier)(nil)
 
-func TestEntityService_Set(t *testing.T) {
+func TestUserManagementService_Set(t *testing.T) {
 
 	type fields struct {
 		repo     ports.Repo
@@ -56,8 +56,8 @@ func TestEntityService_Set(t *testing.T) {
 	ctx := context.Background()
 
 	type args struct {
-		entity ports.Entity
-		ctx    context.Context
+		userManagement ports.UserManagement
+		ctx            context.Context
 	}
 	tests := []struct {
 		name    string
@@ -66,10 +66,10 @@ func TestEntityService_Set(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "Store some entity",
+			name:   "Store some userManagement",
 			fields: testFields,
 			args: args{
-				ports.Entity{Id: "1", IntProp: 4711, StringProp: "Test"},
+				ports.UserManagement{Id: "1", IntProp: 4711, StringProp: "Test"},
 				ctx,
 			},
 			wantErr: false,
@@ -77,35 +77,35 @@ func TestEntityService_Set(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewEntityService(tt.fields.repo, tt.fields.notifier)
+			s := core.NewUserManagementService(tt.fields.repo, tt.fields.notifier)
 
-			if err := s.Set(tt.args.entity, tt.args.ctx); (err != nil) != tt.wantErr {
-				t.Errorf("EntityService.Set() error = %v, wantErr %v", err, tt.wantErr)
+			if err := s.Set(tt.args.userManagement, tt.args.ctx); (err != nil) != tt.wantErr {
+				t.Errorf("UserManagementService.Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if tt.fields.repo.(*MockRepo).entity != tt.args.entity {
-				t.Errorf("EntityService.Set() repo entity = %v, want %v", tt.fields.repo.(*MockRepo).entity, tt.args.entity)
+			if tt.fields.repo.(*MockRepo).userManagement != tt.args.userManagement {
+				t.Errorf("UserManagementService.Set() repo userManagement = %v, want %v", tt.fields.repo.(*MockRepo).userManagement, tt.args.userManagement)
 			}
 
-			if tt.fields.notifier.(*MockNotifier).entity != tt.args.entity {
-				t.Errorf("EntityService.Set() notifier entity = %v, want %v", tt.fields.notifier.(*MockNotifier).entity, tt.args.entity)
+			if tt.fields.notifier.(*MockNotifier).userManagement != tt.args.userManagement {
+				t.Errorf("UserManagementService.Set() notifier userManagement = %v, want %v", tt.fields.notifier.(*MockNotifier).userManagement, tt.args.userManagement)
 			}
 
 			if tt.fields.notifier.(*MockNotifier).callcount != 1 {
-				t.Errorf("EntityService.Set() notifier callcount = %v, want %v", tt.fields.notifier.(*MockNotifier).callcount, 1)
+				t.Errorf("UserManagementService.Set() notifier callcount = %v, want %v", tt.fields.notifier.(*MockNotifier).callcount, 1)
 			}
 
 		})
 	}
 }
 
-func TestEntityService_Get(t *testing.T) {
+func TestUserManagementService_Get(t *testing.T) {
 	type fields struct {
 		repo     ports.Repo
 		notifier ports.Notifier
 	}
 
-	testFields := fields{&MockRepo{entity: ports.Entity{Id: "25", IntProp: 23, StringProp: "test"}}, nil}
+	testFields := fields{&MockRepo{userManagement: ports.UserManagement{Id: "25", IntProp: 23, StringProp: "test"}}, nil}
 	ctx := context.Background()
 
 	type args struct {
@@ -116,33 +116,33 @@ func TestEntityService_Get(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    ports.Entity
+		want    ports.UserManagement
 		wantErr bool
 	}{
 		{
-			name:   "Get existing entity",
+			name:   "Get existing userManagement",
 			fields: testFields,
 			args: args{
 				"25",
 				ctx,
 			},
-			want:    ports.Entity{Id: "25", IntProp: 23, StringProp: "test"},
+			want:    ports.UserManagement{Id: "25", IntProp: 23, StringProp: "test"},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewEntityService(tt.fields.repo, tt.fields.notifier)
+			s := core.NewUserManagementService(tt.fields.repo, tt.fields.notifier)
 			got, err := s.Get(tt.args.id, tt.args.ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("EntityService.Get() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("UserManagementService.Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("EntityService.Get() = %v, want %v", got, tt.want)
+				t.Errorf("UserManagementService.Get() = %v, want %v", got, tt.want)
 			}
 			if tt.fields.repo.(*MockRepo).requestedId != tt.args.id {
-				t.Errorf("EntityService.Get() repo requestedId = %v, want %v", tt.fields.repo.(*MockRepo).requestedId, tt.args.id)
+				t.Errorf("UserManagementService.Get() repo requestedId = %v, want %v", tt.fields.repo.(*MockRepo).requestedId, tt.args.id)
 			}
 		})
 	}

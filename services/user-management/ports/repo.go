@@ -5,6 +5,6 @@ import (
 )
 
 type Repo interface {
-	Store(entity Entity, ctx context.Context) error
-	FindById(id string, ctx context.Context) (Entity, error)
+	Store(userManagement UserManagement, ctx context.Context) error
+	FindById(id string, ctx context.Context) (UserManagement, error)
 }

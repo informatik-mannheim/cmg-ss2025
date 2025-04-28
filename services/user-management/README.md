@@ -1,13 +1,13 @@
-# Entity Service
+# User Management Service
 
-The entity service is an example service that demonstrates the folder structure of a microservice following the ports & adapters architecture.
+This service provides an API to store and retrieve user management data, following the Ports & Adapters (Hexagonal) architecture.
 
 > **WARNING**
-> The implementation is in an early stage. Many things are still missing. Use with care.
+> The implementation is in an early stage. Some functionality may be missing or subject to change.
 
 ## Usage
 
 ```bash
-curl -X PUT -d '{ "Id": "34", "IntProp" : 23, "StringProp": "test" }' localhost:8080/entity
-curl localhost:8080/entity/34
+curl -X PUT -d '{ "Id": "34", "IntProp" : 23, "StringProp": "test" }' localhost:8080/user-management
+curl localhost:8080/user-management/34
 ```

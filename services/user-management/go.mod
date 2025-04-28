@@ -1,4 +1,4 @@
-module github.com/informatik-mannheim/cmg-ss2025/services/entity
+module github.com/informatik-mannheim/cmg-ss2025/services/user-management
 
 go 1.23.1
 

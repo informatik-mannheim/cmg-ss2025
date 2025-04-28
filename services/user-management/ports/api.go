@@ -5,9 +5,9 @@ import (
 	"errors"
 )
 
-var ErrEntityNotFound = errors.New("entity not found")
+var ErrUserManagementNotFound = errors.New("userManagement not found")
 
 type Api interface {
-	Set(entity Entity, ctx context.Context) error
-	Get(id string, ctx context.Context) (Entity, error)
+	Set(userManagement UserManagement, ctx context.Context) error
+	Get(id string, ctx context.Context) (UserManagement, error)
 }

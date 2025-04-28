@@ -5,5 +5,5 @@ import (
 )
 
 type Notifier interface {
-	EntityChanged(entity Entity, ctx context.Context)
+	UserManagementChanged(userManagement UserManagement, ctx context.Context)
 }

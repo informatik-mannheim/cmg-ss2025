@@ -3,41 +3,41 @@ package core
 import (
 	"context"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/entity/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
-type EntityService struct {
+type UserManagementService struct {
 	repo     ports.Repo
 	notifier ports.Notifier
 }
 
-func NewEntityService(repo ports.Repo, notifier ports.Notifier) *EntityService {
-	return &EntityService{
+func NewUserManagementService(repo ports.Repo, notifier ports.Notifier) *UserManagementService {
+	return &UserManagementService{
 		repo:     repo,
 		notifier: notifier,
 	}
 }
 
-var _ ports.Api = (*EntityService)(nil)
+var _ ports.Api = (*UserManagementService)(nil)
 
-func (s *EntityService) Set(entity ports.Entity, ctx context.Context) error {
-	err := s.repo.Store(entity, ctx)
+func (s *UserManagementService) Set(userManagement ports.UserManagement, ctx context.Context) error {
+	err := s.repo.Store(userManagement, ctx)
 	if err != nil {
 		return err
 	}
 	if s.notifier != nil {
-		s.notifier.EntityChanged(entity, ctx)
+		s.notifier.UserManagementChanged(userManagement, ctx)
 	}
 	return nil
 }
 
-func (s *EntityService) Get(id string, ctx context.Context) (ports.Entity, error) {
-	entity, err := s.repo.FindById(id, ctx)
+func (s *UserManagementService) Get(id string, ctx context.Context) (ports.UserManagement, error) {
+	userManagement, err := s.repo.FindById(id, ctx)
 	if err != nil {
-		return ports.Entity{}, err
+		return ports.UserManagement{}, err
 	}
-	if entity.Id != id {
-		return ports.Entity{}, ports.ErrEntityNotFound
+	if userManagement.Id != id {
+		return ports.UserManagement{}, ports.ErrUserManagementNotFound
 	}
-	return entity, nil
+	return userManagement, nil
 }

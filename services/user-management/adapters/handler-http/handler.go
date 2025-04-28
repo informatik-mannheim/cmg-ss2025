@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/entity/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 type Handler struct {
@@ -19,8 +19,8 @@ var _ http.Handler = (*Handler)(nil)
 func NewHandler(service ports.Api) *Handler {
 
 	h := Handler{service: service, rtr: *mux.NewRouter()}
-	h.rtr.HandleFunc("/entity/{id}", h.handleGet).Methods("GET")
-	h.rtr.HandleFunc("/entity", h.handleSet).Methods("PUT")
+	h.rtr.HandleFunc("/user-management/{id}", h.handleGet).Methods("GET")
+	h.rtr.HandleFunc("/user-management", h.handleSet).Methods("PUT")
 	return &h
 }
 
@@ -29,13 +29,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleSet(w http.ResponseWriter, r *http.Request) {
-	var entity ports.Entity
-	err := json.NewDecoder(r.Body).Decode(&entity)
+	var userManagement ports.UserManagement
+	err := json.NewDecoder(r.Body).Decode(&userManagement)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.Set(entity, r.Context())
+	err = h.service.Set(userManagement, r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,11 +45,11 @@ func (h *Handler) handleSet(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	entity, err := h.service.Get(vars["id"], r.Context())
+	userManagement, err := h.service.Get(vars["id"], r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(entity)
+	json.NewEncoder(w).Encode(userManagement)
 }

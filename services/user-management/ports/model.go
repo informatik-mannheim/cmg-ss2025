@@ -1,6 +1,6 @@
 package ports
 
-type Entity struct {
+type UserManagement struct {
 	Id         string
 	IntProp    int
 	StringProp string
