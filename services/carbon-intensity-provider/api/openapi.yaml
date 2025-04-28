@@ -37,6 +37,7 @@ paths:
                     type: number
                     description: The carbon intensity value.
                     example: 140
+                  
         '404':
           description: Zone not found
         '500':
@@ -64,3 +65,4 @@ components:
         carbonIntensity:
           type: number
           example: 140
+          

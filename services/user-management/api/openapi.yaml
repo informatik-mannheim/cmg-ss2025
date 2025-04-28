@@ -58,6 +58,7 @@ paths:
               properties:
                 secret:
                   type: string
+                  example: some secret
       responses:
         '200':
           description: JWT issued
