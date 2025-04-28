@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/informatik-mannheim/cmg-ss2025/servicescarbon-intensity-provider/core"
-	"github.com/informatik-mannheim/cmg-ss2025/servicescarbon-intensity-provider/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
 type MockRepo struct {
