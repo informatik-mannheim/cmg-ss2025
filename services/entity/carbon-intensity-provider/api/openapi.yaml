@@ -42,7 +42,28 @@ paths:
           description: Zone not found
         '500':
           description: Internal server error
-
+  /carbon-intensity/zones:
+    get:
+      summary: Get list of available zones
+      security:
+        - BearerAuth: []
+      tags:
+        - Carbon Intensity
+      responses:
+        '200':
+          description: List of available zones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  zones:
+                    type: array
+                    items:
+                      type: string
+                    example: ["DE", "US-NY-NYIS", "TH"]
+        '500':
+          description: Internal server error
 components:
   securitySchemes:
     BearerAuth:
