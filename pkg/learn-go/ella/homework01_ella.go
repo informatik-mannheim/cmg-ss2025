@@ -21,7 +21,7 @@ func evenOddHandler(w http.ResponseWriter, r *http.Request) {
 	// Ensure the request uses PUT method
 	if r.Method == "PUT" {
 
-	
+
 			// Read the entire request body
 			b, err := io.ReadAll(r.Body)
 			if err != nil {
