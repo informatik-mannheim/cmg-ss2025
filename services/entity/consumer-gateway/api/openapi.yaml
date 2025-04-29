@@ -66,14 +66,10 @@ paths:
                     type: string
                   status:
                     type: string
-                    enum: [cancelled, queued, running, completed, failed]
-                  started_at:
-                    type: string
-                    format: date-time
-                  finished_at:
-                    type: string
-                    format: date-time
-                    nullable: true
+                    enum: [cancelled, queued, scheduled, running, completed, failed] 
+                    # Queued: Jobs created by user, that are waiting for eval by job scheduler
+                    # Scheduled: Jobs that have been evaluated and waiting for worker-execution
+                 
         "400":
           description: Bad request 
         "401":
@@ -99,16 +95,12 @@ paths:
                 - password
       responses: 
         "200":
-          description: Login successful
+          description: Login successful, JWT issued
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  user_id:
-                    type: string
-                  role:
-                    type: string
                   token:
                     type: string
         "400":
@@ -131,30 +123,55 @@ paths:
                   type: string
                 password:
                   type: string
-                email:
+                role:
                   type: string
+                  enum: [consumer, provider]
               required:
                 - username
                 - password
-                - email
+                - role
       responses: 
-        "200":
+        "201":
           description: Registration successful
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  user_id:
-                    type: string
-                  role:
-                    type: string
                   token:
                     type: string
         "400":
           description: Bad request 
         "401":
           description: Unauthorized
+
+  /me:
+    get:
+      summary: Get info about the authenticated user
+      tags:
+        - User
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: user-abc123
+                  username:
+                    type: string
+                    example: my_name
+                  role:
+                    type: string
+                    example: consumer
+        '401':
+          description: Invalid or missing token  
+  
 
 components:
   securitySchemes:
