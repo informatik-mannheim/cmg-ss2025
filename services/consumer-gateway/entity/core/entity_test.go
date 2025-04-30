@@ -23,6 +23,14 @@ func (m *MockRepo) Store(consumer ports.Consumer, ctx context.Context) error {
 	return nil
 }
 
+func (m *MockRepo) FindById(id string, ctx context.Context) (ports.Consumer, error) {
+	m.requestedId = id
+	if m.err != nil {
+		return ports.Consumer{}, *m.err
+	}
+	return m.consumer, nil
+}
+
 var _ ports.Repo = (*MockRepo)(nil)
 
 type MockNotifier struct {
