@@ -17,10 +17,14 @@ type Handler struct {
 var _ http.Handler = (*Handler)(nil)
 
 func NewHandler(service ports.Api) *Handler {
-
 	h := Handler{service: service, rtr: *mux.NewRouter()}
-	h.rtr.HandleFunc("/consumer/{id}", h.handleGet).Methods("GET")
-	h.rtr.HandleFunc("/consumer", h.handleSet).Methods("PUT")
+
+	h.rtr.HandleFunc("/job", h.handleCreateJob).Methods("POST")
+	h.rtr.HandleFunc("/jobs/{id}/status", h.handleGetJobStatusResponse).Methods("GET")
+
+	h.rtr.HandleFunc("/auth/login", h.handleSet).Methods("POST")
+	h.rtr.HandleFunc("/auth/register", h.handleSet).Methods("POST")
+	h.rtr.HandleFunc("/me", h.handleSet).Methods("GET")
 	return &h
 }
 
@@ -28,28 +32,34 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.rtr.ServeHTTP(w, r) //delegate
 }
 
-func (h *Handler) handleSet(w http.ResponseWriter, r *http.Request) {
-	var consumer ports.Cosnumer
-	err := json.NewDecoder(r.Body).Decode(&consumer)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	err = h.service.Set(consumer, r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-}
+// removed func handleSet(...)
 
-func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	consumer, err := h.service.Get(vars["id"], r.Context())
+func (h *Handler) handleGetJobStatusResponse(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r) // Grabs path parameter, i think
+	jobID := vars["job-id"]
+
+	status, err := h.service.GetJobStatus(jobID, r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(consumer)
+	json.NewEncoder(w).Encode(status)
+}
+
+func (h *Handler) handleCreateJob(w http.ResponseWriter, r *http.Request) {
+	var req ports.CreateJobRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
+		return
+	}
+		
+		resp, err := h.service.CreateJob(req, r.Context())
+	if err != nil {
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }

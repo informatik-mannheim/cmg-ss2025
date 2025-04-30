@@ -1,7 +1,9 @@
 package ports
 
+// does this even need to exist?
 type Consumer struct {
-	Id         string
-	IntProp    int
-	StringProp string
+	Username	string
+	Password	string
+	UserID 		string
+	Role 		string
 }
