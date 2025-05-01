@@ -33,7 +33,7 @@ func (s *CarbonIntensityService) GetAvailableZones() []model.Zone {
 	for code, data := range s.zoneMap {
 		zones = append(zones, model.Zone{
 			Code: code,
-			Name: data.Zone, // Use the Zone field as name
+			Name: data.Zone,
 		})
 	}
 	return zones
