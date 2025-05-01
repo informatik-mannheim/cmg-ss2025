@@ -60,10 +60,10 @@ type MeResponse struct {
 
 type Api interface {
 
-	CreateJobRequest(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
+	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
 	GetJobStatus(jobID string, ctx context.Context) (JobStatusResponse, error)
 
-	ConsumerLoginRequest(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
-	ConsumerRegisterRequest(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)
-	MeRequest(ctx context.Context) (MeResponse, error)
+	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
+	Register(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)
+	GetMe(ctx context.Context) (MeResponse, error)
 }

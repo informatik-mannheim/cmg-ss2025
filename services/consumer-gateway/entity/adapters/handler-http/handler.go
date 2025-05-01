@@ -33,7 +33,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 
-
 /* 
 Creates a new job using the provided data ba the client.
 The parameter req: contains the fields (imageID, location) defined in 
@@ -81,7 +80,7 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 		
-		resp, err := h.service.ConsumerLoginRequest(req, r.Context())
+		resp, err := h.service.Login(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
@@ -98,7 +97,7 @@ func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 		
-		resp, err := h.service.ConsumerRegisterRequest(req, r.Context())
+		resp, err := h.service.Register(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
@@ -113,7 +112,7 @@ Returns Client requests with infos about themselves (username, password, role).
 This request has no body, as Clients are identified by JWT sent in the Header.
 */
 func (h *Handler) handleMeRequest(w http.ResponseWriter, r *http.Request) {
-		resp, err := h.service.MeRequest(r.Context())
+		resp, err := h.service.GetMe(r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
