@@ -29,9 +29,10 @@ type Job struct {
 	Status               JobStatus         `json:"status"`
 	CreatedAt            time.Time         `json:"createdAt"`
 	UpdatedAt            time.Time         `json:"updatedAt"`
-	Result               string            `json:"result"` // perhaps some containers will provide a result
-	WorkerID             string            `json:"workerId"`
+	Result               string            `json:"result"`   // perhaps some containers will provide a result
+	WorkerID             string            `json:"workerId"` // saved as UUID
 	ErrorMessage         string            `json:"errorMessage"`
+	CreationZone         string            `json:"creationZone"`    // origin of the job creation
 	ComputeZone          string            `json:"computeZone"`     // saved as "zone key", we get from Electricity Maps API, e.g "DE" (germany)
 	CarbonIntensity      int               `json:"carbonIntensity"` // CO2eq/kWh which are emitted during job execution
 	CarbonSaving         int               `json:"carbonSavings"`   // consumption savings compared to the actual consumer location
