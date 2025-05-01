@@ -5,5 +5,5 @@ import "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-prov
 // CarbonIntensityProvider defines the service interface for managing carbon intensity data.
 type CarbonIntensityProvider interface {
 	GetCarbonIntensityByZone(zone string) (model.CarbonIntensityData, error)
-	GetAvailableZones() []string
+	GetAvailableZones() []model.Zone
 }
