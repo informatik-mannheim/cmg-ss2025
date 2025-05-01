@@ -20,7 +20,7 @@ func NewHandler(service ports.Api) *Handler {
 	h := Handler{service: service, rtr: *mux.NewRouter()}
 
 	h.rtr.HandleFunc("/jobs", h.handleCreateJobRequest).Methods("POST")
-	h.rtr.HandleFunc("/jobs/{id}/status", h.handleGetJobStatusResponse).Methods("GET")
+	h.rtr.HandleFunc("/jobs/{id}/status", h.handleGetJobStatusRequest).Methods("GET")
 
 	h.rtr.HandleFunc("/auth/login", h.handleLoginRequest).Methods("POST")
 	h.rtr.HandleFunc("/auth/register", h.handleRegisterRequest).Methods("POST")
@@ -33,19 +33,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (h *Handler) handleGetJobStatusResponse(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r) // Grabs path parameter
-	jobID := vars["job-id"]
 
-	status, err := h.service.GetJobStatus(jobID, r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
-}
-
+/* 
+Creates a new job using the provided data ba the client.
+The parameter req: contains the fields (imageID, location) defined in 
+the CreateJobRequest struct
+*/
 func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request) {
 	var req ports.CreateJobRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -63,8 +56,26 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(resp)
 }
 
+/* 
+Returns a job status that was requested by client.
+The parameter vars: is a map that extracts the pathparameters from client request.
+So jobs/<job-id>/status returns -> jobID: <job-id>
+*/
+func (h *Handler) handleGetJobStatusRequest(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r) // 
+	jobID := vars["job-id"] // "jobID" : "123-abc"
+
+	status, err := h.service.GetJobStatus(jobID, r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(status)
+}
+
 func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
-	var req ports.ConsumerLoginRequest // req holds client request data defined in api.go, eg `req.Username == "bob"`` ..
+	var req ports.ConsumerLoginRequest // Example: req.Username == "Bob", req.Password == "SuperSecure"
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
 		return
@@ -77,7 +88,7 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	json.NewEncoder(w).Encode(resp) // Token: 123-abc
 }
 
 func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) {
@@ -97,14 +108,11 @@ func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(resp)
 }
 
-
+/*
+Returns Client requests with infos about themselves (username, password, role). 
+This request has no body, as Clients are identified by JWT sent in the Header.
+*/
 func (h *Handler) handleMeRequest(w http.ResponseWriter, r *http.Request) {
-	var req ports.MeRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
-		return
-	}
-		
 		resp, err := h.service.MeRequest(r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
