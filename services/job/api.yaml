@@ -233,180 +233,6 @@ paths:
                     type: string
                   message:
                     type: string
-    put:
-      summary: Update a job
-      description: Update an existing job identified by its ID.
-      parameters:
-        - name: jobId
-          in: path
-          required: true
-          description: The ID of the job to update
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/JobUpdate'
-      responses:
-        200:
-          description: Job updated successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-        204:
-          description: Job updated successfully, no content to return.
-        400:
-          description: Bad Request. Invalid data provided.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Bad Request"
-                  message: "Invalid job details provided."
-        401:
-          description: Unauthorized. Authentication is required.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-        403:
-          description: Forbidden. You do not have permission to update this job.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-        404:
-          description: Not Found. The job with the specified ID does not exist.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Not Found"
-                  message: "The specified job does not exist."
-        500:
-          description: Internal Server Error. The server encountered an unexpected condition.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-    delete:
-      summary: Delete a job
-      description: Delete a job identified by its ID.
-      parameters:
-        - name: jobId
-          in: path
-          required: true
-          description: The ID of the job to delete
-          schema:
-            type: string
-      responses:
-        204:
-          description: Job deleted successfully. No content is returned.
-        400:
-          description: Bad Request. Invalid job ID format provided.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Bad Request"
-                  message: "The job ID format is invalid."
-        401:
-          description: Unauthorized. Authentication is required.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-        403:
-          description: Forbidden. You do not have permission to delete this job.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-        404:
-          description: Not Found. The job with the specified ID was not found.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Not Found"
-                  message: "A job with the specified ID does not exist."
-        409:
-          description: Conflict. The job cannot be deleted because of its current state.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Conflict"
-                  message: "The job is currently running and cannot be deleted."
-        500:
-          description: Internal Server Error. The server encountered an unexpected condition.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
   /jobs/{jobId}/workerId:
     patch:
       summary: Update worker ID
@@ -621,7 +447,7 @@ components:
     Job:
       type: object
       properties:
-        ID:
+        id:
           type: string
         jobName:
           type: string
@@ -641,23 +467,17 @@ components:
           format: date-time
         workerId:
           type: string
-          nullable: true
         errorMessage:
           type: string
-          nullable: true
         computeLocation:
           type: string
-          nullable: true
         carbonItensity:
           type: integer
-          nullable: true
         result:
           type: string
-          nullable: true
         startedAt:
           type: string
           format: date-time
-          nullable: true
         updatedAt:
           type: string
           format: date-time
@@ -685,7 +505,7 @@ components:
     ContainerImage:
       type: object
       properties:
-        imageName:
+        name:
           type: string
-        imageVersion:
+        version:
           type: string
