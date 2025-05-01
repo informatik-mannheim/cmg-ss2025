@@ -89,6 +89,8 @@ paths:
     post:
       summary: Create a new job
       description: Add a new job to the queue.
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -176,6 +178,8 @@ paths:
     get:
       summary: Get a specific job
       description: Retrieve a job by its ID.
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -379,11 +383,12 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred. Please contact support."
-
   /jobs/{jobId}/result:
     get:
       summary: Get job result
       description: Retrieve detailed result and metadata of a job identified by its ID.
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -495,8 +500,10 @@ paths:
     patch:
       summary: Update job result
       description: Update the result of a job identified by its ID after a container execution has completed.
+      security:
+        - BearerAuth: []
       parameters:
-        - name: jobId
+        - name: id
           in: path
           required: true
           description: The ID of the job to update - represented as UUID
@@ -612,13 +619,12 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred. Please contact support."
-
   /jobs/{jobId}/status:
     patch:
       summary: Update job status
       description: Update the status of a job identified by its ID.
       parameters:
-        - name: jobId
+        - name: id
           in: path
           required: true
           description: The ID of the job to update
@@ -762,16 +768,19 @@ components:
     JobCreate:
       type: object
       required:
+        - creationZone
         - image
         - parameters
       properties:
+        creationZone:
+          type: string
+          enum: [DE,FR,US]
         image:
           $ref: '#/components/schemas/ContainerImage'
         parameters:
           type: object
           additionalProperties:
             type: string
-
     ContainerImage:
       type: object
       properties:
@@ -779,3 +788,8 @@ components:
           type: string
         version:
           type: string
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
