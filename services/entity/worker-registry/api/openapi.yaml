@@ -151,31 +151,6 @@ paths:
           description: Worker not found.
         '500':
           description: Internal server error.
-  
-  /zones:
-    get:
-      tags:
-        - zones
-      security:
-        - BearerAuth: []
-      description: Fetches all zones from the Carbon Intensity Provider.
-      operationId: getZones            
-      responses:
-        '200':
-          description: All available zones (can be empty if no match)
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Zone'
-              example:
-                - zone: "DE"
-                - zone: "EN"
-        '500':
-          description: Internal server error.
-        '502':
-          description: Bad Gateway. Carbon Intensity Provider is unavailable.
 
 components:
   securitySchemes:
@@ -202,11 +177,3 @@ components:
         - id
         - status
         - zone
-    Zone:
-      type: object
-      description: zone details
-      properties:
-        name:
-          type: string
-      required:
-        - name
