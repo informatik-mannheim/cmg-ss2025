@@ -1,37 +1,23 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
+	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/api"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/core"
 )
 
 func main() {
+	service := core.NewCarbonIntensityService()
 
-	core := core.NewCarbonIntensityProvider(repo.NewRepo(), nil)
+	// Preload fixed zones manually as test(for Assignment II)
+	service.AddOrUpdateZone("DE", 140.5)
+	service.AddOrUpdateZone("FR", 135.2)
+	service.AddOrUpdateZone("US-NY-NYIS", 128.9)
 
-	srv := &http.Server{Addr: ":8080"}
-
-	h := handler_http.NewHandler(core)
-	http.Handle("/", h)
-
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
-	}()
-
-	log.Print("listening...")
-	srv.ListenAndServe()
-	log.Print("Done")
+	// Start server
+	router := api.NewHandler(service)
+	log.Println("Carbon Intensity Provider running on :8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
