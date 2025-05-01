@@ -15,11 +15,11 @@ import (
 
 func main() {
 
-	service := core.NewConsumerService(repo.NewRepo(), nil)
+	core := core.NewConsumerService(repo.NewRepo(), nil)
 
 	srv := &http.Server{Addr: ":8080"}
 
-	h := handler_http.NewHandler(service)
+	h := handler_http.NewHandler(core)
 	http.Handle("/", h)
 
 	go func() {
