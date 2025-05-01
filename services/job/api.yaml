@@ -55,6 +55,9 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Unauthorized"
+                  message: "Missing or invalid authentication token."
         403:
           description: Forbidden. You do not have permission to view these jobs.
           content:
@@ -66,6 +69,9 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Forbidden"
+                  message: "You do not have the necessary permissions to access this resource."
         500:
           description: Internal Server Error. The server encountered an unexpected condition.
           content:
@@ -77,6 +83,9 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Internal Server Error"
+                  message: "An unexpected error occurred. Please try again later."
     post:
       summary: Create a new job
       description: Add a new job to the queue.
@@ -118,6 +127,9 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Unauthorized"
+                  message: "Authentication is required."
         403:
           description: Forbidden. You do not have permission to create a job.
           content:
@@ -129,20 +141,9 @@ paths:
                     type: string
                   message:
                     type: string
-        409:
-          description: Conflict. Job with the provided identifier already exists.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
                 example:
-                  error: "Conflict"
-                  message: "A job with this identifier already exists."
+                  error: "Forbidden"
+                  message: "You do not have permission to create a job"
         500:
           description: Internal Server Error. The server encountered an unexpected condition.
           content:
@@ -154,12 +155,29 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Internal Server Error"
+                  message: "The server encountered an unexpected condition"
+        503:
+          description: Service Unavailable. The server is currently unavailable, usually due to overload or maintenance..
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Service Unavailable"
+                  message: "The server is currently unavailable, usually due to overload or maintenance."
   /jobs/{jobId}:
     get:
       summary: Get a specific job
       description: Retrieve a job by its ID.
       parameters:
-        - name: ID
+        - name: id
           in: path
           required: true
           description: The ID of the job to retrieve
@@ -173,7 +191,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Job'
         400:
-          description: Bad Request. Invalid job ID format.
+          description: Bad Request. Invalid ID format.
           content:
             application/json:
               schema:
@@ -185,7 +203,8 @@ paths:
                     type: string
                 example:
                   error: "Bad Request"
-                  message: "The job ID format is invalid."
+                  message: "The ID format is invalid. Expected a UUID string."
+
         401:
           description: Unauthorized. Authentication is required.
           content:
@@ -197,6 +216,10 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Unauthorized"
+                  message: "Authentication token is missing or invalid. Please log in."
+
         403:
           description: Forbidden. You do not have permission to access this job.
           content:
@@ -208,6 +231,10 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Forbidden"
+                  message: "Access to this job is denied. Your account does not have the required permissions."
+
         404:
           description: Not Found. The job with the specified ID was not found.
           content:
@@ -221,7 +248,8 @@ paths:
                     type: string
                 example:
                   error: "Not Found"
-                  message: "A job with the specified ID does not exist."
+                  message: "A job with the specified ID does not exist. Please check the ID and try again."
+
         500:
           description: Internal Server Error. The server encountered an unexpected condition.
           content:
@@ -233,15 +261,18 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Internal Server Error"
+                  message: "An unexpected error occurred on the server. Please contact support."
   /jobs/{jobId}/workerId:
     patch:
       summary: Update worker ID
       description: Update the worker ID of a job identified by its ID.
       parameters:
-        - name: jobId
+        - name: id
           in: path
           required: true
-          description: The ID of the job to update
+          description: The ID of the job to update - represented as UUID
           schema:
             type: string
       requestBody:
@@ -253,6 +284,8 @@ paths:
               properties:
                 workerId:
                   type: string
+              example:
+                workerId: 123e4567-e89b-12d3-a456-426614174000
       responses:
         200:
           description: Worker ID updated successfully. The response may include updated job details.
@@ -275,7 +308,7 @@ paths:
                     type: string
                 example:
                   error: "Bad Request"
-                  message: "The worker ID format is invalid."
+                  message: "The worker ID format is invalid. Expected a UUID format."
         401:
           description: Unauthorized. Authentication is required.
           content:
@@ -287,6 +320,9 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Unauthorized"
+                  message: "Missing or invalid authentication token."
         403:
           description: Forbidden. You do not have permission to update the worker ID.
           content:
@@ -298,6 +334,9 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Forbidden"
+                  message: "You do not have permission to update this resource."
         404:
           description: Not Found. The job with the specified ID was not found.
           content:
@@ -311,7 +350,7 @@ paths:
                     type: string
                 example:
                   error: "Not Found"
-                  message: "A job with the specified ID does not exist."
+                  message: "A job with the specified ID does not exist. Please verify the ID."
         409:
           description: Conflict. The worker ID cannot be updated due to a conflict with the job's current state.
           content:
@@ -337,6 +376,243 @@ paths:
                     type: string
                   message:
                     type: string
+                example:
+                  error: "Internal Server Error"
+                  message: "An unexpected error occurred. Please contact support."
+
+  /jobs/{jobId}/result:
+    get:
+      summary: Get job result
+      description: Retrieve detailed result and metadata of a job identified by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the job to retrieve - represented as UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Job result retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobName:
+                    type: string
+                  status:
+                    type: string
+                    enum: [queued, running, completed, failed, cancelled]
+                  result:
+                    type: string
+                  errorMessage:
+                    type: string
+                  computeZone:
+                    type: string
+                  carbonIntensity:
+                    type: integer
+                  carbonSavings:
+                    type: integer
+                example:
+                  jobName: "Data Analysis Job"
+                  status: "completed"
+                  result: "Analysis complete. Results stored in /data/analysis/output.txt."
+                  errorMessage: ""
+                  computeZone: "DE"
+                  carbonIntensity: 80
+                  carbonSavings: 20
+        400:
+          description: Bad Request. Invalid job ID format.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The job ID format is invalid. Expected a UUID format."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Unauthorized"
+                  message: "Missing or invalid authentication token."
+        403:
+          description: Forbidden. You do not have permission to view this job result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Forbidden"
+                  message: "You do not have permission to access this resource."
+        404:
+          description: Not Found. The job with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "A job with the specified ID does not exist. Please verify the ID."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Internal Server Error"
+                  message: "An unexpected error occurred. Please contact support."
+    patch:
+      summary: Update job result
+      description: Update the result of a job identified by its ID after a container execution has completed.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job to update - represented as UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                result:
+                  type: string
+              example:
+                result: "The container executed successfully and the output was stored in the designated location."
+      responses:
+        200:
+          description: Result updated successfully. The response may include updated job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                jobName: "Data Processing Job"
+                result: "Execution completed with output saved to /data/output/result.txt."
+                status: "completed"
+                updatedAt: "2023-10-06T15:45:00Z"
+        204:
+          description: Result updated successfully, no content to return.
+        400:
+          description: Bad Request. Invalid input data for updating the result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Bad Request"
+                  message: "The result data format is invalid."
+        401:
+          description: Unauthorized. Authentication is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Unauthorized"
+                  message: "Missing or invalid authentication token."
+        403:
+          description: Forbidden. You do not have permission to update the job result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Forbidden"
+                  message: "You do not have permission to update this resource."
+        404:
+          description: Not Found. The job with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Not Found"
+                  message: "A job with the specified ID does not exist. Please verify the ID."
+        409:
+          description: Conflict. The result cannot be updated due to a conflict with the job's current state.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Conflict"
+                  message: "The job is currently locked and cannot accept updates to the result."
+        500:
+          description: Internal Server Error. The server encountered an unexpected condition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  error: "Internal Server Error"
+                  message: "An unexpected error occurred. Please contact support."
+
   /jobs/{jobId}/status:
     patch:
       summary: Update job status
@@ -456,8 +732,9 @@ components:
         image:
           $ref: '#/components/schemas/ContainerImage'
         parameters:
-          type: array
-          items:
+          type: object
+          description: its a map with key(flag) value(value)
+          additionalProperties:
             type: string
         status:
           type: string
@@ -465,22 +742,23 @@ components:
         createdAt:
           type: string
           format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        result:
+          type: string
         workerId:
           type: string
         errorMessage:
           type: string
-        computeLocation:
+        computeZone:
           type: string
-        carbonItensity:
+          enum: [DE,US,GB,FR, ...]
+          description: depends on the zone keys of the electricity map
+        carbonIntensity:
           type: integer
-        result:
-          type: string
-        startedAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+        carbonSavings:
+          type: integer
     JobCreate:
       type: object
       required:
@@ -493,15 +771,7 @@ components:
           type: object
           additionalProperties:
             type: string
-    JobUpdate:
-      type: object
-      properties:
-        image:
-          $ref: '#/components/schemas/ContainerImage'
-        parameters:
-          type: array
-          items:
-            type: string
+
     ContainerImage:
       type: object
       properties:
