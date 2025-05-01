@@ -1,12 +1,15 @@
 package model
 
-// CarbonIntensityData represents carbon intensity information for a single zone.
 type CarbonIntensityData struct {
 	Zone            string  `json:"zone"`
 	CarbonIntensity float64 `json:"carbonIntensity"`
 }
 
-// AvailableZonesResponse is used to respond with a list of available zones.
+type Zone struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 type AvailableZonesResponse struct {
-	Zones []string `json:"zones"`
+	Zones []Zone `json:"zones"`
 }
