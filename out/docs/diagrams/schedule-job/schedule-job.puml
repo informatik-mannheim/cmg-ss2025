@@ -1,23 +1,53 @@
-@startuml
-JobScheduler -> WorkerRegistry : Give me free Workers
-WorkerRegistry --> JobScheduler : list of free Workers
+@startuml Schedule Job
 
-==If there are free Workers, continue==
+JobScheduler -> Job : HTTP/GET /jobs?status=queued,scheduled
+alt successfull case
+    Job --> JobScheduler : list of queued and scheduled jobs
+else some failure
+    Job --> JobScheduler : some error
+    JobScheduler -> JobScheduler : abort Schedule-Job
+end
 
-JobScheduler -> Job : Give me jobs waiting to run
-Job --> JobScheduler : list of jobs waiting to run
+JobScheduler -> WorkerRegistry : HTTP/GET /workers?status=AVAILABLE
 
-==If there are jobs waiting to run, continue==
+alt successfull case
+    WorkerRegistry --> JobScheduler : list of free Workers
 
-JobScheduler -> CarbonIntensityProvider : Give me best location for carbon intensity
+    loop for each worker that has an assigned job
+        JobScheduler -> WorkerRegistry : HTTP/PATCH /workers/{id}/status
+        alt successfull case
+            WorkerRegistry --> JobScheduler : OK
+            JobScheduler -> JobScheduler : remove worker from list of free workers
+        else some failure
+            JobScheduler -> JobScheduler : abort Schedule-Job
+            ==Will be handled in next Schedule==
+        end
+    end
 
-==CarbonIntensityProvider request...==
+else some failure
+    WorkerRegistry --> JobScheduler : some error
+    JobScheduler -> JobScheduler : abort Schedule-Job
+end
 
-CarbonIntensityProvider --> JobScheduler : location of best carbon intensity
+loop for each unique Zone from list of free workers
+    JobScheduler -> CarbonIntensityProvider : HTTP/GET /carbon-intensity/{zone}
 
-JobScheduler -> Job : Job Y is assigned to Worker X
-Job --> JobScheduler : OK
+    ==CarbonIntensityProvider request...==
 
-JobScheduler -> WorkerRegistry : Worker X is now working
-WorkerRegistry --> JobScheduler : OK
+    CarbonIntensityProvider --> JobScheduler : carbon intensity of {zone}
+end
+
+JobScheduler -> Job : HTTP/PATCH /jobs/{jobId}/workerId
+
+alt successfull case
+    Job --> JobScheduler : OK
+
+
+    JobScheduler -> WorkerRegistry : HTTP/PATCH /workers/{id}/status
+    alt successfull case
+        WorkerRegistry --> JobScheduler : OK
+    else some failure
+        ==Will be handled in next Schedule==
+    end
+end
 @enduml
