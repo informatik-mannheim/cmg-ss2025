@@ -24,8 +24,10 @@ The entity service is an example service that demonstrates the folder structure 
 
 Inside the dev container: `go run .`
 
-As a container: `docker run -p 8080:8080 entity` 
+As a container: 
 
+```bash
+docker run -e PORT=8080 -p 8080:8080 entity
 ## Usage
 
 ```bash
