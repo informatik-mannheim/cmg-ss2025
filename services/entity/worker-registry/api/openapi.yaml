@@ -56,8 +56,15 @@ paths:
         - workers
       security:
         - BearerAuth: []
-      description: Registers a new Worker in the Worker Registry. Creates a unique Id and marks newly created worker as "AVAILABLE".
+      description: Registers a new Worker in the Worker Registry. Creates a unique Id and marks newly created worker as "AVAILABLE" by passing the zone of the new worker.
       operationId: saveWorker
+      parameters:
+        - name: zone
+          description: The zone of the new worker.
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '201':
           description: Worker successfully saved.
@@ -86,8 +93,8 @@ paths:
       operationId: getWorkerById
       parameters:
         - name: id
-          in: path
           required: true
+          in: path
           schema:
             type: string
             format: uuid
