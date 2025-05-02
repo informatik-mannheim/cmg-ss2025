@@ -17,7 +17,11 @@ func main() {
 
 	core := core.NewEntityService(repo.NewRepo(), nil)
 
-	srv := &http.Server{Addr: ":8080"}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default port if not specified
+	}
+	srv := &http.Server{Addr: ":" + port}
 
 	h := handler_http.NewHandler(core)
 	http.Handle("/", h)
