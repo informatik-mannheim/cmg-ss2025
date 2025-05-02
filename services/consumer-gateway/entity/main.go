@@ -15,7 +15,7 @@ import (
 
 func main() {
 
-	core := core.ConsumerService(repo.NewRepo(), nil)
+	core := core.NewConsumerService(repo.NewRepo(), nil)
 
 	srv := &http.Server{Addr: ":8080"}
 

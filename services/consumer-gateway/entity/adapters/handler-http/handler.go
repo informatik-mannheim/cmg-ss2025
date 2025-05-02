@@ -45,7 +45,7 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 		return
 	}
 		
-		resp, err := h.service.CreateJobRequest(req, r.Context())
+		resp, err := h.service.CreateJob(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
@@ -60,11 +60,11 @@ Returns a job status that was requested by client.
 The parameter vars: is a map that extracts the pathparameters from client request.
 So jobs/<job-id>/status returns -> jobID: <job-id>
 */
-func (h *Handler) handleGetJobStatusRequest(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r) // 
 	jobID := vars["job-id"] // "jobID" : "123-abc"
 
-	status, err := h.service.GetJobStatus(jobID, r.Context())
+	status, err := h.service.GetJobResult(jobID, r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

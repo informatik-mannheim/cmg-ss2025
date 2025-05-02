@@ -16,12 +16,12 @@ type CreateJobResponse struct {
 	JobID string `json:"job_id"`
 	JobStatus string `json:"status"`
 }
-type GetJobStatus struct {
+type GetJobResult struct {
 	JobID string `json:"job_id"`
 
 }
 
-type JobStatusResponse struct {
+type JobResultResponse struct {
 	JobID string `json:"job_id"`
 	JobStatus string `json:"status"`
 
@@ -47,23 +47,13 @@ type RegisterResponse struct {
 	Token string `json:"token"`
 }
 
-// Request to /me
-type MeRequest struct {
-	Token string `json:"token"`
-}
-
-type MeResponse struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role string `json:"role"`
-}
 
 type Api interface {
 
 	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
-	GetJobStatus(jobID string, ctx context.Context) (JobStatusResponse, error)
+	GetJobResult(jobID string, ctx context.Context) (JobStatusResponse, error)
 
 	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
 	Register(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)
-	GetMe(ctx context.Context) (MeResponse, error)
+
 }
