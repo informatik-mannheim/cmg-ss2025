@@ -9,28 +9,26 @@ var ErrConsumerNotFound = errors.New("Consumer Gateway not found")
 
 type CreateJobRequest struct {
 	ImageID string `json:"image_id"`
-	Location string  `json:"location"`
+	Zone string  `json:"zone"`
 }
 
 type CreateJobResponse struct {
 	JobID string `json:"job_id"`
 	JobStatus string `json:"status"`
 }
+
 type GetJobResult struct {
 	JobID string `json:"job_id"`
-
 }
 
 type JobResultResponse struct {
 	JobID string `json:"job_id"`
 	JobStatus string `json:"status"`
-
 }
 
 type ConsumerLoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-
 }
 
 type LoginResponse struct {

@@ -20,11 +20,10 @@ func NewHandler(service ports.Api) *Handler {
 	h := Handler{service: service, rtr: *mux.NewRouter()}
 
 	h.rtr.HandleFunc("/jobs", h.handleCreateJobRequest).Methods("POST")
-	h.rtr.HandleFunc("/jobs/{id}/status", h.handleGetJobStatusRequest).Methods("GET")
+	h.rtr.HandleFunc("/jobs/{id}/status", h.handleGetJobResultRequest).Methods("GET")
 
 	h.rtr.HandleFunc("/auth/login", h.handleLoginRequest).Methods("POST")
 	h.rtr.HandleFunc("/auth/register", h.handleRegisterRequest).Methods("POST")
-	h.rtr.HandleFunc("/me", h.handleMeRequest).Methods("GET")
 	return &h
 }
 
