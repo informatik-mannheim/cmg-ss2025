@@ -22,7 +22,7 @@ paths:
             type: string
           description: The zone for which to get carbon intensity data (e.g. DE, TH, US-NY-NYIS).
       responses:
-        '200':
+        "200":
           description: Carbon intensity data
           content:
             application/json:
@@ -37,10 +37,10 @@ paths:
                     type: number
                     description: The carbon intensity value.
                     example: 140
-                  
-        '404':
+
+        "404":
           description: Zone not found
-        '500':
+        "500":
           description: Internal server error
   /carbon-intensity/zones:
     get:
@@ -50,7 +50,7 @@ paths:
       tags:
         - Carbon Intensity
       responses:
-        '200':
+        "200":
           description: List of available zones
           content:
             application/json:
@@ -62,7 +62,7 @@ paths:
                     items:
                       type: string
                     example: ["DE", "US-NY-NYIS", "TH"]
-        '500':
+        "500":
           description: Internal server error
 components:
   securitySchemes:
@@ -83,4 +83,3 @@ components:
         carbonIntensity:
           type: number
           example: 140
-          
