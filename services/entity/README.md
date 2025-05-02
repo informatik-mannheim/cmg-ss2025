@@ -26,8 +26,8 @@ Inside the dev container: `go run .`
 
 As a container: 
 
-```bash
-docker run -e PORT=8080 -p 8080:8080 entity
+`docker run -e PORT=8080 -p 8080:8080 entity`
+
 ## Usage
 
 ```bash
