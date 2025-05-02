@@ -106,19 +106,3 @@ func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
-
-/*
-Returns Client requests with infos about themselves (username, password, role). 
-This request has no body, as Clients are identified by JWT sent in the Header.
-*/
-func (h *Handler) handleMeRequest(w http.ResponseWriter, r *http.Request) {
-		resp, err := h.service.GetMe(r.Context())
-	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
-}
-
