@@ -23,7 +23,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Content-Type. Expected application/json", http.StatusUnsupportedMediaType)
 		return
 	}
-
+  
 	if r.Method != http.MethodPut {
 		http.Error(w, "This method is not allowed", http.StatusMethodNotAllowed)
 		return
