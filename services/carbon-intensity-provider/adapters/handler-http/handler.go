@@ -5,51 +5,42 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
 type Handler struct {
-	service ports.Api
-	rtr     mux.Router
+	service ports.CarbonIntensityProvider
 }
 
-var _ http.Handler = (*Handler)(nil)
+func NewHandler(service ports.CarbonIntensityProvider) http.Handler {
+	r := mux.NewRouter()
+	h := &Handler{service: service}
 
-func NewHandler(service ports.Api) *Handler {
+	r.HandleFunc("/carbon-intensity/{zone}", h.handleGetCarbonIntensityByZone).Methods("GET")
+	r.HandleFunc("/carbon-intensity/zones", h.handleGetAvailableZones).Methods("GET")
 
-	h := Handler{service: service, rtr: *mux.NewRouter()}
-	h.rtr.HandleFunc("/carbon-intensity-provider/{id}", h.handleGet).Methods("GET")
-	h.rtr.HandleFunc("/carbon-intensity-provider", h.handleSet).Methods("PUT")
-	return &h
+	return r
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.rtr.ServeHTTP(w, r) //delegate
-}
-
-func (h *Handler) handleSet(w http.ResponseWriter, r *http.Request) {
-	var carbonIntensityProvider ports.CarbonIntensityProvider
-	err := json.NewDecoder(r.Body).Decode(&carbonIntensityProvider)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	err = h.service.Set(carbonIntensityProvider, r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-}
-
-func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetCarbonIntensityByZone(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	carbonIntensityProvider, err := h.service.Get(vars["id"], r.Context())
+	zone := vars["zone"]
+
+	data, err := h.service.GetCarbonIntensityByZone(zone)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, "Zone not found", http.StatusNotFound)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(carbonIntensityProvider)
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h *Handler) handleGetAvailableZones(w http.ResponseWriter, r *http.Request) {
+	zones := h.service.GetAvailableZones()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"zones": zones,
+	})
 }
