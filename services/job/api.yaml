@@ -11,14 +11,21 @@ paths:
     get:
       summary: Get jobs
       description: Retrieve a list of jobs with optional filtering.
+      security:
+        - BearerAuth: []
       parameters:
         - name: status
           in: query
           required: false
-          description: Filter jobs by status
+          description: "Filter jobs by status. Multiple values can be provided, separated by commas (e.g., 'queued,scheduled')."
           schema:
-            type: string
-            enum: [queued, running, completed, failed, cancelled]
+            type: array
+            items:
+              type: string
+              enum: [queued, scheduled, running, completed, failed]
+            example: queued,scheduled
+          style: form
+          explode: false
       responses:
         200:
           description: A list of jobs.
