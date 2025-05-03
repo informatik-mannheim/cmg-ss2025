@@ -9,12 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	repo "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/api"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/core"
 )
 
 func main() {
-	service := core.NewCarbonIntensityService()
+	repository := repo.NewRepo()
+	service := core.NewCarbonIntensityService(repository)
 
 	// Preload fixed zones manually as test(for Assignment II)
 	service.AddOrUpdateZone("DE", 140.5)

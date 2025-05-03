@@ -2,10 +2,13 @@ package core
 
 import (
 	"testing"
+
+	repo_in_memory "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
 )
 
 func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
-	s := NewCarbonIntensityService()
+	repo := repo_in_memory.NewRepo()
+	s := NewCarbonIntensityService(repo)
 	s.AddOrUpdateZone("DE", 150.0)
 
 	data, err := s.GetCarbonIntensityByZone("DE")
@@ -18,7 +21,8 @@ func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
 }
 
 func TestGetCarbonIntensityByZone_NotFound(t *testing.T) {
-	s := NewCarbonIntensityService()
+	repo := repo_in_memory.NewRepo()
+	s := NewCarbonIntensityService(repo)
 
 	_, err := s.GetCarbonIntensityByZone("NOPE")
 	if err == nil {
@@ -27,7 +31,8 @@ func TestGetCarbonIntensityByZone_NotFound(t *testing.T) {
 }
 
 func TestGetAvailableZones(t *testing.T) {
-	s := NewCarbonIntensityService()
+	repo := repo_in_memory.NewRepo()
+	s := NewCarbonIntensityService(repo)
 	s.AddOrUpdateZone("DE", 100.0)
 	s.AddOrUpdateZone("FR", 90.0)
 
@@ -47,5 +52,15 @@ func TestGetAvailableZones(t *testing.T) {
 	}
 	if !foundDE || !foundFR {
 		t.Error("expected to find both DE and FR zones")
+	}
+}
+
+func TestGetAvailableZones_Empty(t *testing.T) {
+	repo := repo_in_memory.NewRepo()
+	s := NewCarbonIntensityService(repo)
+
+	zones := s.GetAvailableZones()
+	if len(zones) != 0 {
+		t.Errorf("expected 0 zones, got %d", len(zones))
 	}
 }
