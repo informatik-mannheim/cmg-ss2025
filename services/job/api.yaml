@@ -174,7 +174,7 @@ paths:
                 example:
                   error: "Service Unavailable"
                   message: "The server is currently unavailable, usually due to overload or maintenance."
-  /jobs/{jobId}:
+  /jobs/{id}:
     get:
       summary: Get a specific job
       description: Retrieve a job by its ID.
@@ -268,7 +268,7 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred on the server. Please contact support."
-  /jobs/{jobId}/workerId:
+  /jobs/{id}/workerId:
     patch:
       summary: Update worker ID
       description: Update the worker ID of a job identified by its ID.
@@ -383,7 +383,7 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred. Please contact support."
-  /jobs/{jobId}/result:
+  /jobs/{id}/result:
     get:
       summary: Get job result
       description: Retrieve detailed result and metadata of a job identified by its ID.
@@ -619,7 +619,7 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred. Please contact support."
-  /jobs/{jobId}/status:
+  /jobs/{id}/status:
     patch:
       summary: Update job status
       description: Update the status of a job identified by its ID.
