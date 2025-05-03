@@ -21,19 +21,29 @@ type ContainerImage struct {
 // Json tags helps by (de-)serializing, json:"id" -> "id":"1234", functionality imported by "encoding/json" package
 
 type Job struct {
-	ID                   string            `json:"id"`      // generated as UUID
-	JobName              string            `json:"jobName"` //set by User
-	UserID               string            `json:"userId"`  // get from JWT
+
+	// set by job-service, theyre set automatically
+	ID        string    `json:"id"`        // generated as UUID
+	UserID    string    `json:"userId"`    // get from JWT
+	CreatedAt time.Time `json:"createdAt"` // set at creation
+	UpdatedAt time.Time `json:"updatedAt"` // set at creation
+
+	// set by consumer-cli, theyre not empty by default
+	JobName              string            `json:"jobName"` // set by User
 	Image                ContainerImage    `json:"image"`
-	AdjustmentParameters map[string]string `json:"parameters"` // e.g key(-p) : value (8080:8080)
-	Status               JobStatus         `json:"status"`
-	CreatedAt            time.Time         `json:"createdAt"`
-	UpdatedAt            time.Time         `json:"updatedAt"`
-	Result               string            `json:"result"`   // perhaps some containers will provide a result
-	WorkerID             string            `json:"workerId"` // saved as UUID
-	ErrorMessage         string            `json:"errorMessage"`
-	CreationZone         string            `json:"creationZone"`    // origin of the job creation
-	ComputeZone          string            `json:"computeZone"`     // saved as "zone key", we get from Electricity Maps API, e.g "DE" (germany)
-	CarbonIntensity      int               `json:"carbonIntensity"` // CO2eq/kWh which are emitted during job execution
-	CarbonSaving         int               `json:"carbonSavings"`   // consumption savings compared to the actual consumer location
+	AdjustmentParameters map[string]string `json:"parameters"`   // e.g key(-p) : value (8080:8080)
+	CreationZone         string            `json:"creationZone"` // origin of the job creation
+
+	// set by job-scheduler
+	WorkerID        string `json:"workerId"`        // default value is empty string - saved as UUID
+	ComputeZone     string `json:"computeZone"`     // default value is empty string - saved as "zone key", we get from Electricity Maps API, e.g "DE" (germany)
+	CarbonIntensity int    `json:"carbonIntensity"` // default value is -1 - CO2eq/kWh which are emitted during job execution
+	CarbonSaving    int    `json:"carbonSavings"`   // default value is -1 - consumption savings compared to the actual consumer location
+
+	// set by worker
+	Result       string `json:"result"`       // empty string by default - perhaps some containers will provide a result
+	ErrorMessage string `json:"errorMessage"` // empty string by default
+
+	// multiple access
+	Status JobStatus `json:"status"` // default value is "queued"
 }
