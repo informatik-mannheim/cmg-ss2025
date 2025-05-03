@@ -1,5 +1,7 @@
 @startuml Schedule Job
 
+note over JobScheduler : if at any point a request fails because \nof authentication, then the JobScheduler \nwill authenticate and try again \nNot shown in the diagram to keep it de-bloated
+
 JobScheduler -> Job : HTTP/GET /jobs?status=queued,scheduled
 alt successfull case
     Job --> JobScheduler : list of queued and scheduled jobs
@@ -14,7 +16,7 @@ alt successfull case
     WorkerRegistry --> JobScheduler : list of free Workers
 
     loop for each worker that has an assigned job
-        JobScheduler -> WorkerRegistry : HTTP/PATCH /workers/{id}/status
+        JobScheduler -> WorkerRegistry : HTTP/PUT /workers/{id}/status
         alt successfull case
             WorkerRegistry --> JobScheduler : OK
             JobScheduler -> JobScheduler : remove worker from list of free workers
@@ -34,20 +36,28 @@ loop for each unique Zone from list of free workers
 
     ==CarbonIntensityProvider request...==
 
-    CarbonIntensityProvider --> JobScheduler : carbon intensity of {zone}
+    alt successfull case
+        CarbonIntensityProvider --> JobScheduler : carbon intensity of {zone}
+    else some failure
+        CarbonIntensityProvider --> JobScheduler : some error
+        JobScheduler -> JobScheduler : abort Schedule-Job
+    end
 end
 
-JobScheduler -> Job : HTTP/PATCH /jobs/{jobId}/workerId
+JobScheduler -> Job : HTTP/PATCH /jobs/{id}/update-scheduler
 
 alt successfull case
     Job --> JobScheduler : OK
 
 
-    JobScheduler -> WorkerRegistry : HTTP/PATCH /workers/{id}/status
+    JobScheduler -> WorkerRegistry : HTTP/PUT /workers/{id}/status
     alt successfull case
         WorkerRegistry --> JobScheduler : OK
     else some failure
         ==Will be handled in next Schedule==
     end
+else some failure
+    Job --> JobScheduler : some error
+    JobScheduler -> JobScheduler : abort Schedule-Job
 end
 @enduml
