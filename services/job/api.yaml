@@ -9,7 +9,7 @@ servers:
 paths:
   /jobs:
     get:
-      summary: Get jobs
+      summary: Get one or more jobs filterable by their status
       description: Retrieve a list of jobs with optional filtering.
       security:
         - BearerAuth: []
@@ -167,20 +167,6 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "The server encountered an unexpected condition"
-        503:
-          description: Service Unavailable. The server is currently unavailable, usually due to overload or maintenance..
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Service Unavailable"
-                  message: "The server is currently unavailable, usually due to overload or maintenance."
   /jobs/{id}:
     get:
       summary: Get a specific job
@@ -275,124 +261,9 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred on the server. Please contact support."
-  /jobs/{id}/workerId:
-    patch:
-      summary: Update worker ID
-      description: Update the worker ID of a job identified by its ID.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The ID of the job to update - represented as UUID
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                workerId:
-                  type: string
-              example:
-                workerId: 123e4567-e89b-12d3-a456-426614174000
-      responses:
-        200:
-          description: Worker ID updated successfully. The response may include updated job details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-        204:
-          description: Worker ID updated successfully, no content to return.
-        400:
-          description: Bad Request. Invalid input data for updating the worker ID.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Bad Request"
-                  message: "The worker ID format is invalid. Expected a UUID format."
-        401:
-          description: Unauthorized. Authentication is required.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Unauthorized"
-                  message: "Missing or invalid authentication token."
-        403:
-          description: Forbidden. You do not have permission to update the worker ID.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Forbidden"
-                  message: "You do not have permission to update this resource."
-        404:
-          description: Not Found. The job with the specified ID was not found.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Not Found"
-                  message: "A job with the specified ID does not exist. Please verify the ID."
-        409:
-          description: Conflict. The worker ID cannot be updated due to a conflict with the job's current state.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Conflict"
-                  message: "The job is currently locked for editing."
-        500:
-          description: Internal Server Error. The server encountered an unexpected condition.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Internal Server Error"
-                  message: "An unexpected error occurred. Please contact support."
-  /jobs/{id}/result:
+  /jobs/{id}/outcome:
     get:
-      summary: Get job result
+      summary: Receive data relevant for the consumer cli 
       description: Retrieve detailed result and metadata of a job identified by its ID.
       security:
         - BearerAuth: []
@@ -504,18 +375,19 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred. Please contact support."
+  /jobs/{id}/update-scheduler:
     patch:
-      summary: Update job result
-      description: Update the result of a job identified by its ID after a container execution has completed.
+      summary: Update job properties of schedulers point of view
+      description: Updates the WorkerID, ComputeZone, CarbonIntensity, CarbonSaving and Status fields. A job is determined by its unique ID
       security:
         - BearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: The ID of the job to update - represented as UUID
-          schema:
-            type: string
+      - name: id
+        in: path
+        required: true
+        description: The ID of the job to update - represented as UUID
+        schema:
+          type: string
       requestBody:
         required: true
         content:
@@ -523,23 +395,64 @@ paths:
             schema:
               type: object
               properties:
-                result:
+                workerId:
                   type: string
-              example:
-                result: "The container executed successfully and the output was stored in the designated location."
+                  description: Worker ID, saved as UUID.
+                computeZone:
+                  type: string
+                  description: Compute zone key, e.g., "DE" for Germany from Electricity Maps API.
+                carbonIntensity:
+                  type: integer
+                  description: CO2eq/kWh emitted during job execution.
+                carbonSavings:
+                  type: integer
+                  description: Consumption savings compared to the actual consumer location.
+                status:
+                  type: string
+                  description: The current status of the job.
+                  enum: [queued, scheduled, running, completed, failed, cancelled]
+              required:
+                - workerId
+                - computeZone
+                - carbonIntensity
+                - carbonSavings
+                - status
+            example:
+              workerId: "123e4567-e89b-12d3-a456-426614174000"
+              computeZone: "DE"
+              carbonIntensity: 80
+              carbonSavings: 20
+              status: "scheduled"
       responses:
         200:
-          description: Result updated successfully. The response may include updated job details.
+          description: Job updated successfully. Returns the updated job details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'
-              example:
-                id: "123e4567-e89b-12d3-a456-426614174000"
-                jobName: "Data Processing Job"
-                result: "Execution completed with output saved to /data/output/result.txt."
-                status: "completed"
-                updatedAt: "2023-10-06T15:45:00Z"
+                type: object
+                properties:
+                  id:
+                    type: string
+                  workerId:
+                    type: string
+                  computeZone:
+                    type: string
+                  carbonIntensity:
+                    type: integer
+                  carbonSavings:
+                    type: integer
+                  status:
+                    type: string
+                  updatedAt:
+                    type: string
+                    format: date-time
+                example:
+                  id: "123e4567-e89b-12d3-a456-426614174000"
+                  workerId: "123e4567-e89b-12d3-a456-426614174000"
+                  computeZone: "DE"
+                  carbonIntensity: 80
+                  carbonSavings: 20
+                  status: "scheduled"
         204:
           description: Result updated successfully, no content to return.
         400:
@@ -598,20 +511,6 @@ paths:
                 example:
                   error: "Not Found"
                   message: "A job with the specified ID does not exist. Please verify the ID."
-        409:
-          description: Conflict. The result cannot be updated due to a conflict with the job's current state.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Conflict"
-                  message: "The job is currently locked and cannot accept updates to the result."
         500:
           description: Internal Server Error. The server encountered an unexpected condition.
           content:
@@ -626,10 +525,12 @@ paths:
                 example:
                   error: "Internal Server Error"
                   message: "An unexpected error occurred. Please contact support."
-  /jobs/{id}/status:
+  /jobs/{id}/update-workerdaemon:
     patch:
-      summary: Update job status
-      description: Update the status of a job identified by its ID.
+      summary: Update job properties of worker daemon point of view
+      description: Update the status, result, and error message of a job identified by its ID.
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -646,14 +547,72 @@ paths:
               properties:
                 status:
                   type: string
-                  enum: [queued, running, completed, failed, cancelled]
+                  enum: [queued, scheduled, running, completed, failed]
+                  description: The current status of the job.
+                result:
+                  type: string
+                  description: Result of job execution, if available.
+                errorMessage:
+                  type: string
+                  description: Error message if job execution failed.
+              required:
+                - status
+            example:
+              status: "completed"
+              result: "Execution completed with output saved to /data/output/result.txt."
+              errorMessage: ""
       responses:
         200:
-          description: Job status updated successfully. The updated job details may be included.
+          description: Job updated successfully. Returns the updated job details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Job'
+                type: object
+                properties:
+                  id:
+                    type: string
+                  userId:
+                    type: string
+                  jobName:
+                    type: string
+                  image:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      version:
+                        type: string
+                  parameters:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  creationZone:
+                    type: string
+                  workerId:
+                    type: string
+                  computeZone:
+                    type: string
+                  carbonIntensity:
+                    type: integer
+                  carbonSavings:
+                    type: integer
+                  result:
+                    type: string
+                  errorMessage:
+                    type: string
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                example:
+                  id: "123e4567-e89b-12d3-a456-426614174000"
+                  errorMessage: ""
+                  result: "Execution completed with output saved to /data/output/result.txt."
+                  status: "completed"
         204:
           description: Job status updated successfully, no content to return.
         400:
@@ -706,20 +665,6 @@ paths:
                 example:
                   error: "Not Found"
                   message: "A job with the specified ID does not exist."
-        409:
-          description: Conflict. The job status cannot be updated due to a conflict with the current job state.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-                example:
-                  error: "Conflict"
-                  message: "The job cannot be moved to 'completed' from the current status."
         500:
           description: Internal Server Error. The server encountered an unexpected condition.
           content:
@@ -738,9 +683,9 @@ components:
       properties:
         id:
           type: string
-        jobName:
-          type: string
         userId:
+          type: string
+        jobName:
           type: string
         image:
           $ref: '#/components/schemas/ContainerImage'
@@ -749,6 +694,10 @@ components:
           description: its a map with key(flag) value(value)
           additionalProperties:
             type: string
+        creationZone:
+          type: string
+          enum: [DE,FR,US]
+          description: The zone where the job was created.
         status:
           type: string
           enum: [queued, scheduled, running, completed, failed, cancelled]
@@ -766,7 +715,7 @@ components:
           type: string
         computeZone:
           type: string
-          enum: [DE,US,GB,FR, ...]
+          enum: [DE,US,GB,FR]
           description: depends on the zone keys of the electricity map
         carbonIntensity:
           type: integer
@@ -778,7 +727,11 @@ components:
         - creationZone
         - image
         - parameters
+        - jobName
       properties:
+        jobName:
+          type: string
+          description: The name of the job, set by the user.
         creationZone:
           type: string
           enum: [DE,FR,US]
