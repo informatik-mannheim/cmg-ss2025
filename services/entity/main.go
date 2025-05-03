@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/entity/adapters/handler-http"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/entity/adapters/repo-in-memory"
@@ -15,37 +14,24 @@ import (
 )
 
 func main() {
-	coreService := core.NewEntityService(repo.NewRepo(), nil)
-	handler := handler_http.NewHandler(coreService)
 
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: handler,
-	}
+	core := core.NewEntityService(repo.NewRepo(), nil)
 
-	// Channel to listen for interrupt or terminate signals
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	srv := &http.Server{Addr: ":8080"}
 
-	// Run the server in a goroutine
+	h := handler_http.NewHandler(core)
+	http.Handle("/", h)
+
 	go func() {
-		log.Println("Listening on :8080...")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
-		}
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+
+		log.Print("The service is shutting down...")
+		srv.Shutdown(context.Background())
 	}()
 
-	// Wait for signal
-	<-stop
-	log.Println("Shutdown signal received...")
-
-	// Give 5 seconds for graceful shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
-	}
-
-	log.Println("Server exited gracefully.")
+	log.Print("listening...")
+	srv.ListenAndServe()
+	log.Print("Done")
 }
