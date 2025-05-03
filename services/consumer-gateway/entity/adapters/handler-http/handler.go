@@ -20,7 +20,7 @@ func NewHandler(service ports.Api) *Handler {
 	h := Handler{service: service, rtr: *mux.NewRouter()}
 
 	h.rtr.HandleFunc("/jobs", h.handleCreateJobRequest).Methods("POST")
-	h.rtr.HandleFunc("/jobs/{id}/status", h.handleGetJobResultRequest).Methods("GET")
+	h.rtr.HandleFunc("/jobs/{id}/result", h.handleGetJobResultRequest).Methods("GET")
 
 	h.rtr.HandleFunc("/auth/login", h.handleLoginRequest).Methods("POST")
 	h.rtr.HandleFunc("/auth/register", h.handleRegisterRequest).Methods("POST")
@@ -33,9 +33,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 
 /* 
-Creates a new job using the provided data ba the client.
-The parameter req: contains the fields (imageID, location) defined in 
-the CreateJobRequest struct
+Creates a new job using the provided data by the client.
+The parameter req: contains the fields (imageID, zone) defined 
+in the CreateJobRequest struct
 */
 func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request) {
 	var req ports.CreateJobRequest
@@ -55,9 +55,9 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 }
 
 /* 
-Returns a job status that was requested by client.
+Returns a job result that was requested by client.
 The parameter vars: is a map that extracts the pathparameters from client request.
-So jobs/<job-id>/status returns -> jobID: <job-id>
+So jobs/<job-id>/result returns -> jobID: <job-id>
 */
 func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r) // 
