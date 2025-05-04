@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
@@ -85,8 +86,9 @@ func TestGetWorkerById(t *testing.T) {
 
 	t.Run("non-existent worker", func(t *testing.T) {
 		_, err := service.GetWorkerById("9999", context.Background())
-		if err != ports.ErrWorkerNotFound {
-			t.Errorf("expected ErrWorkerNotFound, got %v", err)
+		expectedError := "Worker with ID 9999 not found"
+		if err == nil || err.Error() != expectedError {
+			t.Errorf("expected error: %v, got: %v", expectedError, err)
 		}
 	})
 }
@@ -110,15 +112,17 @@ func TestUpdateWorkerStatus(t *testing.T) {
 
 	t.Run("invalid status update", func(t *testing.T) {
 		_, err := service.UpdateWorkerStatus(worker.Id, "INVALID_STATUS", context.Background())
-		if err != ports.ErrUpdatingWorkerFailed {
-			t.Errorf("expected ErrUpdatingWorkerFailed, got %v", err)
+		expectedError := fmt.Sprintf("invalid status ('AVAILABLE' or 'RUNNING') for worker with ID %s", worker.Id)
+		if err == nil || err.Error() != expectedError {
+			t.Errorf("expected error: %v, got: %v", expectedError, err)
 		}
 	})
 
 	t.Run("non-existent worker", func(t *testing.T) {
 		_, err := service.UpdateWorkerStatus("9999", "AVAILABLE", context.Background())
-		if err != ports.ErrWorkerNotFound {
-			t.Errorf("expected ErrWorkerNotFound, got %v", err)
+		expectedError := "Worker with ID 9999 not found"
+		if err == nil || err.Error() != expectedError {
+			t.Errorf("expected error: %v, got: %v", expectedError, err)
 		}
 	})
 }

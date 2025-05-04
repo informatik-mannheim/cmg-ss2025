@@ -36,7 +36,7 @@ func (s *WorkerRegistryService) CreateWorker(zone string, ctx context.Context) (
 		Status: ports.StatusAvailable,
 		Zone:   zone,
 	}
-	err := s.repo.StoreWorker(newWorker, ctx)
+	err := s.repo.CreateWorker(newWorker, ctx)
 	if err != nil {
 		return ports.Worker{}, err
 	}

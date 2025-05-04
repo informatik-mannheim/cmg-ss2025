@@ -82,9 +82,7 @@ func (h *Handler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	var payload struct {
-		Status ports.WorkerStatus `json:"status"`
-	}
+	var payload ports.UpdateWorkerStatusRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

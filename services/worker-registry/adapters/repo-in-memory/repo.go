@@ -31,14 +31,14 @@ func (r *Repo) GetWorkers(status ports.WorkerStatus, zone string, ctx context.Co
 func (r *Repo) GetWorkerById(id string, ctx context.Context) (ports.Worker, error) {
 	worker, ok := r.workers[id]
 	if !ok {
-		return ports.Worker{}, ports.ErrWorkerNotFound
+		return ports.Worker{}, ports.NewErrWorkerNotFound(id)
 	}
 	return worker, nil
 }
 
-func (r *Repo) StoreWorker(worker ports.Worker, ctx context.Context) error {
+func (r *Repo) CreateWorker(worker ports.Worker, ctx context.Context) error {
 	if worker.Status == "" || worker.Zone == "" {
-		return ports.ErrStoringWorkerFailed
+		return ports.NewErrCreatingWorkerFailed()
 	}
 	r.workers[worker.Id] = worker
 	return nil
@@ -47,10 +47,10 @@ func (r *Repo) StoreWorker(worker ports.Worker, ctx context.Context) error {
 func (r *Repo) UpdateWorkerStatus(id string, status ports.WorkerStatus, ctx context.Context) (ports.Worker, error) {
 	worker, ok := r.workers[id]
 	if !ok {
-		return ports.Worker{}, ports.ErrWorkerNotFound
+		return ports.Worker{}, ports.NewErrWorkerNotFound(id)
 	}
 	if !isValidStatus(status) {
-		return ports.Worker{}, ports.ErrUpdatingWorkerFailed
+		return ports.Worker{}, ports.NewErrUpdatingWorkerFailed(id)
 	}
 
 	worker.Status = status

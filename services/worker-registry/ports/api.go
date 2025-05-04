@@ -2,12 +2,20 @@ package ports
 
 import (
 	"context"
-	"errors"
+	"fmt"
 )
 
-var ErrWorkerNotFound = errors.New("Worker not found")
-var ErrUpdatingWorkerFailed = errors.New("invalid status ('AVAILABLE' or 'RUNNING')")
-var ErrStoringWorkerFailed = errors.New("storing worker failed due to missing parameters (status or zone)")
+func NewErrWorkerNotFound(id string) error {
+	return fmt.Errorf("Worker with ID %v not found", id)
+}
+
+func NewErrUpdatingWorkerFailed(id string) error {
+	return fmt.Errorf("invalid status ('AVAILABLE' or 'RUNNING') for worker with ID %v", id)
+}
+
+func NewErrCreatingWorkerFailed() error {
+	return fmt.Errorf("creating worker failed due to missing parameter 'zone'")
+}
 
 type Api interface {
 	GetWorkers(status WorkerStatus, zone string, ctx context.Context) ([]Worker, error)

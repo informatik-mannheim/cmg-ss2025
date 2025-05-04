@@ -12,6 +12,7 @@ import (
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 
 	CreateDummyWorkers(*service)
 
-	srv := &http.Server{Addr: ":8080"}
+	srv := &http.Server{Addr: "127.0.0.1:8080"}
 
 	h := handler.NewHandler(service)
 	http.Handle("/", h)
@@ -46,5 +47,5 @@ func CreateDummyWorkers(service core.WorkerRegistryService) {
 	service.CreateWorker("EN", context.Background())
 	service.CreateWorker("DE", context.Background())
 	service.CreateWorker("DE", context.Background())
-	service.UpdateWorkerStatus("3", "RUNNING", context.Background())
+	service.UpdateWorkerStatus("3", ports.StatusRunning, context.Background())
 }
