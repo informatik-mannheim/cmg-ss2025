@@ -6,6 +6,8 @@ import (
 )
 
 var ErrWorkerNotFound = errors.New("Worker not found")
+var ErrUpdatingWorkerFailed = errors.New("invalid status ('AVAILABLE' or 'RUNNING')")
+var ErrStoringWorkerFailed = errors.New("storing worker failed due to missing parameters (status or zone)")
 
 type Api interface {
 	GetWorkers(status, zone string, ctx context.Context) ([]Worker, error)

@@ -7,31 +7,52 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
+	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
+	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
 )
 
 func main() {
+	repository := repo.NewRepo()
+	notifier := notifier.NewHttpNotifier()
+	service := core.NewWorkerRegistryService(repository, notifier)
 
-	core := core.NewWorkerRegistryService(repo.NewRepo(), nil)
+	// Preload fixed workers manually as test(for Assignment II)
+	service.CreateWorker("DE", context.Background())
+	service.CreateWorker("EN", context.Background())
+	service.CreateWorker("DE", context.Background())
+	service.CreateWorker("DE", context.Background())
+	service.UpdateWorkerStatus("3", "RUNNING", context.Background())
 
-	srv := &http.Server{Addr: ":8080"}
+	// Start server
+	router := handler.NewHandler(service)
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
 
-	h := handler_http.NewHandler(core)
-	http.Handle("/", h)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
+		log.Println("Carbon Intensity Provider running on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
 	}()
 
-	log.Print("listening...")
-	srv.ListenAndServe()
-	log.Print("Done")
+	<-stop
+	log.Println("Shutdown signal received...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
+	}
+
+	log.Println("Server exited gracefully.")
 }

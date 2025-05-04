@@ -56,35 +56,37 @@ func (h *Handler) handleGetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleCreate(w http.ResponseWriter, r *http.Request) {
-	var worker ports.Worker
-	if err := json.NewDecoder(r.Body).Decode(&worker); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	zone := r.URL.Query().Get("zone")
+
+	if zone == "" {
+		http.Error(w, "zone is required to create Workers", http.StatusBadRequest)
 		return
 	}
 
-	_, err := h.service.CreateWorker(worker.Zone, r.Context())
+	worker, err := h.service.CreateWorker(zone, r.Context())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(worker)
 }
 
 func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
+	worker, err := h.service.GetWorkerById(id, r.Context())
 
-	var payload struct {
-		Status string `json:"status"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if _, err := h.service.UpdateWorkerStatus(id, payload.Status, r.Context()); err != nil {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	if _, err := h.service.UpdateWorkerStatus(id, worker.Status, r.Context()); err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(worker)
+	w.WriteHeader(http.StatusOK)
 }

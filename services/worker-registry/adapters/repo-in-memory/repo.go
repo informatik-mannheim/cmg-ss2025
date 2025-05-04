@@ -19,13 +19,13 @@ func NewRepo() *Repo {
 }
 
 func (r *Repo) GetWorkers(status, zone string, ctx context.Context) ([]ports.Worker, error) {
-	var workers []ports.Worker
+	matchingWorkers := []ports.Worker{}
 	for _, worker := range r.workers {
 		if (status == "" || worker.Status == status) && (zone == "" || worker.Zone == zone) {
-			workers = append(workers, worker)
+			matchingWorkers = append(matchingWorkers, worker)
 		}
 	}
-	return workers, nil
+	return matchingWorkers, nil
 }
 
 func (r *Repo) GetWorkerById(id string, ctx context.Context) (ports.Worker, error) {
@@ -37,6 +37,9 @@ func (r *Repo) GetWorkerById(id string, ctx context.Context) (ports.Worker, erro
 }
 
 func (r *Repo) StoreWorker(worker ports.Worker, ctx context.Context) error {
+	if worker.Status == "" || worker.Zone == "" {
+		return ports.ErrStoringWorkerFailed
+	}
 	r.workers[worker.Id] = worker
 	return nil
 }
@@ -46,8 +49,15 @@ func (r *Repo) UpdateWorkerStatus(id, status string, ctx context.Context) (ports
 	if !ok {
 		return ports.Worker{}, ports.ErrWorkerNotFound
 	}
+	if !isValidStatus(status) {
+		return ports.Worker{}, ports.ErrUpdatingWorkerFailed
+	}
 
 	worker.Status = status
 	r.workers[id] = worker
 	return worker, nil
+}
+
+func isValidStatus(status string) bool {
+	return status == "AVAILABLE" || status == "RUNNING"
 }

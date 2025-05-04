@@ -27,21 +27,19 @@ Returns the list of all registered workers.
 #### Example Command
 
 ```bash
-curl -X 'GET' \
-  'http://localhost:8080/workers' \
-  -H 'accept: application/json'
+curl -X 'GET' 'http://localhost:8080/workers'
 ```
 #### Sample Response
 
 ```json
 [
   {
-    "id": "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7",
+    "id": "0",
     "status": "RUNNING",
     "zone": "DE"
   },
   {
-    "id": "06842e74-1121-4700-b6d5-6558c8af6199",
+    "id": "1",
     "status": "AVAILABLE",
     "zone": "EN"
   }
@@ -54,21 +52,19 @@ Returns the list of all registered workers in the zone `DE` that are `AVAILABLE`
 #### Example Command
 
 ```bash
-curl -X 'GET' \
-  'http://localhost:8080/workers?status=AVAILABLE&zone=DE' \
-  -H 'accept: application/json'
+curl -X 'GET' 'http://localhost:8080/workers?status=AVAILABLE&zone=DE'
 ```
 #### Sample Response
 
 ```json
 [
   {
-    "id": "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7",
+    "id": "0",
     "status": "AVAILABLE",
     "zone": "DE"
   },
   {
-    "id": "42842c54-1121-4700-b6d5-6331c8af616a",
+    "id": "1",
     "status": "AVAILABLE",
     "zone": "DE"
   }
@@ -82,9 +78,7 @@ Returns a worker with the specified `id`.
 #### Example Command
 
 ```bash
-curl -X 'GET' \
-  'http://localhost:8080/workers/101a8fa4-dce6-4d10-a65a-e88e6edbcdf7' \
-  -H 'accept: application/json'
+curl -X 'GET' 'http://localhost:8080/workers/0'
 ```
 
 #### Example Response
@@ -92,7 +86,7 @@ curl -X 'GET' \
 ```json
 [
   {
-    "id": "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7",
+    "id": "0",
     "status": "AVAILABLE",
     "zone": "DE"
   }
@@ -105,16 +99,13 @@ Creates a worker from given `zone`.
 
 #### Example Command
 ```bash
-curl -X 'POST' \
-  'http://localhost:8080/workers?zone=EN' \
-  -H 'accept: application/json' \
-  -d ''
+curl -X 'POST' 'http://localhost:8080/workers?zone=EN'
 ```
 #### Example Response
 ```json
 [
   {
-  "id": "90bb1e74-22f1-4b91-bf0b-fd17e542cb3e",
+  "id": "0",
   "status": "AVAILABLE",
   "zone": "EN"
   }
@@ -127,13 +118,9 @@ Updates the `status` of a specific worker (`AVAILABLE` or `RUNNING`).
 
 #### Example Command
 ```bash
-curl -X 'PUT' \
-  'http://localhost:8080/workers/101a8fa4-dce6-4d10-a65a-e88e6edbcdf7/status' \
-  -H 'accept: application/json' \
+curl -X 'PUT' 'http://localhost:8080/workers/1/status'
   -H 'Content-Type: application/json' \
-  -d '{
-  "workerStatus": "RUNNING"
-}'
+  -d '{"Status": "RUNNING"}'
 ```
 #### Example Response
 ```json
