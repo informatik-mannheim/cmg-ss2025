@@ -3,41 +3,44 @@ package core
 import (
 	"context"
 
+	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
-type CarbonIntensityProvider struct {
-	repo     ports.Repo
-	notifier ports.Notifier
+// CarbonIntensityService is the concrete implementation of the CarbonIntensityProvider interface.
+type CarbonIntensityService struct {
+	repo ports.Repo
 }
 
-func NewCarbonIntensityProvider(repo ports.Repo, notifier ports.Notifier) *CarbonIntensityProvider {
-	return &CarbonIntensityProvider{
-		repo:     repo,
-		notifier: notifier,
-	}
+// NewCarbonIntensityService creates a new CarbonIntensityService with an empty zone map.
+func NewCarbonIntensityService(repo ports.Repo) *CarbonIntensityService {
+	return &CarbonIntensityService{repo: repo}
 }
 
-var _ ports.Api = (*CarbonIntensityProvider)(nil)
-
-func (s *CarbonIntensityProvider) Set(carbonIntensityProvider ports.CarbonIntensityProvider, ctx context.Context) error {
-	err := s.repo.Store(carbonIntensityProvider, ctx)
-	if err != nil {
-		return err
-	}
-	if s.notifier != nil {
-		s.notifier.CarbonIntensityProviderChanged(carbonIntensityProvider, ctx)
-	}
-	return nil
+// GetCarbonIntensityByZone retrieves carbon intensity data for a specific zone.
+func (s *CarbonIntensityService) GetCarbonIntensityByZone(zone string) (model.CarbonIntensityData, error) {
+	return s.repo.FindById(zone, context.Background())
 }
 
-func (s *CarbonIntensityProvider) Get(id string, ctx context.Context) (ports.CarbonIntensityProvider, error) {
-	carbonIntensityProvider, err := s.repo.FindById(id, ctx)
-	if err != nil {
-		return ports.CarbonIntensityProvider{}, err
+// GetAvailableZones returns a list of all available zones.
+func (s *CarbonIntensityService) GetAvailableZones() []model.Zone {
+	data, _ := s.repo.FindAll(context.Background())
+
+	zones := make([]model.Zone, 0, len(data))
+	for _, item := range data {
+		zones = append(zones, model.Zone{
+			Code: item.Zone,
+			Name: item.Zone,
+		})
 	}
-	if carbonIntensityProvider.Id != id {
-		return ports.CarbonIntensityProvider{}, ports.ErrCarbonIntensityProviderNotFound
+	return zones
+}
+
+// AddOrUpdateZone adds or updates a zone manually (for testing or seeding).
+func (s *CarbonIntensityService) AddOrUpdateZone(zone string, intensity float64) {
+	provider := model.CarbonIntensityData{
+		Zone:            zone,
+		CarbonIntensity: intensity,
 	}
-	return carbonIntensityProvider, nil
+	_ = s.repo.Store(provider, context.Background())
 }

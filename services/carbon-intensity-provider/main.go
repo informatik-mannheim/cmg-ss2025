@@ -7,31 +7,48 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/handler-http"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
+	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/api"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/core"
 )
 
 func main() {
+	repository := repo.NewRepo()
+	service := core.NewCarbonIntensityService(repository)
 
-	core := core.NewCarbonIntensityProvider(repo.NewRepo(), nil)
+	// Preload fixed zones manually as test(for Assignment II)
+	service.AddOrUpdateZone("DE", 140.5)
+	service.AddOrUpdateZone("FR", 135.2)
+	service.AddOrUpdateZone("US-NY-NYIS", 128.9)
 
-	srv := &http.Server{Addr: ":8080"}
+	// Start server
+	router := api.NewHandler(service)
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
 
-	h := handler_http.NewHandler(core)
-	http.Handle("/", h)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
+		log.Println("Carbon Intensity Provider running on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
 	}()
 
-	log.Print("listening...")
-	srv.ListenAndServe()
-	log.Print("Done")
+	<-stop
+	log.Println("Shutdown signal received...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
+	}
+
+	log.Println("Server exited gracefully.")
 }
