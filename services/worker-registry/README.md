@@ -118,9 +118,7 @@ Updates the `status` of a specific worker (`AVAILABLE` or `RUNNING`).
 
 #### Example Command
 ```bash
-curl -X 'PUT' 'http://localhost:8080/workers/1/status'
-  -H 'Content-Type: application/json' \
-  -d '{"Status": "RUNNING"}'
+curl -X 'PUT' 'http://localhost:8080/workers/1/status' -d '{"status": "RUNNING"}'
 ```
 #### Example Response
 ```json
