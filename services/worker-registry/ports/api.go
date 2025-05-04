@@ -10,8 +10,8 @@ var ErrUpdatingWorkerFailed = errors.New("invalid status ('AVAILABLE' or 'RUNNIN
 var ErrStoringWorkerFailed = errors.New("storing worker failed due to missing parameters (status or zone)")
 
 type Api interface {
-	GetWorkers(status, zone string, ctx context.Context) ([]Worker, error)
+	GetWorkers(status WorkerStatus, zone string, ctx context.Context) ([]Worker, error)
 	GetWorkerById(id string, ctx context.Context) (Worker, error)
 	CreateWorker(zone string, ctx context.Context) (Worker, error)
-	UpdateWorkerStatus(id, status string, ctx context.Context) (Worker, error)
+	UpdateWorkerStatus(id string, status WorkerStatus, ctx context.Context) (Worker, error)
 }

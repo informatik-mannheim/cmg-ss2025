@@ -32,8 +32,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleGetAll(w http.ResponseWriter, r *http.Request) {
-	status := r.URL.Query().Get("status")
+	statusString := r.URL.Query().Get("status")
 	zone := r.URL.Query().Get("zone")
+
+	var status ports.WorkerStatus
+	if statusString != "" {
+		status = ports.WorkerStatus(statusString)
+	}
 
 	workers, err := h.service.GetWorkers(status, zone, r.Context())
 	if err != nil {
@@ -78,7 +83,7 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	var payload struct {
-		Status string `json:"status"`
+		Status ports.WorkerStatus `json:"status"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -87,12 +92,11 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updatedWorker, err := h.service.UpdateWorkerStatus(id, payload.Status, r.Context())
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedWorker)
-	w.WriteHeader(http.StatusOK)
 }

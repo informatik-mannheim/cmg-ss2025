@@ -124,7 +124,7 @@ curl -X 'PUT' 'http://localhost:8080/workers/1/status' -d '{"status": "RUNNING"}
 ```json
 [
   {
-    "id": "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7",
+    "id": "0",
     "status": "RUNNING",
     "zone": "DE"
   }

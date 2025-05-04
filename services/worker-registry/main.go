@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
@@ -20,39 +19,32 @@ func main() {
 	notifier := notifier.NewHttpNotifier()
 	service := core.NewWorkerRegistryService(repository, notifier)
 
-	// Preload fixed workers manually as test(for Assignment II)
+	CreateDummyWorkers(*service)
+
+	srv := &http.Server{Addr: ":8080"}
+
+	h := handler.NewHandler(service)
+	http.Handle("/", h)
+
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+
+		log.Print("The service is shutting down...")
+		srv.Shutdown(context.Background())
+	}()
+
+	log.Print("listening...")
+	srv.ListenAndServe()
+	log.Print("Done")
+}
+
+// Preload fixed workers manually as test(for Assignment II)
+func CreateDummyWorkers(service core.WorkerRegistryService) {
 	service.CreateWorker("DE", context.Background())
 	service.CreateWorker("EN", context.Background())
 	service.CreateWorker("DE", context.Background())
 	service.CreateWorker("DE", context.Background())
 	service.UpdateWorkerStatus("3", "RUNNING", context.Background())
-
-	// Start server
-	router := handler.NewHandler(service)
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: router,
-	}
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		log.Println("Carbon Intensity Provider running on :8080")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
-		}
-	}()
-
-	<-stop
-	log.Println("Shutdown signal received...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
-	}
-
-	log.Println("Server exited gracefully.")
 }

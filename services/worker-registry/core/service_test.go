@@ -9,6 +9,28 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
+func TestCreateWorker(t *testing.T) {
+	repo := repo_in_memory.NewRepo()
+	notifier := notifier.NewHttpNotifier()
+	service := NewWorkerRegistryService(repo, notifier)
+
+	t.Run("create worker with valid zone", func(t *testing.T) {
+		worker, err := service.CreateWorker("EN", context.Background())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if worker.Zone != "EN" {
+			t.Errorf("expected zone 'EN', got %v", worker.Zone)
+		}
+		if worker.Status != ports.StatusAvailable {
+			t.Errorf("expected status 'AVAILABLE', got %v", worker.Status)
+		}
+		if worker.Id == "" {
+			t.Errorf("expected a non-empty ID")
+		}
+	})
+}
+
 func TestGetWorkers(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
 	notifier := notifier.NewHttpNotifier()
@@ -19,16 +41,16 @@ func TestGetWorkers(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		status        string
+		status        ports.WorkerStatus
 		zone          string
 		expectedCount int
 	}{
 		{"all workers", "", "", 2},
-		{"by status status 'AVAILABLE' only", "AVAILABLE", "", 2},
-		{"by status 'RUNNING' only", "RUNNING", "", 0},
-		{"by zone 'DE' only", "", "DE", 1},
-		{"by zone 'EN' only", "", "EN", 1},
-		{"by status and zone", "AVAILABLE", "EN", 1},
+		{"by status status 'AVAILABLE' only", ports.StatusAvailable, "", 2},
+		{"by status 'RUNNING' only", ports.StatusRunning, "", 0},
+		{"by zone 'DE' only", ports.StatusAvailable, "DE", 1},
+		{"by zone 'EN' only", ports.StatusAvailable, "EN", 1},
+		{"by status and zone", ports.StatusAvailable, "EN", 1},
 	}
 
 	for _, test := range tests {
@@ -57,7 +79,7 @@ func TestGetWorkerById(t *testing.T) {
 			t.Errorf("unexpected error: %v", err)
 		}
 		if result.Id != worker.Id {
-			t.Errorf("expected ID %s, got %s", worker.Id, result.Id)
+			t.Errorf("expected ID %v, got %v", worker.Id, result.Id)
 		}
 	})
 
@@ -82,7 +104,7 @@ func TestUpdateWorkerStatus(t *testing.T) {
 			t.Errorf("unexpected error: %v", err)
 		}
 		if updated.Status != "RUNNING" {
-			t.Errorf("expected status RUNNING, got %s", updated.Status)
+			t.Errorf("expected status RUNNING, got %v", updated.Status)
 		}
 	})
 

@@ -18,7 +18,7 @@ func NewRepo() *Repo {
 	}
 }
 
-func (r *Repo) GetWorkers(status, zone string, ctx context.Context) ([]ports.Worker, error) {
+func (r *Repo) GetWorkers(status ports.WorkerStatus, zone string, ctx context.Context) ([]ports.Worker, error) {
 	matchingWorkers := []ports.Worker{}
 	for _, worker := range r.workers {
 		if (status == "" || worker.Status == status) && (zone == "" || worker.Zone == zone) {
@@ -44,7 +44,7 @@ func (r *Repo) StoreWorker(worker ports.Worker, ctx context.Context) error {
 	return nil
 }
 
-func (r *Repo) UpdateWorkerStatus(id, status string, ctx context.Context) (ports.Worker, error) {
+func (r *Repo) UpdateWorkerStatus(id string, status ports.WorkerStatus, ctx context.Context) (ports.Worker, error) {
 	worker, ok := r.workers[id]
 	if !ok {
 		return ports.Worker{}, ports.ErrWorkerNotFound
@@ -58,6 +58,6 @@ func (r *Repo) UpdateWorkerStatus(id, status string, ctx context.Context) (ports
 	return worker, nil
 }
 
-func isValidStatus(status string) bool {
-	return status == "AVAILABLE" || status == "RUNNING"
+func isValidStatus(status ports.WorkerStatus) bool {
+	return status == ports.StatusAvailable || status == ports.StatusRunning
 }
