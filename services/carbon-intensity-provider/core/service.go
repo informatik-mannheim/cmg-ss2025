@@ -7,24 +7,24 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
-// CarbonIntensityService is the concrete implementation of the CarbonIntensityProvider interface.
 type CarbonIntensityService struct {
-	repo ports.Repo
+	repo     ports.Repo
+	notifier ports.Notifier
 }
 
-// NewCarbonIntensityService creates a new CarbonIntensityService with an empty zone map.
-func NewCarbonIntensityService(repo ports.Repo) *CarbonIntensityService {
-	return &CarbonIntensityService{repo: repo}
+func NewCarbonIntensityService(repo ports.Repo, notifier ports.Notifier) *CarbonIntensityService {
+	return &CarbonIntensityService{
+		repo:     repo,
+		notifier: notifier,
+	}
 }
 
-// GetCarbonIntensityByZone retrieves carbon intensity data for a specific zone.
-func (s *CarbonIntensityService) GetCarbonIntensityByZone(zone string) (model.CarbonIntensityData, error) {
-	return s.repo.FindById(zone, context.Background())
+func (s *CarbonIntensityService) GetCarbonIntensityByZone(zone string, ctx context.Context) (model.CarbonIntensityData, error) {
+	return s.repo.FindById(zone, ctx)
 }
 
-// GetAvailableZones returns a list of all available zones.
-func (s *CarbonIntensityService) GetAvailableZones() []model.Zone {
-	data, _ := s.repo.FindAll(context.Background())
+func (s *CarbonIntensityService) GetAvailableZones(ctx context.Context) []model.Zone {
+	data, _ := s.repo.FindAll(ctx)
 
 	zones := make([]model.Zone, 0, len(data))
 	for _, item := range data {
@@ -36,11 +36,20 @@ func (s *CarbonIntensityService) GetAvailableZones() []model.Zone {
 	return zones
 }
 
-// AddOrUpdateZone adds or updates a zone manually (for testing or seeding).
-func (s *CarbonIntensityService) AddOrUpdateZone(zone string, intensity float64) {
+func (s *CarbonIntensityService) AddOrUpdateZone(zone string, intensity float64, ctx context.Context) error {
 	provider := model.CarbonIntensityData{
 		Zone:            zone,
 		CarbonIntensity: intensity,
 	}
-	_ = s.repo.Store(provider, context.Background())
+
+	if err := s.repo.Store(provider, ctx); err != nil {
+		return err
+	}
+
+	// Notifier aufrufen – falls gesetzt
+	if s.notifier != nil {
+		s.notifier.CarbonIntensityProviderChanged(provider, ctx)
+	}
+
+	return nil
 }
