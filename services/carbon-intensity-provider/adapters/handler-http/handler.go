@@ -26,7 +26,11 @@ func (h *Handler) handleGetCarbonIntensityByZone(w http.ResponseWriter, r *http.
 	vars := mux.Vars(r)
 	zone := vars["zone"]
 
+<<<<<<< HEAD
 	data, err := h.service.GetCarbonIntensityByZone(zone, r.Context())
+=======
+	data, err := h.service.GetCarbonIntensityByZone(zone)
+>>>>>>> origin
 	if err != nil {
 		http.Error(w, "Zone not found", http.StatusNotFound)
 		return
@@ -37,7 +41,11 @@ func (h *Handler) handleGetCarbonIntensityByZone(w http.ResponseWriter, r *http.
 }
 
 func (h *Handler) handleGetAvailableZones(w http.ResponseWriter, r *http.Request) {
+<<<<<<< HEAD
 	zones := h.service.GetAvailableZones(r.Context())
+=======
+	zones := h.service.GetAvailableZones()
+>>>>>>> origin
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{

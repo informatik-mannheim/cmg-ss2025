@@ -28,7 +28,11 @@ func NewHandler(service ports.CarbonIntensityProvider) *mux.Router {
 // GetCarbonIntensityByZone handles GET /carbon-intensity/{zone}
 func (h *Handler) GetCarbonIntensityByZone(w http.ResponseWriter, r *http.Request) {
 	zone := mux.Vars(r)["zone"]
+<<<<<<< HEAD
 	data, err := h.Service.GetCarbonIntensityByZone(zone, r.Context())
+=======
+	data, err := h.Service.GetCarbonIntensityByZone(zone)
+>>>>>>> origin
 	if err != nil {
 		http.Error(w, "Zone not found", http.StatusNotFound)
 		return
@@ -40,7 +44,11 @@ func (h *Handler) GetCarbonIntensityByZone(w http.ResponseWriter, r *http.Reques
 
 // GetAvailableZones handles GET /carbon-intensity/zones
 func (h *Handler) GetAvailableZones(w http.ResponseWriter, r *http.Request) {
+<<<<<<< HEAD
 	zoneList := h.Service.GetAvailableZones(r.Context())
+=======
+	zoneList := h.Service.GetAvailableZones()
+>>>>>>> origin
 	response := model.AvailableZonesResponse{
 		Zones: zoneList,
 	}

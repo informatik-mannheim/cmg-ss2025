@@ -22,7 +22,11 @@ paths:
             type: string
           description: The zone for which to get carbon intensity data (e.g. DE, TH, US-NY-NYIS).
       responses:
+<<<<<<< HEAD
+        "200":
+=======
         '200':
+>>>>>>> origin
           description: Carbon intensity data
           content:
             application/json:
@@ -37,10 +41,44 @@ paths:
                     type: number
                     description: The carbon intensity value.
                     example: 140
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+
+        "404":
+          description: Zone not found
+        "500":
+          description: Internal server error
+  /carbon-intensity/zones:
+    get:
+      summary: Get list of available zones
+      security:
+        - BearerAuth: []
+      tags:
+        - Carbon Intensity
+      responses:
+        "200":
+          description: List of available zones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  zones:
+                    type: array
+                    items:
+                      type: string
+                    example: ["DE", "US-NY-NYIS", "TH"]
+        "500":
+          description: Internal server error
+=======
+                  
+>>>>>>> origin
         '404':
           description: Zone not found
         '500':
           description: Internal server error
+<<<<<<< HEAD
   /carbon-intensity/zones:
     get:
       summary: Get list of available zones
@@ -63,9 +101,40 @@ paths:
                     example: ["DE", "US-NY-NYIS", "TH"]
         '500':
           description: Internal server error
+=======
+
+>>>>>>> origin
+>>>>>>> origin
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
+<<<<<<< HEAD
       bearerFormat: JWT
+=======
+      bearerFormat: JWT
+  schemas:
+    CarbonIntensityData:
+      type: object
+      required:
+        - zone
+        - carbonIntensity
+<<<<<<< HEAD
+=======
+        - datetime
+        - updatedAt
+        - createdAt
+>>>>>>> origin
+      properties:
+        zone:
+          type: string
+          example: DE
+        carbonIntensity:
+          type: number
+          example: 140
+<<<<<<< HEAD
+=======
+          
+>>>>>>> origin
+>>>>>>> origin
