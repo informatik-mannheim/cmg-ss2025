@@ -1,7 +1,6 @@
 package core
 
 import (
-<<<<<<< HEAD
 	"context"
 	"testing"
 
@@ -25,19 +24,6 @@ func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
 	}
 
 	data, err := s.GetCarbonIntensityByZone("DE", ctx)
-=======
-	"testing"
-
-	repo_in_memory "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
-)
-
-func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
-	s.AddOrUpdateZone("DE", 150.0)
-
-	data, err := s.GetCarbonIntensityByZone("DE")
->>>>>>> origin
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
@@ -47,24 +33,16 @@ func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
 }
 
 func TestGetCarbonIntensityByZone_NotFound(t *testing.T) {
-<<<<<<< HEAD
 	ctx := context.Background()
 	s := newTestService()
 
 	_, err := s.GetCarbonIntensityByZone("NOPE", ctx)
-=======
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
-
-	_, err := s.GetCarbonIntensityByZone("NOPE")
->>>>>>> origin
 	if err == nil {
 		t.Error("expected error for missing zone, got nil")
 	}
 }
 
 func TestGetAvailableZones(t *testing.T) {
-<<<<<<< HEAD
 	ctx := context.Background()
 	s := newTestService()
 
@@ -72,14 +50,6 @@ func TestGetAvailableZones(t *testing.T) {
 	s.AddOrUpdateZone("FR", 90.0, ctx)
 
 	zones := s.GetAvailableZones(ctx)
-=======
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
-	s.AddOrUpdateZone("DE", 100.0)
-	s.AddOrUpdateZone("FR", 90.0)
-
-	zones := s.GetAvailableZones()
->>>>>>> origin
 	if len(zones) != 2 {
 		t.Errorf("expected 2 zones, got %d", len(zones))
 	}
@@ -99,17 +69,10 @@ func TestGetAvailableZones(t *testing.T) {
 }
 
 func TestGetAvailableZones_Empty(t *testing.T) {
-<<<<<<< HEAD
 	ctx := context.Background()
 	s := newTestService()
 
 	zones := s.GetAvailableZones(ctx)
-=======
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
-
-	zones := s.GetAvailableZones()
->>>>>>> origin
 	if len(zones) != 0 {
 		t.Errorf("expected 0 zones, got %d", len(zones))
 	}
