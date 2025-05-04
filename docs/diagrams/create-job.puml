@@ -1,0 +1,25 @@
+@startuml
+actor "User"
+
+
+== Create Job ==
+
+User -> CLI: create job <image-id>[additional params]
+CLI -> "Consumer Gateway": POST\n/jobs <image-id>\nHeader: Authorization:<token>
+note right of CLI: token was issued\nduring Login
+note over "Consumer Gateway": creates job-id\nfor job
+"Consumer Gateway" -> Job: POST\n/jobs Body:\n <image-id, job-id>\nHeader: Authorization:<token>
+note right of Job: adds job to queue
+
+
+== Status requested by user ==
+
+"User" -> "CLI": get my jobs \nHeader: Authorization:<token>
+"CLI" -> "Consumer Gateway": GET\n/job/result \nHeader: Authorization:<token>
+"Consumer Gateway" -> "Job": GET\n/job/result \nHeader: Authorization:<token>
+note right of Job: List of jobs with corresponding \n status (filtered by user_id)
+"Job" -> "Consumer Gateway": 200 OK\nBody: {eg: "Status: Running"}
+"Consumer Gateway"->"CLI": 200 OK\nBody: {eg: "Status: Running"}
+"CLI"->"User": <List of your jobs with status and result> (if available)
+
+@enduml
