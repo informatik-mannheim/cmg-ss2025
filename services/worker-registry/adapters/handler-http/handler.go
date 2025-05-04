@@ -76,17 +76,23 @@ func (h *Handler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	worker, err := h.service.GetWorkerById(id, r.Context())
+
+	var payload struct {
+		Status string `json:"status"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	updatedWorker, err := h.service.UpdateWorkerStatus(id, payload.Status, r.Context())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	if _, err := h.service.UpdateWorkerStatus(id, worker.Status, r.Context()); err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(worker)
+	json.NewEncoder(w).Encode(updatedWorker)
 	w.WriteHeader(http.StatusOK)
 }
