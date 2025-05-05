@@ -1,23 +1,47 @@
 @startuml run-compute-job
-actor "Worker Daemon" as Worker_Daemon
-participant "Worker Gateway" as Worker_Gateway
-participant "Worker Registry" as Worker_Registry
-participant "Job" as Job
-participant "Consumer Gateway" as Consumer_Gateway
-participant "Consumer CLI" as Consumer_CLI
 
-==run computing job==
-Worker_Registry -> Worker_Gateway: POST /run-job\n<job-id, worker-id>
-Worker_Gateway -> Job: GET /job-payload\n<job-id>
-Worker_Gateway -> Worker_Daemon: POST /run-job\n<job-id, job-payload>
-Worker_Gateway -> Worker_Registry: POST /worker/status\n<worker-id, status:"COMPUTING">
-Worker_Gateway -> Job: POST /job/{job-id}/status\n<job-id, status:"RUNNING">
-Job -> Consumer_Gateway: POST /job/{job-id}/status\n<job-id, status:"RUNNING">
-Consumer_Gateway -> Consumer_CLI: showJobStatus(job-id, status:"RUNNING")
+actor "Worker Daemon" as wd
+participant "Worker Gateway" as wg
+participant "Worker Registry" as wr
+participant "Job" as j
 
-Worker_Daemon -> Worker_Gateway: POST /result\n<job-id, status, result>
-Worker_Gateway -> Worker_Registry: POST /worker/status\n<worker-id, status:"AVAILABLE">
-Worker_Gateway -> Job: POST /job/{job-id}/status\n<job-id, status:"COMPLETED", result>
-Job -> Consumer_Gateway: POST /job/{job-id}/status\n<job-id, status:"COMPLETED">
-Consumer_Gateway -> Consumer_CLI: showJobStatus(job-id, status:"COMPLETED")
+== Get Job / Heartbeat (AVAILABLE)==
+
+wd -> wg : POST /worker/heartbeat \n{ workerId, status: "AVAILABLE" } 
+wg -> wr : PUT /worker/{id}/status\n{ status: "AVAILABLE" }
+wg -> j  : GET /jobs/{["scheduled"]}
+alt Jobs scheduled
+    j -> wg : 200 OK\n{ Jobs }
+        note over wg: Filter Jobs by workerId.
+    wg -> wd : 200 OK\n{ Jobs }
+    note over wd: Jobs assigned.\nPick first Job of Jobs[] and start execution.
+
+else No Jobs scheduled or Error
+    j -> wg : OK { [] }\nor ERROR
+    wg -> wd : OK { [] }\nor ERROR
+    note over wd: No Jobs assigned yet or error.\nWait for next heartbeat.
+    
+end
+
+== Execute Job / Heartbeat (COMPUTING) ==
+
+wd -> wg : POST /worker/heartbeat \n{ workerId, status: "COMPUTING" }
+wg -> wr : PUT /worker/{id}/status\n{ status: "COMPUTING" }
+wg -> j  : PATCH /job/{id}/update-workerdeamon\n{ status: "RUNNING" }
+    note over wd: Repeat this section while computing.
+
+== Finish Job ==
+    note over wd: Compute job done.
+wd -> wg : POST /result\n{ jobId, status, result }
+wg -> j  : PATCH /jobs/{id}/update-workerdeamon\n{ status: "COMPLETED", result, errorMessage }
+alt Result delivered
+    j -> wg : OK
+else Error
+    j -> wg : ERROR
+        note over wg: Repeat call after delay.
+    wg -> j  : PATCH /jobs/{id}/update-workerdeamon\n{ status: "COMPLETED", result, errorMessage }
+end
+
+    note over wd: restart workflow with \nHeartbeat (AVAILABLE).
+
 @enduml
