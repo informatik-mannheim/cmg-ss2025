@@ -1,0 +1,120 @@
+// handler-http/auth.go
+package handler
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/google/uuid"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/model"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/notifier"
+)
+
+type registerRequest struct {
+	Role model.Role `json:"role"`
+}
+
+type registerResponse struct {
+	ID     string `json:"id"`
+	Secret string `json:"secret"`
+}
+
+type loginRequest struct {
+	Secret string `json:"secret"`
+}
+
+type loginResponse struct {
+	Token string `json:"token"`
+}
+
+var service = core.NewService()
+
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	var req registerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || (req.Role != model.Consumer && req.Role != model.Provider) {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	id := uuid.NewString()
+	secret, err := service.AddUser(id, req.Role)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	notifier := notifier.New()
+	notifier.UserRegistered(id, string(req.Role))
+	resp := registerResponse{ID: id, Secret: secret}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resp)
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Secret == "" {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := service.Authenticate(req.Secret)
+	if err != nil {
+		http.Error(w, "invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	notifier := notifier.New()
+	notifier.UserLoggedIn(user.ID)
+
+	token, err := requestAuth0Token()
+	if err != nil {
+		http.Error(w, "failed to retrieve token", http.StatusInternalServerError)
+		return
+	}
+
+	resp := loginResponse{Token: token}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func requestAuth0Token() (string, error) {
+	type auth0Response struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+	}
+
+	data := map[string]string{
+		"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+		"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
+		"audience":      os.Getenv("JWT_AUDIENCE"),
+		"grant_type":    "client_credentials",
+	}
+	jsonData, _ := json.Marshal(data)
+
+	url := os.Getenv("AUTH0_TOKEN_URL")
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Auth0 token request failed [%d]: %s", resp.StatusCode, string(body))
+		return "", errors.New("Auth0 request failed")
+	}
+
+	var parsed auth0Response
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return "", err
+	}
+
+	return parsed.AccessToken, nil
+}

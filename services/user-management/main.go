@@ -1,37 +1,33 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/repo-in-memory"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables (optional)
+	_ = godotenv.Load()
 
-	core := core.NewUserManagementService(repo.NewRepo(), nil)
+	// Register API endpoints
+	http.HandleFunc("/auth/register", handler.RegisterHandler)
+	http.HandleFunc("/auth/login", handler.LoginHandler)
 
-	srv := &http.Server{Addr: ":8080"}
+	// Start HTTP server
+	port := getPort()
+	log.Printf("User Management Service running at http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
 
-	h := handler_http.NewHandler(core)
-	http.Handle("/", h)
-
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
-	}()
-
-	log.Print("listening...")
-	srv.ListenAndServe()
-	log.Print("Done")
+// getPort returns PORT from environment or falls back to 8081
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		return "8081"
+	}
+	return port
 }
