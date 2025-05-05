@@ -46,3 +46,31 @@ func TestJobSchedulerSingleton(t *testing.T) {
 		t.Error("Expected error for second job scheduler, got nil")
 	}
 }
+
+func TestAuthenticate(t *testing.T) {
+	service := &Service{
+		users:    make(map[string]model.User),
+		filePath: "",
+	}
+
+	id := "auth-user"
+	role := model.Consumer
+
+	secret, err := service.AddUser(id, role)
+	if err != nil {
+		t.Fatalf("Failed to add user: %v", err)
+	}
+
+	user, err := service.Authenticate(secret)
+	if err != nil {
+		t.Errorf("Expected authentication to succeed, got error: %v", err)
+	}
+	if user == nil || user.ID != id {
+		t.Errorf("Expected authenticated user with ID %s, got %+v", id, user)
+	}
+
+	_, err = service.Authenticate("wrong-secret")
+	if err == nil {
+		t.Error("Expected authentication to fail with wrong secret")
+	}
+}
