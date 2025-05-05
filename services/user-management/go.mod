@@ -1,6 +1,6 @@
 module github.com/informatik-mannheim/cmg-ss2025/services/user-management
 
-go 1.23.1
+go 1.22
 
 require (
 	github.com/alexedwards/argon2id v1.0.0
