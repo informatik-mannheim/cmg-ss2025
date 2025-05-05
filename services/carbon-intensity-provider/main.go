@@ -9,27 +9,32 @@ import (
 	"syscall"
 	"time"
 
+	notifier "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/api"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/core"
 )
 
 func main() {
+	ctx := context.Background()
+
 	repository := repo.NewRepo()
-	service := core.NewCarbonIntensityService(repository)
+	dummyNotifier := notifier.New()
+	service := core.NewCarbonIntensityService(repository, dummyNotifier)
 
-	// Preload fixed zones manually as test(for Assignment II)
-	service.AddOrUpdateZone("DE", 140.5)
-	service.AddOrUpdateZone("FR", 135.2)
-	service.AddOrUpdateZone("US-NY-NYIS", 128.9)
+	// Preload fixed zones manually as test (for Assignment II)
+	service.AddOrUpdateZone("DE", 140.5, ctx)
+	service.AddOrUpdateZone("FR", 135.2, ctx)
+	service.AddOrUpdateZone("US-NY-NYIS", 128.9, ctx)
 
-	// Start server
+	// Start HTTP server
 	router := api.NewHandler(service)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,
 	}
 
+	// Graceful shutdown setup
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
@@ -43,10 +48,10 @@ func main() {
 	<-stop
 	log.Println("Shutdown signal received...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(ctxShutdown); err != nil {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
