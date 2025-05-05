@@ -36,9 +36,23 @@ type loginResponse struct {
 var service = core.NewService()
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	adminSecret := os.Getenv("ADMIN_SECRET")
+	isAdmin := r.Header.Get("X-Admin-Secret") == adminSecret
+
 	var req registerRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || (req.Role != model.Consumer && req.Role != model.Provider) {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || (req.Role != model.Consumer && req.Role != model.Provider && req.Role != model.JobScheduler) {
 		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Prevent Job Scheduler if not explicitly authorized
+	if req.Role == model.JobScheduler && !isAdmin {
+		http.Error(w, "unauthorized to create Job Scheduler", http.StatusForbidden)
+		return
+	}
+
+	if !isAdmin {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -51,6 +65,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	notifier := notifier.New()
 	notifier.UserRegistered(id, string(req.Role))
+
 	resp := registerResponse{ID: id, Secret: secret}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
