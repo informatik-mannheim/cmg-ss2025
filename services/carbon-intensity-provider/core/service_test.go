@@ -1,17 +1,29 @@
 package core
 
 import (
+	"context"
 	"testing"
 
+	notifier "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/notifier"
 	repo_in_memory "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
 )
 
-func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
+func newTestService() *CarbonIntensityService {
 	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
-	s.AddOrUpdateZone("DE", 150.0)
+	dummyNotifier := notifier.New()
+	return NewCarbonIntensityService(repo, dummyNotifier)
+}
 
-	data, err := s.GetCarbonIntensityByZone("DE")
+func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
+	ctx := context.Background()
+	s := newTestService()
+
+	err := s.AddOrUpdateZone("DE", 150.0, ctx)
+	if err != nil {
+		t.Fatalf("unexpected error during AddOrUpdateZone: %v", err)
+	}
+
+	data, err := s.GetCarbonIntensityByZone("DE", ctx)
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
@@ -21,22 +33,23 @@ func TestAddAndGetCarbonIntensityByZone(t *testing.T) {
 }
 
 func TestGetCarbonIntensityByZone_NotFound(t *testing.T) {
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
+	ctx := context.Background()
+	s := newTestService()
 
-	_, err := s.GetCarbonIntensityByZone("NOPE")
+	_, err := s.GetCarbonIntensityByZone("NOPE", ctx)
 	if err == nil {
 		t.Error("expected error for missing zone, got nil")
 	}
 }
 
 func TestGetAvailableZones(t *testing.T) {
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
-	s.AddOrUpdateZone("DE", 100.0)
-	s.AddOrUpdateZone("FR", 90.0)
+	ctx := context.Background()
+	s := newTestService()
 
-	zones := s.GetAvailableZones()
+	s.AddOrUpdateZone("DE", 100.0, ctx)
+	s.AddOrUpdateZone("FR", 90.0, ctx)
+
+	zones := s.GetAvailableZones(ctx)
 	if len(zones) != 2 {
 		t.Errorf("expected 2 zones, got %d", len(zones))
 	}
@@ -56,10 +69,10 @@ func TestGetAvailableZones(t *testing.T) {
 }
 
 func TestGetAvailableZones_Empty(t *testing.T) {
-	repo := repo_in_memory.NewRepo()
-	s := NewCarbonIntensityService(repo)
+	ctx := context.Background()
+	s := newTestService()
 
-	zones := s.GetAvailableZones()
+	zones := s.GetAvailableZones(ctx)
 	if len(zones) != 0 {
 		t.Errorf("expected 0 zones, got %d", len(zones))
 	}
