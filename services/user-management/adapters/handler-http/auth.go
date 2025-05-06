@@ -3,6 +3,9 @@ package handler
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -36,8 +39,8 @@ type loginResponse struct {
 var service = core.NewService()
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	adminSecret := os.Getenv("ADMIN_SECRET")
-	isAdmin := r.Header.Get("X-Admin-Secret") == adminSecret
+	// adminSecret := os.Getenv("ADMIN_SECRET")
+	isAdmin := isAdmin(r.Header.Get("X-Admin-Secret"))
 
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || (req.Role != model.Consumer && req.Role != model.Provider && req.Role != model.JobScheduler) {
@@ -132,4 +135,11 @@ func requestAuth0Token() (string, error) {
 	}
 
 	return parsed.AccessToken, nil
+}
+
+func isAdmin(headerValue string) bool {
+	expectedHash := os.Getenv("ADMIN_SECRET_HASH")
+	hash := sha256.Sum256([]byte(headerValue))
+	actualHash := hex.EncodeToString(hash[:])
+	return subtle.ConstantTimeCompare([]byte(actualHash), []byte(expectedHash)) == 1
 }
