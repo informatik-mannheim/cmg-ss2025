@@ -1,0 +1,186 @@
+openapi: 3.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+info:
+  version: 1.0.0
+  title: Worker Registry API
+  description: The API for the Worker Registry
+
+paths:
+  /workers:
+    get:
+      tags:
+        - workers
+      security:
+        - BearerAuth: []
+      description: Returns all registered workers. Can be filtered by region or status.
+      operationId: getWorkers
+      parameters:
+        - name: status
+          in: query
+          description: Filter workers by their status.
+          required: false
+          schema:
+            type: string
+            enum: [AVAILABLE, RUNNING]
+        - name: zone
+          in: query
+          description: Filter workers by their zone.
+          required: false
+          schema:
+            type: string            
+      responses:
+        '200':
+          description: Registered workers (can be empty if no match)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
+              example:
+                - id: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
+                  status: "RUNNING"
+                  zone: "DE"
+                - id: "06842e74-1121-4700-b6d5-6558c8af6199"
+                  status: "AVAILABLE"
+                  zone: "EN"
+        '500':
+          description: Internal server error.
+
+    post:
+      tags:
+        - workers
+      security:
+        - BearerAuth: []
+      description: Registers a new Worker in the Worker Registry. Creates a unique Id and marks newly created worker as "AVAILABLE" by passing the zone of the new worker.
+      operationId: saveWorker
+      parameters:
+        - name: zone
+          description: The zone of the new worker.
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Worker successfully saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+              example:
+                id: "90bb1e74-22f1-4b91-bf0b-fd17e542cb3e"
+                status: "AVAILABLE"
+                zone: "DE"               
+        '400':
+          description: Worker could not be saved.
+        '405':
+          description: Method not allowed. Only GET and POST is supported on this endpoint.                  
+        '500':
+          description: Internal server error.  
+
+  /workers/{id}:
+    get:
+      tags:
+        - workers
+      security:
+        - BearerAuth: []
+      description: Retrieves a worker by their ID.
+      operationId: getWorkerById
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Worker retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+              example:
+                - id: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
+                  status: "RUNNING"
+                  zone: "DE"                
+        '204':
+          description: Worker exists but no content to display.             
+        '404':
+          description: Worker not found.
+        '500':
+          description: Internal server error.
+
+  /workers/{id}/status:              
+    put:
+      tags:
+        - workers
+      security:
+        - BearerAuth: []
+      description: Updates the status of a specific worker ("AVAILABLE" or "RUNNING").
+      operationId: updateWorkerStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workerStatus:
+                  type: string
+                  enum: [AVAILABLE, RUNNING]
+      responses:
+        '200':
+          description: Worker status updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+              example:
+                - id: "101a8fa4-dce6-4d10-a65a-e88e6edbcdf7"
+                  status: "RUNNING"
+                  zone: "DE"
+        '400':
+          description: Invalid worker status provided.
+        '404':
+          description: Worker not found.
+        '500':
+          description: Internal server error.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Worker:
+      type: object
+      description: Worker details
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - AVAILABLE
+            - RUNNING
+        zone:
+          type: string
+      required:
+        - id
+        - status
+        - zone
