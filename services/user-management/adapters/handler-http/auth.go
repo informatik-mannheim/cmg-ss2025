@@ -1,4 +1,3 @@
-// handler-http/auth.go
 package handler
 
 import (
@@ -9,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"os"
 
@@ -39,7 +37,6 @@ type loginResponse struct {
 var service = core.NewService()
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	// adminSecret := os.Getenv("ADMIN_SECRET")
 	isAdmin := isAdmin(r.Header.Get("X-Admin-Secret"))
 
 	var req registerRequest
@@ -48,7 +45,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Prevent Job Scheduler if not explicitly authorized
 	if req.Role == model.JobScheduler && !isAdmin {
 		http.Error(w, "unauthorized to create Job Scheduler", http.StatusForbidden)
 		return
@@ -66,8 +62,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifier := notifier.New()
-	notifier.UserRegistered(id, string(req.Role))
+	n := notifier.New()
+	n.UserRegistered(id, string(req.Role))
 
 	resp := registerResponse{ID: id, Secret: secret}
 	w.Header().Set("Content-Type", "application/json")
@@ -88,10 +84,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifier := notifier.New()
-	notifier.UserLoggedIn(user.ID)
+	n := notifier.New()
+	n.UserLoggedIn(user.ID)
 
-	token, err := requestAuth0Token()
+	token, err := requestAuth0Token(n)
 	if err != nil {
 		http.Error(w, "failed to retrieve token", http.StatusInternalServerError)
 		return
@@ -102,38 +98,50 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func requestAuth0Token() (string, error) {
+func requestAuth0Token(n notifier.Notifier) (string, error) {
 	type auth0Response struct {
 		AccessToken string `json:"access_token"`
 		TokenType   string `json:"token_type"`
 	}
 
+	clientID := os.Getenv("AUTH0_CLIENT_ID")
+	clientSecret := os.Getenv("AUTH0_CLIENT_SECRET")
+	audience := os.Getenv("JWT_AUDIENCE")
+	url := os.Getenv("AUTH0_TOKEN_URL")
+
+	n.Event("Requesting Auth0 token from: " + url)
+	n.Event("client_id: " + clientID)
+	n.Event("audience: " + audience)
+
 	data := map[string]string{
-		"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
-		"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
-		"audience":      os.Getenv("JWT_AUDIENCE"),
+		"client_id":     clientID,
+		"client_secret": clientSecret,
+		"audience":      audience,
 		"grant_type":    "client_credentials",
 	}
 	jsonData, _ := json.Marshal(data)
 
-	url := os.Getenv("AUTH0_TOKEN_URL")
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
+		n.Event("Error making request to Auth0: " + err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Auth0 token request failed [%d]: %s", resp.StatusCode, string(body))
+		n.Event("Auth0 responded with status " + resp.Status + ": " + string(body))
 		return "", errors.New("Auth0 request failed")
 	}
 
 	var parsed auth0Response
 	if err := json.Unmarshal(body, &parsed); err != nil {
+		n.Event("Failed to parse Auth0 response: " + err.Error())
 		return "", err
 	}
 
+	n.Event("Successfully received token from Auth0")
 	return parsed.AccessToken, nil
 }
 

@@ -1,5 +1,5 @@
 # Step 1: Build the Go binary
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23.1-alpine AS builder
 
 WORKDIR /app
 
@@ -14,16 +14,19 @@ COPY . .
 RUN go build -o user-management .
 
 # Step 2: Minimal runtime image
-FROM scratch
+FROM alpine:3.18
 
-# App listens on 8081
-EXPOSE 8081
+# add ca-certificates to the image
+RUN apk add --no-cache ca-certificates
 
-# Copy the statically compiled binary
+# Create a non-root user
+WORKDIR /app
+
+# Copy the binary from the builder stage
 COPY --from=builder /app/user-management /app/user-management
 
-# Optional: copy static files like .env or users.json if you want to bundle them
-# COPY --from=builder /app/users.json /app/users.json
-# COPY --from=builder /app/.env /app/.env
+# Expose the port the app runs on
+EXPOSE 8081
 
+# Command to run the binary
 CMD ["/app/user-management"]

@@ -1,14 +1,12 @@
 module github.com/informatik-mannheim/cmg-ss2025/services/user-management
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
-	github.com/alexedwards/argon2id v1.0.0
 	github.com/google/uuid v1.6.0
+	golang.org/x/crypto v0.38.0
 )
 
-require (
-	github.com/joho/godotenv v1.5.1
-	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-)
+require golang.org/x/sys v0.33.0 // indirect

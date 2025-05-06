@@ -1,16 +1,18 @@
-// core/service.go
 package core
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 	"sync"
 
-	"github.com/alexedwards/argon2id"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/model"
+	"golang.org/x/crypto/argon2"
 )
 
 type Service struct {
@@ -45,15 +47,12 @@ func (s *Service) AddUser(id string, role model.Role) (string, error) {
 	}
 
 	plainSecret := generateSecret()
-	hash, err := argon2id.CreateHash(plainSecret, argon2id.DefaultParams)
-	if err != nil {
-		return "", err
-	}
+	hashed := hashSecret(plainSecret)
 
 	s.users[id] = model.User{
 		ID:     id,
 		Role:   role,
-		Secret: hash,
+		Secret: hashed,
 	}
 
 	s.saveUsersToFile()
@@ -65,8 +64,7 @@ func (s *Service) Authenticate(secret string) (*model.User, error) {
 	defer s.mu.RUnlock()
 
 	for _, user := range s.users {
-		match, err := argon2id.ComparePasswordAndHash(secret, user.Secret)
-		if err == nil && match {
+		if verifySecret(secret, user.Secret) {
 			return &user, nil
 		}
 	}
@@ -81,6 +79,32 @@ func generateSecret() string {
 		panic("failed to generate secret: " + err.Error())
 	}
 	return hex.EncodeToString(key)
+}
+
+func hashSecret(secret string) string {
+	salt := make([]byte, 16)
+	_, err := rand.Read(salt)
+	if err != nil {
+		panic("failed to generate salt: " + err.Error())
+	}
+
+	hash := argon2.IDKey([]byte(secret), salt, 1, 64*1024, 4, 32)
+	return base64.RawStdEncoding.EncodeToString(salt) + "$" + base64.RawStdEncoding.EncodeToString(hash)
+}
+
+func verifySecret(secret, encoded string) bool {
+	parts := strings.Split(encoded, "$")
+	if len(parts) != 2 {
+		return false
+	}
+	salt, err1 := base64.RawStdEncoding.DecodeString(parts[0])
+	expected, err2 := base64.RawStdEncoding.DecodeString(parts[1])
+	if err1 != nil || err2 != nil {
+		return false
+	}
+
+	hash := argon2.IDKey([]byte(secret), salt, 1, 64*1024, 4, 32)
+	return subtle.ConstantTimeCompare(hash, expected) == 1
 }
 
 func (s *Service) loadUsersFromFile() {

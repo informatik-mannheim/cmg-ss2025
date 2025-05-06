@@ -6,6 +6,7 @@ import "log"
 type Notifier interface {
 	UserRegistered(id string, role string)
 	UserLoggedIn(id string)
+	Event(message string)
 }
 
 // StdoutNotifier is a simple implementation that logs to stdout.
@@ -23,4 +24,8 @@ func (n *StdoutNotifier) UserLoggedIn(id string) {
 // New returns a default notifier implementation.
 func New() Notifier {
 	return &StdoutNotifier{}
+}
+
+func (n *StdoutNotifier) Event(message string) {
+	log.Printf("[Notifier] %s", message)
 }
