@@ -1,10 +1,6 @@
 package repo_in_memory
 
-import (
-	"context"
-
-	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
-)
+/*
 
 type Repo struct {
 	entities map[string]ports.Job
@@ -30,3 +26,5 @@ func (r *Repo) FindById(id string, ctx context.Context) (ports.Job, error) {
 	}
 	return job, nil
 }
+
+*/

@@ -1,18 +1,6 @@
 package main
 
-import (
-	"context"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/job/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/job/adapters/repo-in-memory"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job/core"
-)
-
+/*
 func main() {
 
 	core := core.NewJobService(repo.NewRepo(), nil)
@@ -35,3 +23,4 @@ func main() {
 	srv.ListenAndServe()
 	log.Print("Done")
 }
+*/

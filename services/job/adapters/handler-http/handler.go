@@ -1,13 +1,6 @@
 package handler_http
 
-import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/gorilla/mux"
-
-	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
-)
+/*
 
 type Handler struct {
 	service ports.Api
@@ -53,3 +46,6 @@ func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(job)
 }
+
+
+*/
