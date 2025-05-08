@@ -15,10 +15,14 @@ type UpdateJob struct {
 	ComputeZone     string  `json:"computeZone"`
 	CarbonIntensity float64 `json:"carbonIntensity"`
 	CarbonSavings   float64 `json:"carbonSavings"`
+	// No status on this struct, because there is only 1 possible option,
+	// so the function will set it itself.
 }
 
 type UpdateWorker struct {
 	ID string `json:"id"` // actually uuid
+	// No status on this struct, because there is only 1 possible option,
+	// so the function will set it itself.
 }
 
 type Notifier interface {

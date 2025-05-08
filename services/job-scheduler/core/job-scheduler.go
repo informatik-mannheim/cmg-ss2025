@@ -42,7 +42,7 @@ func (js *JobSchedulerService) ScheduleJob() error {
 	log.Printf("Workers: %v\n", workers)
 
 	// 3. Check already assigned
-	jobs, workers, err = js.checkAlreadyAssigned(jobs, workers)
+	jobs, workers, err = js.checkAlreadyAssignedJobs(jobs, workers)
 	if err != nil {
 		log.Printf("Error while checking already assigned jobs, aborting job-schedule: %v\n", err)
 		return err
@@ -67,10 +67,12 @@ func (js *JobSchedulerService) ScheduleJob() error {
 	return nil
 }
 
-func (js *JobSchedulerService) checkAlreadyAssigned(jobs []Job.Job, workers []WorkerRegistry.Worker) ([]Job.Job, []WorkerRegistry.Worker, error) {
+// https://planka.123.123.123.123:8080
+
+func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []Job.Job, workers []WorkerRegistry.Worker) ([]Job.Job, []WorkerRegistry.Worker, error) {
 	var unassignedJobs []Job.Job
 	for _, job := range jobs {
-		if job.Status == Job.StatusScheduled && checkWorkerAlreadyAssigned(workers, job) {
+		if job.Status == Job.StatusScheduled && checkAlreadyAssignedWorker(workers, job) {
 			err := js.Notifier.AssignWorker(ports.UpdateWorker{
 				ID: job.WorkerID,
 			})
@@ -88,7 +90,7 @@ func (js *JobSchedulerService) checkAlreadyAssigned(jobs []Job.Job, workers []Wo
 	return unassignedJobs, unassignedWorkers, nil
 }
 
-func checkWorkerAlreadyAssigned(workers []WorkerRegistry.Worker, job Job.Job) bool {
+func checkAlreadyAssignedWorker(workers []WorkerRegistry.Worker, job Job.Job) bool {
 	checkWorker := func(worker WorkerRegistry.Worker) bool {
 		return worker.Id == job.WorkerID
 	}
