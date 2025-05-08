@@ -8,20 +8,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/entity/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/entity/adapters/repo-in-memory"
-	"github.com/informatik-mannheim/cmg-ss2025/services/entity/core"
+	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
+	repo "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/repo-in-memory"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
 )
 
 func main() {
 
-	core := core.NewEntityService(repo.NewRepo(), nil)
+	core := core.NewUserManagementService(repo.NewRepo(), nil)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080" // Default port if not specified
-	}
-	srv := &http.Server{Addr: ":" + port}
+	srv := &http.Server{Addr: ":8080"}
 
 	h := handler_http.NewHandler(core)
 	http.Handle("/", h)

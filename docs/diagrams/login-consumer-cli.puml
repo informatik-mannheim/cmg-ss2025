@@ -23,21 +23,12 @@ note over User: User account is now registered and can log in
 == Login Flow ==
 
 User -> CLI: run login command
-CLI -> Gateway: POST /auth/login\n{username, password}
-Gateway -> UserMgmt: Forward login data
+CLI -> Gateway: POST /auth/login\n{secret}
+Gateway -> UserMgmt: Forward login data (secret hashed and compared in user mgmt)
 UserMgmt --> Gateway: 200 OK + {token}
 Gateway --> CLI: 200 OK + {token}
 CLI --> User: Login successful
 
 note over User: JWT is stored locally and used in Authorization header for future requests
-
-== Fetch Current User Info ==
-
-User -> CLI: run user info command
-CLI -> Gateway: GET /me\nAuthorization: Bearer <token>
-Gateway -> UserMgmt: Forward request with token
-UserMgmt --> Gateway: 200 OK + {id, username, role}
-Gateway --> CLI: 200 OK + user info
-CLI --> User: Display user info
 
 @enduml

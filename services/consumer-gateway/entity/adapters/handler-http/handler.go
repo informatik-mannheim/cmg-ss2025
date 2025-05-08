@@ -17,6 +17,7 @@ type Handler struct {
 var _ http.Handler = (*Handler)(nil)
 
 func NewHandler(service ports.Api) *Handler {
+<<<<<<< HEAD
 	h := Handler{service: service, rtr: *mux.NewRouter()}
 
 	h.rtr.HandleFunc("/jobs", h.handleCreateJobRequest).Methods("POST")
@@ -24,6 +25,12 @@ func NewHandler(service ports.Api) *Handler {
 
 	h.rtr.HandleFunc("/auth/login", h.handleLoginRequest).Methods("POST")
 	h.rtr.HandleFunc("/auth/register", h.handleRegisterRequest).Methods("POST")
+=======
+
+	h := Handler{service: service, rtr: *mux.NewRouter()}
+	h.rtr.HandleFunc("/consumer/{id}", h.handleGet).Methods("GET")
+	h.rtr.HandleFunc("/consumer", h.handleSet).Methods("PUT")
+>>>>>>> main
 	return &h
 }
 
@@ -31,6 +38,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.rtr.ServeHTTP(w, r) //delegate
 }
 
+<<<<<<< HEAD
 
 /* 
 Creates a new job using the provided data by the client.
@@ -64,11 +72,32 @@ func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Reque
 	jobID := vars["job-id"] // "jobID" : "123-abc"
 
 	status, err := h.service.GetJobResult(jobID, r.Context())
+=======
+func (h *Handler) handleSet(w http.ResponseWriter, r *http.Request) {
+	var consumer ports.Cosnumer
+	err := json.NewDecoder(r.Body).Decode(&consumer)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = h.service.Set(consumer, r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	consumer, err := h.service.Get(vars["id"], r.Context())
+>>>>>>> main
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+<<<<<<< HEAD
 	json.NewEncoder(w).Encode(status)
 }
 
@@ -104,4 +133,7 @@ func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+=======
+	json.NewEncoder(w).Encode(consumer)
+>>>>>>> main
 }

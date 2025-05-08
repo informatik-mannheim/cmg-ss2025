@@ -1,0 +1,26 @@
+@startuml worker-daemon-sequence
+
+skinparam Shadowing false
+skinparam ParticipantPadding 80
+skinparam BoxPadding 10
+
+actor "GCLS Worker Daemon" as Worker
+participant "Worker Gateway" as Gateway
+participant "User Management" as UserManagement
+participant "Worker Registry" as Registry
+
+== Worker Daemon Registration ==
+
+Worker -> Gateway: Register with key
+
+alt "Key is valid"
+    Gateway -> UserManagement: Create authorization Token
+    UserManagement -> Gateway: OK + token
+    Gateway -> Registry: POST /workers + token
+    Registry -> Gateway: OK
+    Gateway -> Worker: OK + token
+else "Key is invalid"
+    Gateway -> Worker: 401 Unauthorized
+end
+
+@enduml
