@@ -1,6 +1,6 @@
 # Consumer Gateway Service
 
-The consumer-gateway service is a service that forwards all client requests to the appropriate service. Endpoints like `/jobs` require a valid JWT in the `Authorization` header.
+The consumer-gateway service is a forwarding service that routes all client requests to the appropriate service. It does not store, evaluate or authenticate any data itself. 
 
 > The implementation is in an early stage. Many things are still missing. Use with care.
 

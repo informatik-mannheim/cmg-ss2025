@@ -10,6 +10,7 @@ var ErrConsumerNotFound = errors.New("Consumer Gateway not found")
 type CreateJobRequest struct {
 	ImageID string `json:"image_id"`
 	Zone string  `json:"zone"` // is optional
+	Param string `json:"params"`
 }
 
 type CreateJobResponse struct {
@@ -45,11 +46,20 @@ type RegisterResponse struct {
 	Token string `json:"token"`
 }
 
+type ZoneRequest struct {
+	Zone string `json:"zone"`
+}
+// CLI: "Choose job location [DE, FR, ESP ...]"
+type ZoneResponse struct {
+	Zone string `json:"zone"`
+}
+
+
 
 type Api interface {
 
 	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
-	GetJobResult(jobID string, ctx context.Context) (JobStatusResponse, error)
+	GetJobResult(jobID string, ctx context.Context) (JobResultResponse, error)
 
 	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
 	Register(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)
