@@ -66,7 +66,7 @@ func TestConsumerService_Set(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "Store some consumer",
+			name:   "Store some entity",
 			fields: testFields,
 			args: args{
 				ports.Consumer{Id: "1", IntProp: 4711, StringProp: "Test"},
