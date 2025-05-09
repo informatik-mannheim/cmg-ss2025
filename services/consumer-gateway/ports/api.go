@@ -13,6 +13,15 @@ type CreateJobRequest struct {
 	Param string `json:"params"`
 }
 
+// is optional
+type GetZones struct {
+	Zone string  `json:"zone"` 
+}
+
+type ZonesResponse struct {
+	Zones string  `json:"zones"` 
+}
+
 type CreateJobResponse struct {
 	JobID string `json:"job_id"`
 	JobStatus string `json:"status"`
@@ -59,6 +68,7 @@ type ZoneResponse struct {
 type Api interface {
 
 	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
+	GetZones(req GetZones, ctx context.Context) (ZonesResponse, error)
 	GetJobResult(jobID string, ctx context.Context) (JobResultResponse, error)
 
 	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)

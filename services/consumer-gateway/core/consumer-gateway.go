@@ -21,6 +21,11 @@ func (s *ConsumerService) CreateJob(req ports.CreateJobRequest, ctx context.Cont
 func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context)(ports.JobResultResponse, error){
 	return ports.JobResultResponse{}, nil
 }
+
+func (s *ConsumerService) GetZones(req ports.GetZones, ctx context.Context)(ports.ZonesResponse, error){
+	return ports.ZonesResponse{}, nil
+}
+
 func (s *ConsumerService) Login(req ports.ConsumerLoginRequest, ctx context.Context)(ports.LoginResponse, error) {
 	return ports.LoginResponse{}, nil
 }
