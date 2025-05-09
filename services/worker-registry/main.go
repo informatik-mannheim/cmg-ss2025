@@ -22,7 +22,11 @@ func main() {
 
 	CreateDummyWorkers(*service)
 
-	srv := &http.Server{Addr: "127.0.0.1:8080"}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	srv := &http.Server{Addr: ":" + port}
 
 	h := handler.NewHandler(service)
 	http.Handle("/", h)
