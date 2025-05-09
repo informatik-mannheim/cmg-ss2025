@@ -58,7 +58,7 @@ type RegisterResponse struct {
 type ZoneRequest struct {
 	Zone string `json:"zone"`
 }
-// CLI: "Choose job location [DE, FR, ESP ...]"
+// CLI: "Choose job location [GER, FR, ESP ...]"
 type ZoneResponse struct {
 	Zone string `json:"zone"`
 }

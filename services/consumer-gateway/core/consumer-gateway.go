@@ -22,7 +22,7 @@ func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context)(ports.
 	return ports.JobResultResponse{}, nil
 }
 
-func (s *ConsumerService) GetZones(req ports.GetZones, ctx context.Context)(ports.ZonesResponse, error){
+func (s *ConsumerService) GetZones(ctx context.Context)(ports.ZonesResponse, error){
 	return ports.ZonesResponse{}, nil
 }
 
