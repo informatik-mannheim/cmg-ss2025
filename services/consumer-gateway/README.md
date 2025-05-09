@@ -1,8 +1,7 @@
-# Entity Service
+# Consumer Gateway Service
 
-The entity service is an example service that demonstrates the folder structure of a microservice following the ports & adapters architecture.
+The consumer-gateway service is a forwarding service that routes all client requests to the appropriate service. It does not store, evaluate or authenticate any data itself. 
 
-> **WARNING**
 > The implementation is in an early stage. Many things are still missing. Use with care.
 
 ## Usage
