@@ -11,26 +11,26 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/model"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 	"golang.org/x/crypto/argon2"
 )
 
 type Service struct {
 	mu       sync.RWMutex
-	users    map[string]model.User
+	users    map[string]ports.User
 	filePath string
 }
 
 func NewService() *Service {
 	s := &Service{
-		users:    make(map[string]model.User),
+		users:    make(map[string]ports.User),
 		filePath: "users.json",
 	}
 	s.loadUsersFromFile()
 	return s
 }
 
-func (s *Service) AddUser(id string, role model.Role) (string, error) {
+func (s *Service) AddUser(id string, role ports.Role) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -38,9 +38,9 @@ func (s *Service) AddUser(id string, role model.Role) (string, error) {
 		return "", errors.New("user already exists")
 	}
 
-	if role == model.JobScheduler {
+	if role == ports.JobScheduler {
 		for _, u := range s.users {
-			if u.Role == model.JobScheduler {
+			if u.Role == ports.JobScheduler {
 				return "", errors.New("a Job Scheduler already exists")
 			}
 		}
@@ -49,7 +49,7 @@ func (s *Service) AddUser(id string, role model.Role) (string, error) {
 	plainSecret := generateSecret()
 	hashed := hashSecret(plainSecret)
 
-	s.users[id] = model.User{
+	s.users[id] = ports.User{
 		ID:     id,
 		Role:   role,
 		Secret: hashed,
@@ -59,7 +59,7 @@ func (s *Service) AddUser(id string, role model.Role) (string, error) {
 	return plainSecret, nil
 }
 
-func (s *Service) Authenticate(secret string) (*model.User, error) {
+func (s *Service) Authenticate(secret string) (*ports.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

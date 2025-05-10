@@ -9,12 +9,13 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - JWKS_URL=${JWKS_URL}
-      - JWT_ISSUER=${JWT_ISSUER}
-      - JWT_AUDIENCE=${JWT_AUDIENCE}
-      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
-      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
-      - ADMIN_SECRET=${ADMIN_SECRET}
+      - ADMIN_SECRET_HASH=da359894a57a42c65efa8b98c8c86f3f974ff2c8dd7fc428fd87ce6ecdc40bd7
+      - AUTH0_CLIENT_ID=E2H2lf2DurjQYMqHUpNENe63VaY8B0xI
+      - AUTH0_CLIENT_SECRET=vcspgNnXISKgmvms0swhVYiSVPd3t-vOxNq_B5o_WA-4eO5z2pqzkOW9QF9aEO6e
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
+      - JWT_ISSUER=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/
+      - JWT_AUDIENCE=https://user-management.local
+      - AUTH0_TOKEN_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/oauth/token
     networks:
       - app-network
     restart: unless-stopped
