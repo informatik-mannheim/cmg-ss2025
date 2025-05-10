@@ -47,28 +47,32 @@ func New(auth ports.AuthProvider, useLive bool, isAdminFn func(string) bool, not
 }
 
 func (h *HTTPHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	notifier := h.NotifierFn()
 	isAdmin := h.IsAdminFn(r.Header.Get("X-Admin-Secret"))
 
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil ||
 		(req.Role != ports.Consumer && req.Role != ports.Provider && req.Role != ports.JobScheduler) {
+		notifier.Event("Invalid register request payload")
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
 	if req.Role == ports.JobScheduler && !isAdmin {
+		notifier.Event("Unauthorized attempt to create Job Scheduler")
 		http.Error(w, "unauthorized to create Job Scheduler", http.StatusForbidden)
 		return
 	}
 
 	if !isAdmin {
+		notifier.Event("Unauthorized register attempt")
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	id := uuid.NewString()
-
-	h.NotifierFn().UserRegistered(id, string(req.Role))
+	notifier.UserRegistered(id, string(req.Role))
+	notifier.Event("Registration successful for role: " + string(req.Role))
 
 	resp := registerResponse{ID: id}
 	w.Header().Set("Content-Type", "application/json")
@@ -77,21 +81,26 @@ func (h *HTTPHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HTTPHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	notifier := h.NotifierFn()
+
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Secret == "" {
+		notifier.Event("Invalid login request format")
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
 	clientID, _ := splitCredentials(req.Secret)
-
+	notifier.Event("Login attempt from client: " + clientID)
 	token, err := h.Auth.RequestTokenFromCredentials(req.Secret)
 	if err != nil {
+		notifier.Event("Login failed for client: " + clientID)
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	h.NotifierFn().UserLoggedIn(clientID)
+	notifier.UserLoggedIn(clientID)
+	notifier.Event("Login successful for client: " + clientID)
 
 	resp := loginResponse{Token: token}
 	w.Header().Set("Content-Type", "application/json")
