@@ -1,37 +1,26 @@
 package main
 
 import (
-	"context"
-	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/repo-in-memory"
+	auth0adapter "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/auth"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/notifier"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
 )
 
 func main() {
+	useLive := os.Getenv("USE_LIVE") == "true"
+	auth := auth0adapter.New(useLive)
+	service := core.NewService()
 
-	core := core.NewUserManagementService(repo.NewRepo(), nil)
+	h := handler.New(service, auth, useLive, handler.IsAdmin, notifier.New)
 
-	srv := &http.Server{Addr: ":8080"}
+	http.HandleFunc("/auth/register", h.RegisterHandler)
+	http.HandleFunc("/auth/login", h.LoginHandler)
 
-	h := handler_http.NewHandler(core)
-	http.Handle("/", h)
-
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
-	}()
-
-	log.Print("listening...")
-	srv.ListenAndServe()
-	log.Print("Done")
+	port := ":8080"
+	println("Listening on", port)
+	http.ListenAndServe(port, nil)
 }

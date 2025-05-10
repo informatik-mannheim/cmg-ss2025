@@ -1,7 +1,15 @@
 package ports
 
+type Role string
+
+const (
+	Consumer     Role = "consumer"
+	Provider     Role = "provider"
+	JobScheduler Role = "job scheduler"
+)
+
 type UserManagement struct {
-	Id         string
-	IntProp    int
-	StringProp string
+	ID     string `json:"id"`
+	Role   Role   `json:"role"`
+	Secret string `json:"secret"` // hashed secret (e.g., Argon2id)
 }

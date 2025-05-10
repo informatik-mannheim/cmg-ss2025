@@ -1,9 +1,7 @@
 package ports
 
-import (
-	"context"
-)
-
 type Notifier interface {
-	UserManagementChanged(userManagement UserManagement, ctx context.Context)
+	UserRegistered(id string, role string)
+	UserLoggedIn(id string)
+	Event(message string)
 }
