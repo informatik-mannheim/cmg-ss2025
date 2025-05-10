@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"io"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
@@ -23,26 +24,21 @@ func TestConsumerService(t *testing.T) {
 		url 			string
 		method			string
 		code   			int
+		inputBody		string
 		responseBody 	string
 
-		zone 			string
-		params 			string
-		body 			string
-
-		username string
-		password string
-		token	 string
 
 	}{
 		{
 			name: "Forward user login data",
 			url: "/auth/login",
 			method: "POST",
+
+			inputBody: `{"username" : "Alice Bob", "password": "SuperSecure123"}`,
+			responseBody: `{"token": "super-secret-123"}`,
 			code: http.StatusOK,
 
-			username: "Alice Bob",
-			password: "SuperSecurePassword123",
-			token: "super-secret-123",
+			
 		},
 
 		{
@@ -51,9 +47,8 @@ func TestConsumerService(t *testing.T) {
 			method: "POST",
 			code: http.StatusCreated,
 
-			username: "Alice Bob",
-			password: "SuperSecurePassword123",
-			token: "super-secret-123",
+			inputBody: `{"username" : "Alice Bob", "password": "SuperSecure123"}`,
+			responseBody: `{"token": "super-secret-123"}`,
 		},
 
 		{
@@ -61,11 +56,9 @@ func TestConsumerService(t *testing.T) {
 			url: "/jobs",
 			method: "POST",
 			code: http.StatusCreated,
-			zone: "GER",
-			params: "-abc",
+			inputBody: `{"image_id": "123", "location" : "FR", "params":  "abc"}`,
 
 		},
-
 		{
 			name: "Get a job result",
 			url: "/jobs/{id}/results",
@@ -74,26 +67,25 @@ func TestConsumerService(t *testing.T) {
 		},
 
 
+
 	}
-	
-		{
+
 		
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			
-			if (tt.name == "Create Job") { 
+			service := core.NewConsumerService()
+			router := handler_http.NewHandler(service)
 
-				service := core.NewConsumerService()
-				router := handler_http.NewHandler(service)
+			body := strings.NewReader(tt.inputBody)
+			req := httptest.NewRequest(tt.method, tt.url, body)
+			req.Header.Set("Content-Type", "application/json")
 
-				req := httptest.NewRequest("POST", "/jobs", body)
-				rr := httptest.NewRecorder()
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
 
-				router.ServeHTTP(rr, req)
-
-		
-		})
-	} }
-
-		
+			if rr.Code != tt.code {
+				t.Errorf("expected code %d, got %d", tt.code, rr.Code)
+				}
+	})
+}
 }
