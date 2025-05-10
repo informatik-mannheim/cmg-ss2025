@@ -11,12 +11,10 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 type HTTPHandler struct {
-	Service    *core.Service
 	Auth       ports.AuthProvider
 	UseLive    bool
 	IsAdminFn  func(string) bool
@@ -28,8 +26,7 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	ID     string `json:"id"`
-	Secret string `json:"secret"`
+	ID string `json:"id"`
 }
 
 type loginRequest struct {
@@ -40,9 +37,8 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
-func New(service *core.Service, auth ports.AuthProvider, useLive bool, isAdminFn func(string) bool, notifierFn func() ports.Notifier) *HTTPHandler {
+func New(auth ports.AuthProvider, useLive bool, isAdminFn func(string) bool, notifierFn func() ports.Notifier) *HTTPHandler {
 	return &HTTPHandler{
-		Service:    service,
 		Auth:       auth,
 		UseLive:    useLive,
 		IsAdminFn:  isAdminFn,
@@ -71,15 +67,10 @@ func (h *HTTPHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := uuid.NewString()
-	secret, err := h.Service.AddUser(id, req.Role)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 
 	h.NotifierFn().UserRegistered(id, string(req.Role))
 
-	resp := registerResponse{ID: id, Secret: secret}
+	resp := registerResponse{ID: id}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(resp)
