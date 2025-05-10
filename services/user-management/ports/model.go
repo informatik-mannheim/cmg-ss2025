@@ -11,5 +11,5 @@ const (
 type UserManagement struct {
 	ID     string `json:"id"`
 	Role   Role   `json:"role"`
-	Secret string `json:"secret"` // hashed secret (e.g., Argon2id)
+	Secret string `json:"secret"`
 }
