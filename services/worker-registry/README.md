@@ -27,7 +27,7 @@ Returns the list of all registered workers.
 #### Example Command
 
 ```bash
-curl -X 'GET' 'http://localhost:8080/workers'
+curl 'localhost:8080/workers'
 ```
 #### Sample Response
 
@@ -52,7 +52,7 @@ Returns the list of all registered workers in the zone `DE` that are `AVAILABLE`
 #### Example Command
 
 ```bash
-curl -X 'GET' 'http://localhost:8080/workers?status=AVAILABLE&zone=DE'
+curl 'localhost:8080/workers?status=AVAILABLE&zone=DE'
 ```
 #### Sample Response
 
@@ -78,7 +78,7 @@ Returns a worker with the specified `id`.
 #### Example Command
 
 ```bash
-curl -X 'GET' 'http://localhost:8080/workers/0'
+curl 'localhost:8080/workers/0'
 ```
 
 #### Example Response
@@ -99,7 +99,7 @@ Creates a worker from given `zone`.
 
 #### Example Command
 ```bash
-curl -X 'POST' 'http://localhost:8080/workers?zone=EN'
+curl -X 'POST' 'localhost:8080/workers?zone=EN'
 ```
 #### Example Response
 ```json
@@ -118,7 +118,7 @@ Updates the `status` of a specific worker (`AVAILABLE` or `RUNNING`).
 
 #### Example Command
 ```bash
-curl -X 'PUT' 'http://localhost:8080/workers/1/status' -d '{"status": "RUNNING"}'
+curl -X 'PUT' 'localhost:8080/workers/1/status' -d '{"status": "RUNNING"}'
 ```
 #### Example Response
 ```json
