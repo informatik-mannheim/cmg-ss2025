@@ -1,10 +1,18 @@
 {
   "DE": {
     "zone": "DE",
-    "carbonIntensity": 142
+    "carbonIntensity": 140.5
+  },
+  "FR": {
+    "zone": "FR",
+    "carbonIntensity": 135.2
   },
   "GB": {
     "zone": "GB",
     "carbonIntensity": 96
+  },
+  "US-NY-NYIS": {
+    "zone": "US-NY-NYIS",
+    "carbonIntensity": 128.9
   }
 }

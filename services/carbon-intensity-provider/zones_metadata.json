@@ -1,10 +1,14 @@
 [
   {
-    "code": "GB",
-    "name": "Great Britain"
-  },
-  {
     "code": "DE",
     "name": "Germany"
+  },
+  {
+    "code": "FR",
+    "name": "France"
+  },
+  {
+    "code": "US-NY-NYIS",
+    "name": "New York ISO"
   }
 ]

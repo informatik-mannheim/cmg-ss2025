@@ -68,6 +68,13 @@ func main() {
 		s.AddOrUpdateZone("DE", 140.5, ctx)
 		s.AddOrUpdateZone("FR", 135.2, ctx)
 		s.AddOrUpdateZone("US-NY-NYIS", 128.9, ctx)
+
+		offlineZones := []ports.Zone{
+			{Code: "DE", Name: "Germany"},
+			{Code: "FR", Name: "France"},
+			{Code: "US-NY-NYIS", Name: "New York ISO"},
+		}
+		_ = r.StoreZones(offlineZones, ctx)
 	}
 
 	httpHandler := handler.NewHandler(s, n)
