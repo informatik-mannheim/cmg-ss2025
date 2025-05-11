@@ -9,7 +9,7 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
-const (
+var (
 	storageFile     = "zones.json"
 	metadataStorage = "zones_metadata.json"
 )
