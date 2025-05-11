@@ -3,11 +3,9 @@ package core
 import (
 	"log"
 
-	CarbonIntensityProvider "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/model"
-	Job "github.com/informatik-mannheim/cmg-ss2025/services/job"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
-	WorkerRegistry "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 type JobSchedulerService struct {
@@ -69,10 +67,10 @@ func (js *JobSchedulerService) ScheduleJob() error {
 
 // https://planka.123.123.123.123:8080
 
-func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []Job.Job, workers []WorkerRegistry.Worker) ([]Job.Job, []WorkerRegistry.Worker, error) {
-	var unassignedJobs []Job.Job
+func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []model.Job, workers []model.Worker) ([]model.Job, []model.Worker, error) {
+	var unassignedJobs []model.Job
 	for _, job := range jobs {
-		if job.Status == Job.StatusScheduled && checkAlreadyAssignedWorker(workers, job) {
+		if job.Status == model.JobStatusScheduled && checkAlreadyAssignedWorker(workers, job) {
 			err := js.Notifier.AssignWorker(ports.UpdateWorker{
 				ID: job.WorkerID,
 			})
@@ -83,37 +81,37 @@ func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []Job.Job, workers 
 			unassignedJobs = append(unassignedJobs, job)
 		}
 	}
-	unassignedWorkers := utils.Filter(workers, func(worker WorkerRegistry.Worker) bool {
-		return worker.Status == WorkerRegistry.StatusAvailable
+	unassignedWorkers := utils.Filter(workers, func(worker model.Worker) bool {
+		return worker.Status == model.WorkerStatusAvailable
 	})
 
 	return unassignedJobs, unassignedWorkers, nil
 }
 
-func checkAlreadyAssignedWorker(workers []WorkerRegistry.Worker, job Job.Job) bool {
-	checkWorker := func(worker WorkerRegistry.Worker) bool {
+func checkAlreadyAssignedWorker(workers []model.Worker, job model.Job) bool {
+	checkWorker := func(worker model.Worker) bool {
 		return worker.Id == job.WorkerID
 	}
 	return utils.Some(workers, checkWorker)
 }
 
-func (js *JobSchedulerService) getCarbonIntensities(workers []WorkerRegistry.Worker) ([]CarbonIntensityProvider.CarbonIntensityData, error) {
-	zones := utils.Map(workers, func(worker WorkerRegistry.Worker) string {
+func (js *JobSchedulerService) getCarbonIntensities(workers []model.Worker) ([]model.CarbonIntensityResponse, error) {
+	zones := utils.Map(workers, func(worker model.Worker) string {
 		return worker.Zone
 	})
 	return js.Notifier.GetCarbonIntensities(zones)
 }
 
-func (js *JobSchedulerService) assignJobs(jobs []Job.Job, workers []WorkerRegistry.Worker, carbons []CarbonIntensityProvider.CarbonIntensityData) error {
+func (js *JobSchedulerService) assignJobs(jobs []model.Job, workers []model.Worker, carbons []model.CarbonIntensityResponse) error {
 	// May execute some complex algorithm to assign jobs, but for now we just assign the first available worker to the job
 
 	var jobIndex int = 0
 	for _, worker := range workers {
-		if worker.Status != WorkerRegistry.StatusAvailable {
+		if worker.Status != model.WorkerStatusAvailable {
 			continue
 		}
 
-		for jobIndex < len(jobs) && jobs[jobIndex].Status != Job.StatusScheduled {
+		for jobIndex < len(jobs) && jobs[jobIndex].Status != model.JobStatusScheduled {
 			jobIndex++
 		}
 		if jobIndex >= len(jobs) {

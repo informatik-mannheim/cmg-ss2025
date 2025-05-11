@@ -1,10 +1,6 @@
 package ports
 
-import (
-	CarbonIntensityProvider "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/model"
-	Job "github.com/informatik-mannheim/cmg-ss2025/services/job"
-	WorkerRegistry "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
-)
+import "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 
 // FIXME: Change id-string to id-uuid, currently not possible due to lack of
 // uuid package approval...
@@ -27,9 +23,9 @@ type UpdateWorker struct {
 
 type Notifier interface {
 	// -- Getters --
-	GetJobs() ([]Job.Job, error)
-	GetWorkers() ([]WorkerRegistry.Worker, error)
-	GetCarbonIntensities(zones []string) ([]CarbonIntensityProvider.CarbonIntensityData, error)
+	GetJobs() ([]model.Job, error)
+	GetWorkers() ([]model.Worker, error)
+	GetCarbonIntensities(zones []string) ([]model.CarbonIntensityResponse, error)
 
 	// -- Setters --
 	AssignJob(update UpdateJob) error

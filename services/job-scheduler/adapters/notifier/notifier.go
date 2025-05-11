@@ -4,15 +4,13 @@ import (
 	"log"
 	"time"
 
-	CarbonIntensityProvider "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/model"
-	Job "github.com/informatik-mannheim/cmg-ss2025/services/job"
-	JobScheduler "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
-	WorkerRegistry "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 )
 
 type HttpNotifier struct{}
 
-var _ JobScheduler.Notifier = (*HttpNotifier)(nil)
+var _ ports.Notifier = (*HttpNotifier)(nil)
 
 func NewHttpNotifier() *HttpNotifier {
 	return &HttpNotifier{}
@@ -22,16 +20,16 @@ func NewHttpNotifier() *HttpNotifier {
 
 // --------------------------  Getters --------------------------
 
-func (n *HttpNotifier) GetJobs() ([]Job.Job, error) {
-	var params map[string]string = map[string]string{
+func (n *HttpNotifier) GetJobs() ([]model.Job, error) {
+	params := map[string]string{
 		"param1": "value1",
 		"param2": "value2",
 	}
-	var containerImage Job.ContainerImage = Job.ContainerImage{
+	containerImage := model.ContainerImage{
 		Name:    "image1",
 		Version: "1.0",
 	}
-	var jobs []Job.Job = []Job.Job{
+	jobs := []model.Job{
 		{
 			ID:                   "job1",
 			UserID:               "1234",
@@ -47,7 +45,7 @@ func (n *HttpNotifier) GetJobs() ([]Job.Job, error) {
 			CarbonSaving:         -1,
 			Result:               "",
 			ErrorMessage:         "",
-			Status:               Job.StatusQueued,
+			Status:               model.JobStatusQueued,
 		}, {
 			ID:                   "job2",
 			UserID:               "1234",
@@ -63,30 +61,30 @@ func (n *HttpNotifier) GetJobs() ([]Job.Job, error) {
 			CarbonSaving:         -1,
 			Result:               "",
 			ErrorMessage:         "",
-			Status:               Job.StatusQueued,
+			Status:               model.JobStatusQueued,
 		},
 	}
 	return jobs, nil
 }
 
-func (n *HttpNotifier) GetWorkers() ([]WorkerRegistry.Worker, error) {
-	var workers []WorkerRegistry.Worker = []WorkerRegistry.Worker{
+func (n *HttpNotifier) GetWorkers() ([]model.Worker, error) {
+	workers := []model.Worker{
 		{
 			Id:     "worker1",
-			Status: WorkerRegistry.StatusAvailable,
+			Status: model.WorkerStatusAvailable,
 			Zone:   "DE",
 		},
 		{
 			Id:     "worker2",
-			Status: WorkerRegistry.StatusAvailable,
+			Status: model.WorkerStatusAvailable,
 			Zone:   "DE",
 		},
 	}
 	return workers, nil
 }
 
-func (n *HttpNotifier) GetCarbonIntensities(zones []string) ([]CarbonIntensityProvider.CarbonIntensityData, error) {
-	var carbonIntensities []CarbonIntensityProvider.CarbonIntensityData = []CarbonIntensityProvider.CarbonIntensityData{
+func (n *HttpNotifier) GetCarbonIntensities(zones []string) ([]model.CarbonIntensityResponse, error) {
+	carbonIntensities := []model.CarbonIntensityResponse{
 		{
 			Zone:            "DE",
 			CarbonIntensity: 0.0,
@@ -101,12 +99,12 @@ func (n *HttpNotifier) GetCarbonIntensities(zones []string) ([]CarbonIntensityPr
 
 // --------------------------  Setters --------------------------
 
-func (n *HttpNotifier) AssignJob(update JobScheduler.UpdateJob) error {
+func (n *HttpNotifier) AssignJob(update ports.UpdateJob) error {
 	log.Printf("Assigned Job: %v\n", update)
 	return nil
 }
 
-func (n *HttpNotifier) AssignWorker(update JobScheduler.UpdateWorker) error {
+func (n *HttpNotifier) AssignWorker(update ports.UpdateWorker) error {
 	log.Printf("Assigned Worker: %v\n", update)
 	return nil
 }

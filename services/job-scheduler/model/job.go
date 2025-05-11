@@ -1,0 +1,67 @@
+package model
+
+import (
+	"fmt"
+	"time"
+)
+
+type JobStatus string
+
+const (
+	JobStatusQueued    JobStatus = "queued"    // default value for new job
+	JobStatusScheduled JobStatus = "scheduled" // is set as soon as a worker has been assigned (by the job-scheduler)
+	JobStatusRunning   JobStatus = "running"   // set by daemon
+	JobStatusCompleted JobStatus = "completed" // set by daemon
+	JobStatusFailed    JobStatus = "failed"    // set by daemon
+	JobStatusCancelled JobStatus = "cancelled" // set by daemon
+)
+
+type ContainerImage struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+// Json tags helps by (de-)serializing, json:"id" -> "id":"1234", functionality imported by "encoding/json" package
+
+type Job struct {
+
+	// set by job-service, theyre set automatically
+	ID        string    `json:"id"`        // generated as UUID // FIXME: actually UUID
+	UserID    string    `json:"userId"`    // get from JWT
+	CreatedAt time.Time `json:"createdAt"` // set at creation
+	UpdatedAt time.Time `json:"updatedAt"` // set at creation
+
+	// set by consumer-cli, theyre not empty by default
+	JobName              string            `json:"jobName"` // set by User
+	Image                ContainerImage    `json:"image"`
+	AdjustmentParameters map[string]string `json:"parameters"`   // e.g key(-p) : value (8080:8080)
+	CreationZone         string            `json:"creationZone"` // origin of the job creation
+
+	// set by job-scheduler
+	WorkerID        string `json:"workerId"`        // default value is empty string - saved as UUID // FIXME: actually UUID
+	ComputeZone     string `json:"computeZone"`     // default value is empty string - saved as "zone key", we get from Electricity Maps API, e.g "DE" (germany)
+	CarbonIntensity int    `json:"carbonIntensity"` // default value is -1 - CO2eq/kWh which are emitted during job execution
+	CarbonSaving    int    `json:"carbonSavings"`   // default value is -1 - consumption savings compared to the actual consumer location
+
+	// set by worker
+	Result       string `json:"result"`       // empty string by default - perhaps some containers will provide a result
+	ErrorMessage string `json:"errorMessage"` // empty string by default
+
+	// multiple access
+	Status JobStatus `json:"status"` // default value is "queued"
+}
+
+func PatchJobStatusEndpoint(id string) string {
+	// FIXME: Add base
+	// FIXME: change string to UUID
+	return fmt.Sprintf("TODO:ADDBASE/jobs/%s/update-scheduler", id)
+}
+
+// This struct is used for the patch-request to the job service
+type UpdateJobPayload struct {
+	WorkerID        string    `json:"workerId"`        // FIXME: actually UUID
+	ComputeZone     string    `json:"computeZone"`     //
+	CarbonIntensity int       `json:"carbonIntensity"` //
+	CarbonSaving    int       `json:"carbonSavings"`   //
+	Status          JobStatus `json:"status"`          // default (and probably only) value is "scheduled"
+}
