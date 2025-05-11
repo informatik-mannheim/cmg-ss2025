@@ -17,7 +17,6 @@ RUN go build -o user-management .
 FROM alpine:3.18
 
 RUN apk add --no-cache ca-certificates
-RUN apk add --no-cache make
 
 WORKDIR /app
 
