@@ -14,6 +14,12 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
+// HTTPHandler is an HTTP handler for user management
+// It provides endpoints for user registration and login
+// It uses the AuthProvider interface to handle authentication
+// It uses the Notifier interface to send notifications
+// It can be configured to use a live Auth0 instance
+// or to use a mock token for testing purposes
 type HTTPHandler struct {
 	Auth       ports.AuthProvider
 	UseLive    bool
@@ -21,18 +27,28 @@ type HTTPHandler struct {
 	NotifierFn func() ports.Notifier
 }
 
+// registerRequest is the request payload for user registration.
+// It contains the role of the user to be registered.
+// The role can be either Consumer, Provider, or JobScheduler.
 type registerRequest struct {
 	Role ports.Role `json:"role"`
 }
 
+// registerResponse is the response payload for user registration.
+// It contains the generated user ID.
 type registerResponse struct {
 	ID string `json:"id"`
 }
 
+// loginRequest is the request payload for user login.
+// It contains the secret used for authentication.
+// The secret should be in the format "clientID.clientSecret".
 type loginRequest struct {
 	Secret string `json:"secret"`
 }
 
+// loginResponse is the response payload for user login.
+// It contains the token received from Auth0.
 type loginResponse struct {
 	Token string `json:"token"`
 }
@@ -46,6 +62,13 @@ func New(auth ports.AuthProvider, useLive bool, isAdminFn func(string) bool, not
 	}
 }
 
+// RegisterHandler handles user registration requests.
+// It checks the request payload for validity and role.
+// If the request is valid, it generates a new user ID and sends a notification.
+// It returns a 201 Created response with the user ID.
+// If the request is invalid, it returns a 400 Bad Request response.
+// If the user is not authorized to create a Job Scheduler, it returns a 403 Forbidden response.
+// If the user is not authorized to register, it returns a 401 Unauthorized response.
 func (h *HTTPHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	notifier := h.NotifierFn()
 	isAdmin := h.IsAdminFn(r.Header.Get("X-Admin-Secret"))
@@ -80,6 +103,8 @@ func (h *HTTPHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// LoginHandler handles user login requests.
+// It checks the request payload for validity and secret.
 func (h *HTTPHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	notifier := h.NotifierFn()
 
