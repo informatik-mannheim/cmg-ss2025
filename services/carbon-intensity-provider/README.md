@@ -10,7 +10,7 @@ This service provides an API to store and retrieve carbon intensity data, follow
 
 ## Architecture
 
-- `model/`: Contains data structures like `CarbonIntensityData` and `Zone`
+- `ports.`: Contains data structures like `CarbonIntensityData` and `Zone`
 - `core/`: Implements logic with an in-memory map (`zoneMap`)
 - `ports/`: Defines the `CarbonIntensityProvider` interface
 - `api/`: Exposes HTTP routes

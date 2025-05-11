@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
@@ -41,7 +40,7 @@ func (h *Handler) GetCarbonIntensityByZone(w http.ResponseWriter, r *http.Reques
 // GetAvailableZones handles GET /carbon-intensity/zones
 func (h *Handler) GetAvailableZones(w http.ResponseWriter, r *http.Request) {
 	zoneList := h.Service.GetAvailableZones(r.Context())
-	response := model.AvailableZonesResponse{
+	response := ports.AvailableZonesResponse{
 		Zones: zoneList,
 	}
 
