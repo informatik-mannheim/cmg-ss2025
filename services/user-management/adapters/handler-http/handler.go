@@ -114,7 +114,7 @@ func (h *HTTPHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, _ := SplitCredentials(req.Secret)
+	clientID, _ := splitCredentials(req.Secret)
 	notifier.Event("Login attempt from client: " + clientID)
 	token, err := h.Auth.RequestTokenFromCredentials(req.Secret)
 	if err != nil {

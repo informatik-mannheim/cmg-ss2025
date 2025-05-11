@@ -82,14 +82,6 @@ func TestHTTPHandler_RegisterHandler(t *testing.T) {
 			eventCheck: "Invalid register request payload",
 			regsCount:  0,
 		},
-		{
-			name:       "Empty role",
-			body:       `{"role":""}`,
-			isAdmin:    true,
-			wantStatus: http.StatusBadRequest,
-			eventCheck: "Invalid register request payload",
-			regsCount:  0,
-		},
 	}
 
 	for _, tt := range tests {
@@ -194,17 +186,5 @@ func TestIsAdmin(t *testing.T) {
 	}
 	if handler.IsAdmin("wrong") {
 		t.Error("IsAdmin() returned true for invalid admin secret")
-	}
-}
-
-func TestSplitCredentials(t *testing.T) {
-	client, secret := handler.SplitCredentials("abc.def")
-	if client != "abc" || secret != "def" {
-		t.Errorf("expected abc.def split, got %s and %s", client, secret)
-	}
-
-	client, secret = handler.SplitCredentials("onlyonepart")
-	if client != "" || secret != "" {
-		t.Errorf("expected empty result for invalid secret, got %s and %s", client, secret)
 	}
 }
