@@ -1,18 +1,18 @@
 # User Management Service
 
-A minimal user management microservice that supports secure user registration, login, and authentication via Auth0. Includes support for role-based users (`consumer`, `provider`, `job scheduler`) and persistence via JSON storage.
+A minimal user management microservice supporting secure login and token issuance via Auth0. Designed for machine-to-machine authentication with configurable roles: `consumer`, `provider`, `job scheduler`.
 
 ---
 
 ## ✨ Features
 
-* Manual registration of users by admin only (via shared admin secret)
-* Login using generated secret
-* JWT issued via Auth0 (Machine-to-Machine)
-* Secure Argon2id hashing for secrets
-* Role enforcement: only one `job scheduler` allowed
-* Notifier integration for logging registrations/logins
-* Persistent user storage via `users.json`
+- Role-based Auth0 integration (via M2M)
+- Login via `client_id.client_secret` → JWT
+- Admin-only `/auth/register` using shared secret
+- Notifier support for logging events
+- Mock vs. Live Auth0 switching via `USE_LIVE`
+- Fully tested (≥94% coverage)
+- Docker & Makefile integration
 
 ---
 
@@ -20,58 +20,80 @@ A minimal user management microservice that supports secure user registration, l
 
 ```
 services/user-management/
-├── main.go                  # Entry point
-├── model/model.go           # User + role types
-├── core/service.go          # Business logic + persistence
-├── notifier/notifier.go     # Event logger
-├── adapters/handler-http/   # HTTP handlers (auth.go)
-├── users.json               # Stored users (auto-created)
-├── .env                     # Auth0 and admin config
+├── main.go                 # Entry point
+├── adapters/
+│   ├── handler-http/       # HTTP routes for /auth/login and /auth/register
+│   ├── auth/               # Auth0 adapter (mock + live)
+│   └── notifier/           # Stdout notifier
+├── ports/                  # Interfaces: Notifier, AuthProvider, Role
+├── Dockerfile              # Container build config
+├── docker-compose.yaml     # Runtime environment
+├── Makefile                # Task automation
+└── README.md               # This file
 ```
 
 ---
 
-## 🔧 .env Configuration
+## 🔧 Configuration (via ENV)
 
-Create a `.env` file with the following:
+Required environment variables:
 
 ```env
-AUTH0_CLIENT_ID=your_auth0_client_id
-AUTH0_CLIENT_SECRET=your_auth0_client_secret
-AUTH0_TOKEN_URL=https://your-domain.eu.auth0.com/oauth/token
-JWT_AUDIENCE=https://user-management.local
-JWT_ISSUER=https://your-domain.eu.auth0.com/
-JWKS_URL=https://your-domain.eu.auth0.com/.well-known/jwks.json
-YOUR_SECRET=your_super_secret_admin_token
+AUTH0_TOKEN_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/oauth/token
+JWT_AUDIENCE=https://green-load-shifting-platform/
+ADMIN_SECRET_HASH=sha256-hash-of-secret
+USE_LIVE=true
+```
+
+You can define these in your Docker Compose or terminal.
+
+---
+
+## 🛠 Run Locally
+
+```bash
+make run       # go run main.go
+make test      # run all unit tests
+make build     # build binary
 ```
 
 ---
 
-## 🚀 Run the Service
+## 🐳 Run with Docker Compose
 
 ```bash
-cd services/user-management
-go run main.go
+make docker-up
+make docker-down
 ```
+
+Ensure the following are defined via environment or .env:
+- `AUTH0_TOKEN_URL`
+- `JWT_AUDIENCE`
+- `ADMIN_SECRET_HASH`
+- `USE_LIVE`
 
 ---
 
-## 🔐 Register a User (Admin Only)
+## 🧪 Testing
 
 ```bash
-curl -X POST http://localhost:8081/auth/register \
+make test
+```
+
+Includes full coverage of:
+- HTTP handlers
+- Auth adapter
+- Notifier logging
+
+---
+
+## 🔐 Register
+
+```bash
+curl -X POST http://localhost:8080/auth/register \
   -H "Content-Type: application/json" \
-  -H "X-Admin-Secret: your_super_secret_admin_token" \
+  -H "X-Admin-Secret: your_admin_secret" \
   -d '{ "role": "consumer" }'
-```
-
-Returns:
-
-```json
-{
-  "id": "uuid",
-  "secret": "generated-secret"
-}
 ```
 
 ---
@@ -79,33 +101,30 @@ Returns:
 ## 🔑 Login
 
 ```bash
-curl -X POST http://localhost:8081/auth/login \
+curl -X POST http://localhost:8080/auth/login \
   -H "Content-Type: application/json" \
-  -d '{ "secret": "generated-secret" }'
-```
-
-Returns:
-
-```json
-{
-  "token": "<auth0-jwt>"
-}
+  -d '{ "secret": "client_id.client_secret" }'
 ```
 
 ---
 
-## 📁 Persistent Storage
+## 📈 Makefile Targets
 
-* Users are stored in `users.json` after each registration.
-* Secrets are hashed with Argon2id.
+```bash
+make run          # Start the service
+make test         # Run tests with coverage
+make fmt          # Format code
+make lint         # Lint (requires golint)
+make docker-up    # Start service with Docker Compose
+make docker-down  # Tear down
+```
 
 ---
 
-## 🔍 TODO / Extensions
+## 📌 Notes
 
-* Add `/auth/me` endpoint (token introspection)
-* Database storage (PostgreSQL, SQLite)
-* Admin panel (CLI or Web)
-* Docker support
+- No persistent storage: login data comes from Auth0 only
+- Job scheduler is a singleton role
+- Notifier can be replaced with alternate implementations
 
 ---
