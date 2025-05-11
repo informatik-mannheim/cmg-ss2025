@@ -20,7 +20,7 @@ func NewHttpNotifier() *HttpNotifier {
 
 // --------------------------  Getters --------------------------
 
-func (n *HttpNotifier) GetJobs() ([]model.Job, error) {
+func (n *HttpNotifier) GetJobs() (model.GetJobsResponse, error) {
 	params := map[string]string{
 		"param1": "value1",
 		"param2": "value2",
@@ -29,7 +29,7 @@ func (n *HttpNotifier) GetJobs() ([]model.Job, error) {
 		Name:    "image1",
 		Version: "1.0",
 	}
-	jobs := []model.Job{
+	jobs := model.GetJobsResponse{
 		{
 			ID:                   "job1",
 			UserID:               "1234",
@@ -67,8 +67,8 @@ func (n *HttpNotifier) GetJobs() ([]model.Job, error) {
 	return jobs, nil
 }
 
-func (n *HttpNotifier) GetWorkers() ([]model.Worker, error) {
-	workers := []model.Worker{
+func (n *HttpNotifier) GetWorkers() (model.GetWorkersResponse, error) {
+	workers := model.GetWorkersResponse{
 		{
 			Id:     "worker1",
 			Status: model.WorkerStatusAvailable,
@@ -83,8 +83,8 @@ func (n *HttpNotifier) GetWorkers() ([]model.Worker, error) {
 	return workers, nil
 }
 
-func (n *HttpNotifier) GetCarbonIntensities(zones []string) ([]model.CarbonIntensityResponse, error) {
-	carbonIntensities := []model.CarbonIntensityResponse{
+func (n *HttpNotifier) GetCarbonIntensities(zones []string) (model.CarbonIntensityResponse, error) {
+	carbonIntensities := model.CarbonIntensityResponse{
 		{
 			Zone:            "DE",
 			CarbonIntensity: 0.0,

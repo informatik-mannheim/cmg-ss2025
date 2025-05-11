@@ -67,8 +67,8 @@ func (js *JobSchedulerService) ScheduleJob() error {
 
 // https://planka.123.123.123.123:8080
 
-func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []model.Job, workers []model.Worker) ([]model.Job, []model.Worker, error) {
-	var unassignedJobs []model.Job
+func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs model.GetJobsResponse, workers model.GetWorkersResponse) ([]model.Job, []model.Worker, error) {
+	var unassignedJobs model.GetJobsResponse
 	for _, job := range jobs {
 		if job.Status == model.JobStatusScheduled && checkAlreadyAssignedWorker(workers, job) {
 			err := js.Notifier.AssignWorker(ports.UpdateWorker{
@@ -88,21 +88,21 @@ func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []model.Job, worker
 	return unassignedJobs, unassignedWorkers, nil
 }
 
-func checkAlreadyAssignedWorker(workers []model.Worker, job model.Job) bool {
+func checkAlreadyAssignedWorker(workers model.GetWorkersResponse, job model.Job) bool {
 	checkWorker := func(worker model.Worker) bool {
 		return worker.Id == job.WorkerID
 	}
 	return utils.Some(workers, checkWorker)
 }
 
-func (js *JobSchedulerService) getCarbonIntensities(workers []model.Worker) ([]model.CarbonIntensityResponse, error) {
+func (js *JobSchedulerService) getCarbonIntensities(workers model.GetWorkersResponse) (model.CarbonIntensityResponse, error) {
 	zones := utils.Map(workers, func(worker model.Worker) string {
 		return worker.Zone
 	})
 	return js.Notifier.GetCarbonIntensities(zones)
 }
 
-func (js *JobSchedulerService) assignJobs(jobs []model.Job, workers []model.Worker, carbons []model.CarbonIntensityResponse) error {
+func (js *JobSchedulerService) assignJobs(jobs model.GetJobsResponse, workers model.GetWorkersResponse, carbons model.CarbonIntensityResponse) error {
 	// May execute some complex algorithm to assign jobs, but for now we just assign the first available worker to the job
 
 	var jobIndex int = 0

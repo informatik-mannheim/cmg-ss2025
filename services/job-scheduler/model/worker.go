@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"net/url"
+)
 
 type WorkerStatus string
 
@@ -15,11 +18,26 @@ type Worker struct {
 	Zone   string       `json:"zone"`
 }
 
-func PutWorkerStatusEndpoint(id string) string {
-	// FIXME: Add base
+// -------------------------- Endpoints --------------------------
+
+func PutWorkerStatusEndpoint(base string, id string) string {
 	// FIXME: change string to UUID
-	return fmt.Sprintf("TODO:ADDBASE/workers/%s/status", id)
+	return fmt.Sprintf("%s/workers/%s/status", base, id)
 }
+
+func GetWorkersEndpoint(base string) string {
+	baseUrl := fmt.Sprintf("%s/workers", base)
+
+	params := url.Values{}
+	params.Add("status", string(WorkerStatusAvailable))
+
+	fullUrl := baseUrl + "?" + params.Encode()
+	return fullUrl
+}
+
+// -------------------------- Response & Request --------------------------
+
+type GetWorkersResponse []Worker
 
 // This struct is used for the patch-request to the worker service
 type UpdateWorkerPayload struct {
