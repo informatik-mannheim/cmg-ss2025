@@ -12,11 +12,19 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
+// Auth0Adapter is an adapter for Auth0 authentication
+// It implements the ports.AuthProvider interface
+// and provides methods to request tokens from Auth0
+// and to validate tokens.
+// It uses the Auth0 API to request tokens and validate them.
+// It can be configured to use a live Auth0 instance
+// or to use a mock token for testing purposes.
 type Auth0Adapter struct {
 	UseLive  bool
 	Notifier ports.Notifier
 }
 
+// New creates a new Auth0Adapter instance
 func New(useLive bool, notifier ports.Notifier) *Auth0Adapter {
 	return &Auth0Adapter{
 		UseLive:  useLive,
@@ -24,6 +32,13 @@ func New(useLive bool, notifier ports.Notifier) *Auth0Adapter {
 	}
 }
 
+// RequestTokenFromCredentials requests a token from Auth0 using the provided credentials
+// The credentials should be in the format "clientID.clientSecret"
+// If UseLive is false, it returns a mock token instead
+// If UseLive is true, it requests a token from Auth0
+// and returns the access token
+// If the request fails, it returns an error
+// The token is a JWT token that can be used to authenticate requests
 func (a *Auth0Adapter) RequestTokenFromCredentials(credentials string) (string, error) {
 	a.Notifier.Event("Processing token request from credentials")
 
@@ -44,9 +59,16 @@ func (a *Auth0Adapter) RequestTokenFromCredentials(credentials string) (string, 
 	return a.requestRealAuth0Token(clientID, clientSecret)
 }
 
+// requestRealAuth0Token requests a token from Auth0 using the provided clientID and clientSecret
+// It sends a POST request to the Auth0 token endpoint
+// with the clientID, clientSecret, audience, and grant_type parameters
+// If the request is successful, it returns the access token
+// If the request fails, it returns an error
 func (a *Auth0Adapter) requestRealAuth0Token(clientID, clientSecret string) (string, error) {
 	a.Notifier.Event("Requesting real token from Auth0")
 
+	// Define the structure of the Auth0 response
+	// This is a simplified version of the actual response
 	type auth0Response struct {
 		AccessToken string `json:"access_token"`
 		TokenType   string `json:"token_type"`
