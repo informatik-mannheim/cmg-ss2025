@@ -114,7 +114,7 @@ func TestAuth0Adapter_RequestTokenFromCredentials(t *testing.T) {
 				tt.setup()
 			}
 			a := auth.New(tt.fields.useLive, tt.fields.notifier)
-			got, err := a.RequestTokenFromCredentials(tt.args.credentials)
+			got, err := a.RequestTokenFromCredentials(context.Background(), tt.args.credentials)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 				return

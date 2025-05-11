@@ -36,7 +36,7 @@ func (m *mockNotifier) UserRegistered(id, role string, _ context.Context) {
 
 type dummyAuth struct{}
 
-func (dummyAuth) RequestTokenFromCredentials(credentials string) (string, error) {
+func (dummyAuth) RequestTokenFromCredentials(_ context.Context, credentials string) (string, error) {
 	return "dummytoken", nil
 }
 

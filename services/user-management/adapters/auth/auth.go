@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,19 +13,11 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
-// Auth0Adapter is an adapter for Auth0 authentication
-// It implements the ports.AuthProvider interface
-// and provides methods to request tokens from Auth0
-// and to validate tokens.
-// It uses the Auth0 API to request tokens and validate them.
-// It can be configured to use a live Auth0 instance
-// or to use a mock token for testing purposes.
 type Auth0Adapter struct {
 	UseLive  bool
 	Notifier ports.Notifier
 }
 
-// New creates a new Auth0Adapter instance
 func New(useLive bool, notifier ports.Notifier) *Auth0Adapter {
 	return &Auth0Adapter{
 		UseLive:  useLive,
@@ -32,43 +25,29 @@ func New(useLive bool, notifier ports.Notifier) *Auth0Adapter {
 	}
 }
 
-// RequestTokenFromCredentials requests a token from Auth0 using the provided credentials
-// The credentials should be in the format "clientID.clientSecret"
-// If UseLive is false, it returns a mock token instead
-// If UseLive is true, it requests a token from Auth0
-// and returns the access token
-// If the request fails, it returns an error
-// The token is a JWT token that can be used to authenticate requests
-func (a *Auth0Adapter) RequestTokenFromCredentials(credentials string) (string, error) {
-	a.Notifier.Event("Processing token request from credentials")
+func (a *Auth0Adapter) RequestTokenFromCredentials(ctx context.Context, credentials string) (string, error) {
+	a.Notifier.Event("Processing token request from credentials", ctx)
 
 	parts := strings.SplitN(credentials, ".", 2)
 	if len(parts) != 2 {
-		a.Notifier.Event("Invalid credentials format")
+		a.Notifier.Event("Invalid credentials format", ctx)
 		return "", fmt.Errorf("invalid credentials format")
 	}
 	clientID := parts[0]
 	clientSecret := parts[1]
-	a.Notifier.Event(fmt.Sprintf("Client ID received: %s", clientID))
+	a.Notifier.Event(fmt.Sprintf("Client ID received: %s", clientID), ctx)
 
 	if !a.UseLive {
-		a.Notifier.Event("Returning mock token")
-		return "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlJGb05QWHZKRmk0SE1vU1lRYzBWNSJ9.eyJodHRwczovL2dyZWVuLWxvYWQtc2hpZnRpbmctcGxhdGZvcm0vcm9sZSI6ImR1bW15X3JvbGUiLCJodHRwczovL2dyZWVuLWxvYWQtc2hpZnRpbmctcGxhdGZvcm0vY2xpZW50X2lkIjoiUWdYSnJrU3Y1WjVkRjhoYzh3cmZPRHYyVk9IZVdCajkiLCJpc3MiOiJodHRwczovL2Rldi1qcWh3Y3U3eHV3Z2RxaTU2LmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJRZ1hKcmtTdjVaNWRGOGhjOHdyZk9EdjJWT0hlV0JqOUBjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9ncmVlbi1sb2FkLXNoaWZ0aW5nLXBsYXRmb3JtLyIsImlhdCI6MTc0NjkxMTExNiwiZXhwIjoxNzQ2OTk3NTE2LCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMiLCJhenAiOiJRZ1hKcmtTdjVaNWRGOGhjOHdyZk9EdjJWT0hlV0JqOSIsInBlcm1pc3Npb25zIjpbXX0.sVRxi8Ea-_3GhkTUOhtDH8Io8Ds3u-TiYELq2wtGwVE4iFzFXRdRwEKSIEz6ELCt_MVjYVlvdza1hnQdgSKmxOp_Hs7ZKnCYRqrFEyKff0_kzHKWR65e0gpBniMKhh97vZ8jmTWOf7F39nIJCZNZ3RFyrkiXCvyxQKXujmJnfRlXKbr9AdRVQGFL-QtDEVSstG_b0954J1zhCAp3dUOSbvo3h1TQI0sZz_WNQOOSaWaH0m9oTzdMdOXkvOfqD3A7Zw8cihwxzITjLKAjVA276wZmcFXe-E5o45uXV5nPaDl4GxPZa3fwFNUB6h9-EL3uPFXRx9RZdr2hmthP-4vcJQ", nil
+		a.Notifier.Event("Returning mock token", ctx)
+		return mockToken(), nil
 	}
 
-	return a.requestRealAuth0Token(clientID, clientSecret)
+	return a.requestRealAuth0Token(ctx, clientID, clientSecret)
 }
 
-// requestRealAuth0Token requests a token from Auth0 using the provided clientID and clientSecret
-// It sends a POST request to the Auth0 token endpoint
-// with the clientID, clientSecret, audience, and grant_type parameters
-// If the request is successful, it returns the access token
-// If the request fails, it returns an error
-func (a *Auth0Adapter) requestRealAuth0Token(clientID, clientSecret string) (string, error) {
-	a.Notifier.Event("Requesting real token from Auth0")
+func (a *Auth0Adapter) requestRealAuth0Token(ctx context.Context, clientID, clientSecret string) (string, error) {
+	a.Notifier.Event("Requesting real token from Auth0", ctx)
 
-	// Define the structure of the Auth0 response
-	// This is a simplified version of the actual response
 	type auth0Response struct {
 		AccessToken string `json:"access_token"`
 		TokenType   string `json:"token_type"`
@@ -77,8 +56,8 @@ func (a *Auth0Adapter) requestRealAuth0Token(clientID, clientSecret string) (str
 	url := os.Getenv("AUTH0_TOKEN_URL")
 	audience := os.Getenv("JWT_AUDIENCE")
 
-	a.Notifier.Event(fmt.Sprintf("Using AUTH0_TOKEN_URL: %s", url))
-	a.Notifier.Event(fmt.Sprintf("Using JWT_AUDIENCE: %s", audience))
+	a.Notifier.Event(fmt.Sprintf("Using AUTH0_TOKEN_URL: %s", url), ctx)
+	a.Notifier.Event(fmt.Sprintf("Using JWT_AUDIENCE: %s", audience), ctx)
 
 	data := map[string]string{
 		"client_id":     clientID,
@@ -88,25 +67,36 @@ func (a *Auth0Adapter) requestRealAuth0Token(clientID, clientSecret string) (str
 	}
 
 	body, _ := json.Marshal(data)
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		a.Notifier.Event("HTTP POST to Auth0 failed: " + err.Error())
+		a.Notifier.Event("Failed to create request: "+err.Error(), ctx)
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		a.Notifier.Event("HTTP POST to Auth0 failed: "+err.Error(), ctx)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		msg, _ := io.ReadAll(resp.Body)
-		a.Notifier.Event(fmt.Sprintf("Auth0 returned non-200: %d — %s", resp.StatusCode, string(msg)))
+		a.Notifier.Event(fmt.Sprintf("Auth0 returned non-200: %d — %s", resp.StatusCode, string(msg)), ctx)
 		return "", fmt.Errorf("auth0 failed: %s", msg)
 	}
 
 	var parsed auth0Response
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		a.Notifier.Event("Failed to decode Auth0 response: " + err.Error())
+		a.Notifier.Event("Failed to decode Auth0 response: "+err.Error(), ctx)
 		return "", err
 	}
 
-	a.Notifier.Event("Successfully received token from Auth0")
+	a.Notifier.Event("Successfully received token from Auth0", ctx)
 	return parsed.AccessToken, nil
+}
+
+func mockToken() string {
+	return "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlJGb05QWHZKRmk0SE1vU1lRYzBWNSJ9.eyJodHRwczovL2dyZWVuLWxvYWQtc2hpZnRpbmctcGxhdGZvcm0vcm9sZSI6ImR1bW15X3JvbGUiLCJodHRwczovL2dyZWVuLWxvYWQtc2hpZnRpbmctcGxhdGZvcm0vY2xpZW50X2lkIjoiUWdYSnJrU3Y1WjVkRjhoYzh3cmZPRHYyVk9IZVdCajkiLCJpc3MiOiJodHRwczovL2Rldi1qcWh3Y3U3eHV3Z2RxaTU2LmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJRZ1hKcmtTdjVaNWRGOGhjOHdyZk9EdjJWT0hlV0JqOUBjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9ncmVlbi1sb2FkLXNoaWZ0aW5nLXBsYXRmb3JtLyIsImlhdCI6MTc0NjkxMTExNiwiZXhwIjoxNzQ2OTk3NTE2LCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMiLCJhenAiOiJRZ1hKcmtTdjVaNWRGOGhjOHdyZk9EdjJWT0hlV0JqOSIsInBlcm1pc3Npb25zIjpbXX0.sVRxi8Ea-_3GhkTUOhtDH8Io8Ds3u-TiYELq2wtGwVE4iFzFXRdRwEKSIEz6ELCt_MVjYVlvdza1hnQdgSKmxOp_Hs7ZKnCYRqrFEyKff0_kzHKWR65e0gpBniMKhh97vZ8jmTWOf7F39nIJCZNZ3RFyrkiXCvyxQKXujmJnfRlXKbr9AdRVQGFL-QtDEVSstG_b0954J1zhCAp3dUOSbvo3h1TQI0sZz_WNQOOSaWaH0m9oTzdMdOXkvOfqD3A7Zw8cihwxzITjLKAjVA276wZmcFXe-E5o45uXV5nPaDl4GxPZa3fwFNUB6h9-EL3uPFXRx9RZdr2hmthP-4vcJQ"
 }

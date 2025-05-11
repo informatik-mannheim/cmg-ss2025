@@ -1,5 +1,7 @@
 package ports
 
+import "context"
+
 type AuthProvider interface {
-	RequestTokenFromCredentials(credentials string) (string, error)
+	RequestTokenFromCredentials(ctx context.Context, credentials string) (string, error)
 }

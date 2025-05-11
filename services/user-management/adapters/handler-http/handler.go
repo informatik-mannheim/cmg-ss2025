@@ -80,7 +80,7 @@ func (h *HTTPHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	clientID, _ := splitCredentials(req.Secret)
 	notifier.Event("Login attempt from client: "+clientID, r.Context())
 
-	token, err := h.Auth.RequestTokenFromCredentials(req.Secret)
+	token, err := h.Auth.RequestTokenFromCredentials(r.Context(), req.Secret)
 	if err != nil {
 		notifier.Event("Login failed for client: "+clientID, r.Context())
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
