@@ -2,5 +2,9 @@
   {
     "code": "GB",
     "name": "Great Britain"
+  },
+  {
+    "code": "DE",
+    "name": "Germany"
   }
 ]

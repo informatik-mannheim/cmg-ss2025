@@ -1,4 +1,8 @@
 {
+  "DE": {
+    "zone": "DE",
+    "carbonIntensity": 142
+  },
   "GB": {
     "zone": "GB",
     "carbonIntensity": 96
