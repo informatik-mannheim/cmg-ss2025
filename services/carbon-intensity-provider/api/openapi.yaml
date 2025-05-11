@@ -1,11 +1,17 @@
 openapi: 3.0.3
 info:
   title: Carbon Intensity API
-  description: API for getting carbon intensity data.
+  description: |
+    API for retrieving real-time carbon intensity data by electricity zone.
+    
+    - All endpoints require a valid JWT Bearer token.
+    - The `/carbon-intensity/zones` endpoint returns a list of configured zones.
+    - Each zone code and zone name is unique in the response.
   version: 1.0.0
 servers:
   - url: http://localhost:8080
     description: Local development server
+
 paths:
   /carbon-intensity/{zone}:
     get:
@@ -20,28 +26,21 @@ paths:
           required: true
           schema:
             type: string
-          description: The zone for which to get carbon intensity data (e.g. DE, TH, US-NY-NYIS).
+          description: The zone code (e.g., DE, FR, US-NY-NYIS)
       responses:
         "200":
           description: Carbon intensity data
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  zone:
-                    type: string
-                    description: The zone for which the data is provided.
-                    example: DE
-                  carbonIntensity:
-                    type: number
-                    description: The carbon intensity value.
-                    example: 140
-
+                $ref: "#/components/schemas/CarbonIntensityData"
+        "401":
+          description: Unauthorized – JWT token is missing or invalid
         "404":
           description: Zone not found
         "500":
           description: Internal server error
+
   /carbon-intensity/zones:
     get:
       summary: Get list of available zones
@@ -59,17 +58,21 @@ paths:
                 properties:
                   zones:
                     type: array
+                    description: Array of zones with unique codes and names.
                     items:
-                      type: string
-                    example: ["DE", "US-NY-NYIS", "TH"]
+                      $ref: "#/components/schemas/Zone"
+        "401":
+          description: Unauthorized – JWT token is missing or invalid
         "500":
           description: Internal server error
+
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
     CarbonIntensityData:
       type: object
@@ -79,7 +82,25 @@ components:
       properties:
         zone:
           type: string
-          example: DE
+          description: The electricity zone identifier.
+          example: FR
         carbonIntensity:
           type: number
-          example: 140
+          format: float
+          description: Current carbon intensity value.
+          example: 135.2
+
+    Zone:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          description: Unique zone identifier
+          example: DE
+        name:
+          type: string
+          description: Unique descriptive name of the zone
+          example: Germany
