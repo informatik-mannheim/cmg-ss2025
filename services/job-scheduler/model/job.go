@@ -65,3 +65,12 @@ type UpdateJobPayload struct {
 	CarbonSaving    int       `json:"carbonSavings"`   //
 	Status          JobStatus `json:"status"`          // default (and probably only) value is "scheduled"
 }
+
+// This struct is returned by the job service as response to the patch-request
+type UpdateJobResponse struct {
+	JobID           string    `json:"jobId"`           // generated as UUID
+	ComputeZone     string    `json:"computeZone"`     //
+	CarbonIntensity int       `json:"carbonIntensity"` //
+	CarbonSaving    int       `json:"carbonSavings"`   //
+	Status          JobStatus `json:"status"`          // default (and probably only) value is "scheduled"
+}

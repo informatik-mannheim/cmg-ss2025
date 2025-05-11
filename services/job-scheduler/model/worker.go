@@ -25,3 +25,10 @@ func PutWorkerStatusEndpoint(id string) string {
 type UpdateWorkerPayload struct {
 	WorkerStatus WorkerStatus `json:"workerStatus"` // default (and probably only) value is "running"
 }
+
+// This struct is returned by the worker service as response to the put-request
+type UpdateWorkerResponse []struct {
+	ID     string       `json:"id"` // generated as UUID
+	Status WorkerStatus `json:"status"`
+	Zone   string       `json:"zone"`
+}
