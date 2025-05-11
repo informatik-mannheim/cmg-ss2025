@@ -50,12 +50,12 @@ curl 'localhost:8080/workers'
 ```json
 [
   {
-    "id": "0",
+    "id": "5fda654b-3343-42ae-bab2-0faeffb78f2e",
     "status": "RUNNING",
     "zone": "DE"
   },
   {
-    "id": "1",
+    "id": "a35c739a-ee51-4cdc-9393-f75a8f1d76ad",
     "status": "AVAILABLE",
     "zone": "EN"
   }
@@ -75,12 +75,12 @@ curl 'localhost:8080/workers?status=AVAILABLE&zone=DE'
 ```json
 [
   {
-    "id": "0",
+    "id": "5fda654b-3343-42ae-bab2-0faeffb78f2e",
     "status": "AVAILABLE",
     "zone": "DE"
   },
   {
-    "id": "1",
+    "id": "a35c739a-ee51-4cdc-9393-f75a8f1d76ad",
     "status": "AVAILABLE",
     "zone": "DE"
   }
@@ -94,7 +94,7 @@ Returns a worker with the specified `id`.
 #### Example Command
 
 ```bash
-curl 'localhost:8080/workers/0'
+curl 'localhost:8080/workers/a35c739a-ee51-4cdc-9393-f75a8f1d76ad'
 ```
 
 #### Example Response
@@ -102,7 +102,7 @@ curl 'localhost:8080/workers/0'
 ```json
 [
   {
-    "id": "0",
+    "id": "a35c739a-ee51-4cdc-9393-f75a8f1d76ad",
     "status": "AVAILABLE",
     "zone": "DE"
   }
@@ -121,7 +121,7 @@ curl -X 'POST' 'localhost:8080/workers?zone=EN'
 ```json
 [
   {
-  "id": "0",
+  "id": "5fda654b-3343-42ae-bab2-0faeffb78f2e",
   "status": "AVAILABLE",
   "zone": "EN"
   }
@@ -134,13 +134,13 @@ Updates the `status` of a specific worker (`AVAILABLE` or `RUNNING`).
 
 #### Example Command
 ```bash
-curl -X 'PUT' 'localhost:8080/workers/1/status' -d '{"status": "RUNNING"}'
+curl -X 'PUT' 'localhost:8080/workers/5fda654b-3343-42ae-bab2-0faeffb78f2e/status' -d '{"status": "RUNNING"}'
 ```
 #### Example Response
 ```json
 [
   {
-    "id": "0",
+    "id": "5fda654b-3343-42ae-bab2-0faeffb78f2e",
     "status": "RUNNING",
     "zone": "DE"
   }

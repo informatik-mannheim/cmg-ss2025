@@ -13,7 +13,7 @@ import (
 
 func TestCreateWorker(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
+	notifier := notifier.NewNotifier()
 	zoneValidator := validator.NewZoneValidator()
 	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
@@ -47,7 +47,7 @@ func TestCreateWorker(t *testing.T) {
 
 func TestGetWorkers(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
+	notifier := notifier.NewNotifier()
 	zoneValidator := validator.NewZoneValidator()
 	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
@@ -83,7 +83,7 @@ func TestGetWorkers(t *testing.T) {
 
 func TestGetWorkerById(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
+	notifier := notifier.NewNotifier()
 	zoneValidator := validator.NewZoneValidator()
 	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
@@ -110,7 +110,7 @@ func TestGetWorkerById(t *testing.T) {
 
 func TestUpdateWorkerStatus(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
+	notifier := notifier.NewNotifier()
 	zoneValidator := validator.NewZoneValidator()
 	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 

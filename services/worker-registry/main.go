@@ -18,7 +18,7 @@ import (
 
 func main() {
 	repository := repo.NewRepo()
-	notifier := notifier.NewHttpNotifier()
+	notifier := notifier.NewNotifier()
 	zoneValidator := validator.NewZoneValidator()
 	service := core.NewWorkerRegistryService(repository, notifier, zoneValidator)
 
