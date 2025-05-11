@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -8,21 +9,18 @@ import (
 	"testing"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/auth"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 type mockNotifier struct {
 	events []string
 }
 
-func (m *mockNotifier) Event(msg string) {
+func (m *mockNotifier) Event(msg string, _ context.Context) {
 	m.events = append(m.events, msg)
 }
 
-func (m *mockNotifier) UserRegistered(id string, role string) {}
-func (m *mockNotifier) UserLoggedIn(id string)                {}
-
-var _ ports.Notifier = (*mockNotifier)(nil)
+func (m *mockNotifier) UserRegistered(id string, role string, _ context.Context) {}
+func (m *mockNotifier) UserLoggedIn(id string, _ context.Context)                {}
 
 func TestAuth0Adapter_RequestTokenFromCredentials(t *testing.T) {
 	type fields struct {

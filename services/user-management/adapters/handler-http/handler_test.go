@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -21,11 +22,17 @@ type mockNotifier struct {
 	regs   []string
 }
 
-func (m *mockNotifier) Event(msg string)               { m.events = append(m.events, msg) }
-func (m *mockNotifier) UserLoggedIn(id string)         { m.logins = append(m.logins, id) }
-func (m *mockNotifier) UserRegistered(id, role string) { m.regs = append(m.regs, id+":"+role) }
+func (m *mockNotifier) Event(msg string, _ context.Context) {
+	m.events = append(m.events, msg)
+}
 
-var _ ports.Notifier = (*mockNotifier)(nil)
+func (m *mockNotifier) UserLoggedIn(id string, _ context.Context) {
+	m.logins = append(m.logins, id)
+}
+
+func (m *mockNotifier) UserRegistered(id, role string, _ context.Context) {
+	m.regs = append(m.regs, id+":"+role)
+}
 
 type dummyAuth struct{}
 
