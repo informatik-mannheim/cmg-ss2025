@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type JobStatus string
@@ -20,7 +22,7 @@ const (
 type Job struct {
 
 	// set by job-service, theyre set automatically
-	ID string `json:"id"` // generated as UUID // FIXME: actually UUID
+	ID uuid.UUID `json:"id"` // generated as UUID // FIXME: actually UUID
 
 	// set by consumer-cli, theyre not empty by default
 	CreationZone string `json:"creationZone"` // origin of the job creation

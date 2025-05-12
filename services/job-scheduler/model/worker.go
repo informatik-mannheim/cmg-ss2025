@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/google/uuid"
 )
 
 type WorkerStatus string
@@ -13,7 +15,7 @@ const (
 )
 
 type Worker struct {
-	Id     string       `json:"id"` // FIXME: actually UUID
+	Id     uuid.UUID    `json:"id"` // FIXME: actually UUID
 	Status WorkerStatus `json:"status"`
 	Zone   string       `json:"zone"`
 }
