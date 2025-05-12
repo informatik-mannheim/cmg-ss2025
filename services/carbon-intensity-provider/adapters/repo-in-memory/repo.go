@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/notifier"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/ports"
 )
 
@@ -20,12 +19,12 @@ type Repo struct {
 	carbonIntensityProviders map[string]ports.CarbonIntensityData
 	availableZones           []ports.Zone
 	mu                       sync.RWMutex
-	notifier                 notifier.Notifier
+	notifier                 ports.Notifier
 }
 
 var _ ports.Repo = (*Repo)(nil)
 
-func NewRepo(n notifier.Notifier) *Repo {
+func NewRepo(n ports.Notifier) *Repo {
 	n.Event("Initializing Repo and loading data from files")
 
 	r := &Repo{

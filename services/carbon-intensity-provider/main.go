@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 
 	n := notifier.New()
-	r := repo.NewRepo()
+	r := repo.NewRepo(n)
 	s := core.NewCarbonIntensityService(r, n)
 
 	if os.Getenv("USE_LIVE") == "true" {

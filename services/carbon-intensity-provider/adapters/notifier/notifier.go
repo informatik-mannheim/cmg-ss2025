@@ -9,7 +9,7 @@ import (
 
 type Notifier struct{}
 
-func New() *Notifier {
+func New() ports.Notifier {
 	return &Notifier{}
 }
 
