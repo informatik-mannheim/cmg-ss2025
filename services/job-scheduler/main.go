@@ -7,6 +7,7 @@ import (
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/notifier"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
 )
@@ -32,8 +33,8 @@ func main() {
 	}
 }
 
-func loadEnvVariables() (ports.Environments, error) {
-	var envs ports.Environments = ports.Environments{}
+func loadEnvVariables() (model.Environments, error) {
+	var envs model.Environments = model.Environments{}
 
 	interval := utils.LoadEnvOrDefault("JOB_SCHEDULER_INTERVAL", "5") // Default to 5 seconds
 	intervalInt, err := strconv.Atoi(interval)
