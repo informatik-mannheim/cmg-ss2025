@@ -18,7 +18,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	rootCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	n := notifier.New()
 	r := repo.NewRepo(n)
@@ -28,7 +29,7 @@ func main() {
 		log.Println("[Mode] Live fetch enabled")
 		fetcher := electricitymaps.NewFromEnv(n)
 
-		detailedZones, err := fetcher.AllElectricityMapZones(ctx)
+		detailedZones, err := fetcher.AllElectricityMapZones(rootCtx)
 		if err != nil {
 			log.Fatalf("Failed to fetch zone metadata: %v", err)
 		}
@@ -41,40 +42,50 @@ func main() {
 			}
 		}
 
-		if err := r.StoreZones(zones, ctx); err != nil {
+		if err := r.StoreZones(zones, rootCtx); err != nil {
 			n.Event("Failed to store filtered zone metadata: " + err.Error())
 		}
 
-		configuredZones, err := fetcher.GetConfiguredZones(ctx)
+		configuredZones, err := fetcher.GetConfiguredZones(rootCtx)
 		if err != nil {
 			log.Fatalf("Failed to get configured zones: %v", err)
 		}
 
-		go func() {
+		// Context-aware fetch loop
+		go func(ctx context.Context) {
+			ticker := time.NewTicker(60 * time.Second)
+			defer ticker.Stop()
+
 			for {
-				for _, zone := range configuredZones {
-					data, err := fetcher.Fetch(zone, ctx)
-					if err != nil {
-						n.Event("Error fetching data for zone " + zone + ": " + err.Error())
-						continue
+				select {
+				case <-ctx.Done():
+					n.Event("Fetcher loop stopped due to context cancellation")
+					return
+				case <-ticker.C:
+					for _, zone := range configuredZones {
+						data, err := fetcher.Fetch(zone, ctx)
+						if err != nil {
+							n.Event("Error fetching data for zone " + zone + ": " + err.Error())
+							continue
+						}
+						s.AddOrUpdateZone(data.Zone, data.CarbonIntensity, ctx)
 					}
-					s.AddOrUpdateZone(data.Zone, data.CarbonIntensity, ctx)
 				}
-				time.Sleep(60 * time.Second)
 			}
-		}()
+		}(rootCtx)
+
 	} else {
 		log.Println("[Mode] Using static offline test data")
-		s.AddOrUpdateZone("DE", 140.5, ctx)
-		s.AddOrUpdateZone("FR", 135.2, ctx)
-		s.AddOrUpdateZone("US-NY-NYIS", 128.9, ctx)
+		s.AddOrUpdateZone("DE", 140.5, rootCtx)
+		s.AddOrUpdateZone("FR", 135.2, rootCtx)
+		s.AddOrUpdateZone("US-NY-NYIS", 128.9, rootCtx)
 
 		offlineZones := []ports.Zone{
 			{Code: "DE", Name: "Germany"},
 			{Code: "FR", Name: "France"},
 			{Code: "US-NY-NYIS", Name: "New York ISO"},
 		}
-		_ = r.StoreZones(offlineZones, ctx)
+		_ = r.StoreZones(offlineZones, rootCtx)
 	}
 
 	httpHandler := handler.NewHandler(s, n)
@@ -94,14 +105,16 @@ func main() {
 	}()
 
 	<-stop
-	log.Println("Shutdown signal received")
+	n.Event("Shutdown signal received")
+	cancel() // cancel root context
 
-	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	ctxShutdown, cancelTimeout := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelTimeout()
 
 	if err := server.Shutdown(ctxShutdown); err != nil {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
+	n.Event("Server exited gracefully")
 	log.Println("Server exited gracefully")
 }
