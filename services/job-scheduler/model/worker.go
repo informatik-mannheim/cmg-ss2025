@@ -41,7 +41,7 @@ type GetWorkersResponse []Worker
 
 // This struct is used for the patch-request to the worker service
 type UpdateWorkerPayload struct {
-	WorkerStatus WorkerStatus `json:"workerStatus"` // default (and probably only) value is "running"
+	WorkerStatus WorkerStatus `json:"status"` // default (and probably only) value is "running"
 }
 
 // This struct is returned by the worker service as response to the put-request
