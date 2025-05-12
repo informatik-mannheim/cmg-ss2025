@@ -2,7 +2,6 @@ package notifier
 
 import (
 	"log"
-	"time"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
@@ -21,47 +20,23 @@ func NewHttpNotifier() *HttpNotifier {
 // --------------------------  Getters --------------------------
 
 func (n *HttpNotifier) GetJobs() (model.GetJobsResponse, error) {
-	params := map[string]string{
-		"param1": "value1",
-		"param2": "value2",
-	}
-	containerImage := model.ContainerImage{
-		Name:    "image1",
-		Version: "1.0",
-	}
 	jobs := model.GetJobsResponse{
 		{
-			ID:                   "job1",
-			UserID:               "1234",
-			CreatedAt:            time.Now(),
-			UpdatedAt:            time.Now(),
-			JobName:              "Job 1",
-			Image:                containerImage,
-			AdjustmentParameters: params,
-			CreationZone:         "DE",
-			WorkerID:             "",
-			ComputeZone:          "",
-			CarbonIntensity:      -1,
-			CarbonSaving:         -1,
-			Result:               "",
-			ErrorMessage:         "",
-			Status:               model.JobStatusQueued,
+			ID:              "job1",
+			CreationZone:    "DE",
+			WorkerID:        "",
+			ComputeZone:     "",
+			CarbonIntensity: -1,
+			CarbonSaving:    -1,
+			Status:          model.JobStatusQueued,
 		}, {
-			ID:                   "job2",
-			UserID:               "1234",
-			CreatedAt:            time.Now(),
-			UpdatedAt:            time.Now(),
-			JobName:              "Job 2",
-			Image:                containerImage,
-			AdjustmentParameters: params,
-			CreationZone:         "DE",
-			WorkerID:             "",
-			ComputeZone:          "",
-			CarbonIntensity:      -1,
-			CarbonSaving:         -1,
-			Result:               "",
-			ErrorMessage:         "",
-			Status:               model.JobStatusQueued,
+			ID:              "job2",
+			CreationZone:    "DE",
+			WorkerID:        "",
+			ComputeZone:     "",
+			CarbonIntensity: -1,
+			CarbonSaving:    -1,
+			Status:          model.JobStatusQueued,
 		},
 	}
 	return jobs, nil
