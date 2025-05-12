@@ -57,7 +57,7 @@ Tokens are zone-specific and loaded dynamically via `TOKEN_<ZONE>`.
 ### With Go:
 
 ```bash
-USE_LIVE=true TOKEN_GB=your_token_here go run main.go
+USE_LIVE=true TOKEN_GB=your_token_here TOKEN_DE=your_token_here go run main.go
 ```
 
 ---
