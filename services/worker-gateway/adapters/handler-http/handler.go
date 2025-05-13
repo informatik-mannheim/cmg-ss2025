@@ -3,22 +3,28 @@ package handler_http
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-
-	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
 )
 
 type Handler struct {
-	service ports.Api
-	rtr     mux.Router
+	wg *core.WorkerGatewayService
 }
 
-var _ http.Handler = (*Handler)(nil)
-
-func NewHandler(service ports.Api) *Handler {
-	return nil
+func NewHandler(wg *core.WorkerGatewayService) *Handler {
+	return &Handler{wg: wg}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.rtr.ServeHTTP(w, r) //delegate
+// POST /worker/heartbeat
+func (h *Handler) HeartbeatHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// POST /result
+func (h *Handler) SubmitResultHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// POST /register
+func (h *Handler) RegisterWorkerHandler(w http.ResponseWriter, r *http.Request) {
+
 }
