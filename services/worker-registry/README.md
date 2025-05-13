@@ -28,12 +28,12 @@ make test      # run all unit tests with coverage
 ## Run with Docker
 
 ```bash
-make docker-build
-make docker-up
-make docker-down
+make docker-up    # start application in docker detached
+make docker-down  
 ```
 
 ---
+
 
 ## API Overview
 ### `GET /workers`
