@@ -15,8 +15,8 @@ type CarbonIntensityAdapterMock struct {
 
 var _ ports.CarbonIntensityAdapter = (*CarbonIntensityAdapterMock)(nil)
 
-func CreateCarbonIntensityAdapterMock(shouldGetCarbonsFail, shouldGetCarbonsEmpty bool) CarbonIntensityAdapterMock {
-	return CarbonIntensityAdapterMock{
+func NewCarbonIntensityAdapterMock(shouldGetCarbonsFail, shouldGetCarbonsEmpty bool) *CarbonIntensityAdapterMock {
+	return &CarbonIntensityAdapterMock{
 		shouldGetCarbonsFail:  shouldGetCarbonsFail,
 		shouldGetCarbonsEmpty: shouldGetCarbonsEmpty,
 	}

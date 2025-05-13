@@ -15,8 +15,8 @@ type JobAdapterMock struct {
 
 var _ ports.JobAdapter = (*JobAdapterMock)(nil)
 
-func CreateJobAdapterMock(shouldGetJobsFail, shouldGetJobsEmpty, shouldAssingJobFail bool) JobAdapterMock {
-	return JobAdapterMock{
+func NewJobAdapterMock(shouldGetJobsFail, shouldGetJobsEmpty, shouldAssingJobFail bool) *JobAdapterMock {
+	return &JobAdapterMock{
 		shouldGetJobsFail:   shouldGetJobsFail,
 		shouldAssingJobFail: shouldAssingJobFail,
 		shouldGetJobsEmpty:  shouldGetJobsEmpty,

@@ -9,8 +9,8 @@ type JobAdapter struct{}
 
 var _ ports.JobAdapter = (*JobAdapter)(nil)
 
-func CreateJobAdapter() JobAdapter {
-	return JobAdapter{}
+func NewJobAdapter() *JobAdapter {
+	return &JobAdapter{}
 }
 
 func (adapter *JobAdapter) GetJobs() (model.GetJobsResponse, error) {

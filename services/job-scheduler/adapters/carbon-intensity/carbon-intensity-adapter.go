@@ -9,8 +9,8 @@ type CarbonIntensityAdapter struct{}
 
 var _ ports.CarbonIntensityAdapter = (*CarbonIntensityAdapter)(nil)
 
-func CreateCarbonIntensityAdapter() CarbonIntensityAdapter {
-	return CarbonIntensityAdapter{}
+func NewCarbonIntensityAdapter() *CarbonIntensityAdapter {
+	return &CarbonIntensityAdapter{}
 }
 
 func (adapter *CarbonIntensityAdapter) GetCarbonIntensities(zones []string) (model.CarbonIntensityResponse, error) {

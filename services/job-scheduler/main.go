@@ -21,7 +21,7 @@ func main() {
 
 	log.Printf("Job Scheduler starting with a %d second interval...\n", envs.Interval)
 
-	var notifier ports.Notifier = notifier.NewHttpNotifier()
+	var notifier ports.Notifier = notifier.NewNotifier()
 	var service ports.JobScheduler = core.NewJobSchedulerService(notifier)
 
 	ticker := time.NewTicker(interval * time.Second)

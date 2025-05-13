@@ -9,8 +9,8 @@ type WorkerAdapter struct{}
 
 var _ ports.WorkerAdapter = (*WorkerAdapter)(nil)
 
-func CreateWorkerAdapater() WorkerAdapter {
-	return WorkerAdapter{}
+func NewWorkerAdapater() *WorkerAdapter {
+	return &WorkerAdapter{}
 }
 
 func (adapter *WorkerAdapter) AssignWorker(update ports.UpdateWorker) error {

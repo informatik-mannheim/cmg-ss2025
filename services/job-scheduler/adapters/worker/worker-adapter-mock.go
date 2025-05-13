@@ -15,8 +15,8 @@ type WorkerAdapterMock struct {
 
 var _ ports.WorkerAdapter = (*WorkerAdapterMock)(nil)
 
-func CraeteWorkerAdapterMock(shouldGetWorkersFail, shouldGetWorkersEmpty, shouldAssignWorkersFail bool) WorkerAdapterMock {
-	return WorkerAdapterMock{
+func NewWorkerAdapterMock(shouldGetWorkersFail, shouldGetWorkersEmpty, shouldAssignWorkersFail bool) *WorkerAdapterMock {
+	return &WorkerAdapterMock{
 		shouldGetWorkersFail:    shouldGetWorkersFail,
 		shouldAssignWorkersFail: shouldAssignWorkersFail,
 		shouldGetWorkersEmpty:   shouldGetWorkersEmpty,
