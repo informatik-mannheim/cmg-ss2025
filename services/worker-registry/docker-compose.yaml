@@ -6,8 +6,4 @@ services:
     container_name: worker-registry
     ports:
       - "8080:8080"
-    environment:
-      - USE_LIVE=false
-      - TOKEN_GB=QNk1Rdt3g3GGEnbPCROu
-      - TOKEN_DE=MSUX5RJxZtdO2avdqoXY
     restart: unless-stopped
