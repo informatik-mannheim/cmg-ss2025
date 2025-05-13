@@ -5,7 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	carbonintensity "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/carbon-intensity"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/job"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/notifier"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/worker"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
@@ -22,7 +25,15 @@ func main() {
 	log.Printf("Job Scheduler starting with a %d second interval...\n", envs.Interval)
 
 	var notifier ports.Notifier = notifier.NewNotifier()
-	var service ports.JobScheduler = core.NewJobSchedulerService(notifier)
+	var jobAdapter ports.JobAdapter = job.NewJobAdapter()
+	var workerAdapter ports.WorkerAdapter = worker.NewWorkerAdapter()
+	var carbonIntensityAdapter ports.CarbonIntensityAdapter = carbonintensity.NewCarbonIntensityAdapter()
+	var service ports.JobScheduler = core.NewJobSchedulerService(
+		jobAdapter,
+		workerAdapter,
+		carbonIntensityAdapter,
+		notifier,
+	)
 
 	ticker := time.NewTicker(interval * time.Second)
 	defer ticker.Stop()

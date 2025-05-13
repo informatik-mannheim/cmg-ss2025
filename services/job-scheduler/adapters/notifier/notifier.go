@@ -30,7 +30,7 @@ func (n *Notifier) NotifyWorkerAssignmentFailed(jobId, workerId uuid.UUID) error
 	return nil
 }
 
-func (n *Notifier) NotifyAssigmentCorrection(jobId, workerId uuid.UUID) error {
+func (n *Notifier) NotifyAssignmentCorrection(jobId, workerId uuid.UUID) error {
 	// TODO: temporary implementation, will probably change, but not in Phase 2
 	message := fmt.Sprintf("Corrected failed Worker assignment for Job %s to Worker %s\n", jobId.String(), workerId.String())
 	log.Print(message)

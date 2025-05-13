@@ -9,7 +9,7 @@ type WorkerAdapter struct{}
 
 var _ ports.WorkerAdapter = (*WorkerAdapter)(nil)
 
-func NewWorkerAdapater() *WorkerAdapter {
+func NewWorkerAdapter() *WorkerAdapter {
 	return &WorkerAdapter{}
 }
 
