@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
 	auth0adapter "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/auth"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/notifier"
@@ -40,9 +41,9 @@ func main() {
 	})
 
 	// Set up routes
-	mux := http.NewServeMux()
-	mux.HandleFunc("/auth/register", handler.RegisterHandler)
-	mux.HandleFunc("/auth/login", handler.LoginHandler)
+	mux := mux.NewRouter()
+	mux.HandleFunc("/auth/register", handler.RegisterHandler).Methods("POST")
+	mux.HandleFunc("/auth/login", handler.LoginHandler).Methods("POST")
 
 	server := &http.Server{
 		Addr:    ":8080",
