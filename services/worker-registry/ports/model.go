@@ -16,3 +16,8 @@ type Worker struct {
 	Status WorkerStatus `json:"status"`
 	Zone   string       `json:"zone"`
 }
+
+type Zone struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}

@@ -33,5 +33,6 @@ go.work.sum
 # Docker artifacts
 docker-compose.override.yml
 
-# dotenv
+# Environment variables
+>>>>>>> origin
 .env
