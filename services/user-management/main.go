@@ -11,6 +11,7 @@ import (
 	auth0adapter "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/auth"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/notifier"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
@@ -18,18 +19,30 @@ func main() {
 	ctx := context.Background()
 	useLive := os.Getenv("USE_LIVE") == "true"
 
+	// Create notifier
 	n := notifier.New()
-	auth := auth0adapter.New(useLive, n)
 
-	notifierFn := func() ports.Notifier {
-		return n
+	// Create Auth0 adapter
+	authAdapter := auth0adapter.New(useLive, n)
+
+	// Wrap adapter in core AuthService
+	authService := core.NewAuthService(authAdapter, n)
+
+	// Admin verification function using core
+	isAdminFn := func(secret string) bool {
+		expected := os.Getenv("ADMIN_SECRET_HASH")
+		return core.IsAdminSecret(secret, expected)
 	}
 
-	h := handler.New(auth, useLive, handler.IsAdmin, notifierFn)
+	// HTTP handler with all dependencies
+	handler := handler.New(authService, useLive, isAdminFn, func() ports.Notifier {
+		return n
+	})
 
+	// Set up routes
 	mux := http.NewServeMux()
-	mux.HandleFunc("/auth/register", h.RegisterHandler)
-	mux.HandleFunc("/auth/login", h.LoginHandler)
+	mux.HandleFunc("/auth/register", handler.RegisterHandler)
+	mux.HandleFunc("/auth/login", handler.LoginHandler)
 
 	server := &http.Server{
 		Addr:    ":8080",
@@ -38,7 +51,7 @@ func main() {
 
 	n.Event("Listening on :8080", ctx)
 
-	// Graceful shutdown handling
+	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
