@@ -138,7 +138,7 @@ paths:
             schema:
               type: object
               properties:
-                workerStatus:
+                status:
                   type: string
                   enum: [AVAILABLE, RUNNING]
       responses:
