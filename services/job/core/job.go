@@ -19,10 +19,15 @@ type JobService struct {
 }
 
 // NewJobService creates a new instance of JobService with the provided storage.
-func NewJobService(storage ports.JobStorage) *JobService {
+// An error is returned if an invalid (e.g. nil) JobStorage is transferred.
+func NewJobService(storage ports.JobStorage) (*JobService, error) {
+	if storage == nil {
+		return nil, errors.New("storage cannot be nil")
+	}
+
 	return &JobService{
 		storage: storage,
-	}
+	}, nil
 }
 
 // GetJobs retrieves jobs based on their status.
@@ -31,7 +36,7 @@ func NewJobService(storage ports.JobStorage) *JobService {
 func (s *JobService) GetJobs(ctx context.Context, status []ports.JobStatus) ([]ports.Job, error) {
 	// If status is nil, return all jobs
 	if status == nil {
-		return s.storage.GetJobs(ctx, nil)
+		return nil, errors.New("atleast one status must be provided")
 	}
 
 	// Filter out invalid statuses
@@ -184,11 +189,9 @@ func (s *JobService) UpdateJobWorkerDaemon(ctx context.Context, id string, data 
 		return ports.Job{}, errors.New("job ID must be a valid UUID")
 	}
 
-	// Add more logical checks if needed, e.g., if certain statuses require a non-empty result or error message
 	updateFn := func(job *ports.Job) error {
 		job.Status = data.Status
 
-		// Ensure Result and ErrorMessage are logically consistent with the status
 		if data.Status == ports.StatusCompleted && data.ErrorMessage != "" {
 			return errors.New("completed status should not have an error message")
 		}

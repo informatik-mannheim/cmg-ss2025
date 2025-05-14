@@ -11,13 +11,13 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
 )
 
-func setup() *core.JobService {
+func setup() (*core.JobService, error) {
 	storage := repo_in_memory.NewMockJobStorage()
 	return core.NewJobService(storage)
 }
 
 func TestJobService_CreateJob(t *testing.T) {
-	service := setup()
+	service, _ := setup()
 	ctx := context.Background()
 
 	tests := []struct {
@@ -116,7 +116,7 @@ func TestJobService_CreateJob(t *testing.T) {
 }
 
 func TestJobService_GetJob(t *testing.T) {
-	service := setup()
+	service, _ := setup()
 	ctx := context.Background()
 
 	jobCreate := ports.JobCreate{
@@ -190,7 +190,7 @@ func TestJobService_GetJob(t *testing.T) {
 }
 
 func TestJobService_GetJobs(t *testing.T) {
-	service := setup()
+	service, _ := setup()
 	ctx := context.Background()
 
 	// Create jobs with different statuses
@@ -263,7 +263,8 @@ func TestJobService_GetJobs(t *testing.T) {
 			wantErr: false,
 			setup: func() *core.JobService {
 				// Create a new service with an empty storage for this case
-				return core.NewJobService(repo_in_memory.NewMockJobStorage())
+				service, _ := core.NewJobService(repo_in_memory.NewMockJobStorage())
+				return service
 			},
 		},
 		{
@@ -291,7 +292,7 @@ func TestJobService_GetJobs(t *testing.T) {
 }
 
 func TestJobService_GetJobOutcome(t *testing.T) {
-	service := setup()
+	service, _ := setup()
 	ctx := context.Background()
 
 	jobCreate := ports.JobCreate{
@@ -364,14 +365,18 @@ func TestJobService_GetJobOutcome(t *testing.T) {
 }
 
 func TestJobService_UpdateJobScheduler(t *testing.T) {
-	service := setup()
+	service, _ := setup()
 	ctx := context.Background()
 
 	jobCreate := ports.JobCreate{
 		JobName:      "Update Scheduler Test",
 		CreationZone: "FR",
 		Image:        ports.ContainerImage{Name: "python", Version: "3.8"},
-		Parameters:   map[string]string{"GPU": "NVIDIA"},
+		Parameters: map[string]string{
+			"volumes": "/host/path:/container/path",
+			"ports":   "80:8080",
+			"env":     "NODE_ENV=development",
+		},
 	}
 	createdJob, _ := service.CreateJob(ctx, jobCreate)
 	updateData := ports.SchedulerUpdateData{
@@ -449,14 +454,18 @@ func TestJobService_UpdateJobScheduler(t *testing.T) {
 }
 
 func TestJobService_UpdateJobWorkerDaemon(t *testing.T) {
-	service := setup()
+	service, _ := setup()
 	ctx := context.Background()
 
 	jobCreate := ports.JobCreate{
 		JobName:      "Update Worker Daemon Test",
 		CreationZone: "GB",
 		Image:        ports.ContainerImage{Name: "java", Version: "8"},
-		Parameters:   map[string]string{"Memory": "16GB"},
+		Parameters: map[string]string{
+			"volumes": "/host/path:/container/path",
+			"ports":   "80:8080",
+			"env":     "NODE_ENV=development",
+		},
 	}
 	createdJob, _ := service.CreateJob(ctx, jobCreate)
 
@@ -513,14 +522,14 @@ func TestJobService_UpdateJobWorkerDaemon(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Scheduled status without Result",
+			name: "Failed status without ErrorMessage",
 			id:   createdJob.Id,
 			data: ports.WorkerDaemonUpdateData{
-				Status:       ports.StatusScheduled,
+				Status:       ports.StatusFailed,
 				Result:       "",
 				ErrorMessage: "",
 			},
-			wantErr: false, // Assuming this is acceptable; adjust according to your logic
+			wantErr: true,
 		},
 	}
 
