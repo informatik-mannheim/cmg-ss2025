@@ -24,6 +24,7 @@ func NewJobService(storage ports.JobStorage) (*JobService, error) {
 	if storage == nil {
 		return nil, errors.New("storage cannot be nil")
 	}
+	var _ ports.JobService = (*JobService)(nil)
 
 	return &JobService{
 		storage: storage,
