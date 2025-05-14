@@ -66,18 +66,14 @@ func (s *JobService) CreateJob(ctx context.Context, jobCreate ports.JobCreate) (
 	if strings.TrimSpace(jobCreate.CreationZone) == "" {
 		return ports.Job{}, errors.New("creation zone must be provided")
 	}
-	if strings.TrimSpace(jobCreate.Image.Name) == "" || strings.TrimSpace(jobCreate.Image.Version) == "" {
+	if strings.TrimSpace(jobCreate.Image.Name) == "" {
 		return ports.Job{}, errors.New("both image name and version must be provided")
 	}
 
-	// Version format validation without regex
 	if !isSimpleValidVersion(jobCreate.Image.Version) {
 		return ports.Job{}, errors.New("image version format is invalid")
 	}
 
-	if len(jobCreate.Parameters) == 0 {
-		return ports.Job{}, errors.New("at least one parameter must be provided")
-	}
 	for key, value := range jobCreate.Parameters {
 		if strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
 			return ports.Job{}, errors.New("parameters cannot have empty keys or values")
@@ -163,17 +159,20 @@ func (s *JobService) UpdateJobScheduler(ctx context.Context, id string, data por
 		return ports.Job{}, errors.New("carbon intensity must be non-negative")
 	}
 
-	updateFn := func(job *ports.Job) error {
-		job.WorkerID = data.WorkerID
-		job.ComputeZone = data.ComputeZone
-		job.CarbonIntensity = data.CarbonIntensity
-		job.CarbonSaving = data.CarbonSaving
-		job.Status = data.Status
-		job.UpdatedAt = time.Now()
-		return nil
+	updated_job, err := s.GetJob(ctx, id)
+
+	if err != nil {
+		updated_job.WorkerID = data.WorkerID
+		updated_job.ComputeZone = data.ComputeZone
+		updated_job.CarbonIntensity = data.CarbonIntensity
+		updated_job.CarbonSaving = data.CarbonSaving
+		updated_job.Status = data.Status
+		updated_job.UpdatedAt = time.Now()
+	} else {
+		return ports.Job{}, err
 	}
 
-	return s.storage.UpdateJob(ctx, id, updateFn)
+	return s.storage.UpdateJob(ctx, id, updated_job)
 }
 
 // UpdateJobWorkerDaemon updates the job with the provided ID using the provided worker daemon update data.
@@ -189,24 +188,15 @@ func (s *JobService) UpdateJobWorkerDaemon(ctx context.Context, id string, data 
 		return ports.Job{}, errors.New("job ID must be a valid UUID")
 	}
 
-	updateFn := func(job *ports.Job) error {
-		job.Status = data.Status
+	updated_job, err := s.GetJob(ctx, id)
 
-		if data.Status == ports.StatusCompleted && data.ErrorMessage != "" {
-			return errors.New("completed status should not have an error message")
-		}
-
-		if data.Status == ports.StatusFailed && data.Result != "" {
-			return errors.New("failed status should not have a result")
-		}
-
-		job.Result = data.Result
-		job.ErrorMessage = data.ErrorMessage
-		job.UpdatedAt = time.Now()
-		return nil
+	if err != nil {
+		updated_job.Result = data.Result
+		updated_job.ErrorMessage = data.ErrorMessage
+		updated_job.UpdatedAt = time.Now()
 	}
 
-	return s.storage.UpdateJob(ctx, id, updateFn)
+	return s.storage.UpdateJob(ctx, id, updated_job)
 }
 
 // isSimpleValidVersion checks if the image version string contains only valid characters.

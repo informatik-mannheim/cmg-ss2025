@@ -50,7 +50,7 @@ func TestJobService_CreateJob(t *testing.T) {
 					"env":     "NODE_ENV=development",
 				},
 			},
-			wantErr: true, // Assuming your implementation returns an error
+			wantErr: true,
 		},
 		{
 			name: "Invalid image version format",
@@ -64,7 +64,21 @@ func TestJobService_CreateJob(t *testing.T) {
 					"env":     "NODE_ENV=development",
 				},
 			},
-			wantErr: true, // Assuming your implementation returns an error
+			wantErr: true,
+		},
+		{
+			name: "Image version is empty",
+			args: ports.JobCreate{
+				JobName:      "Job with latest version",
+				CreationZone: "DE",
+				Image:        ports.ContainerImage{Name: "golang", Version: ""},
+				Parameters: map[string]string{
+					"volumes": "/host/path:/container/path",
+					"ports":   "80:8080",
+					"env":     "NODE_ENV=development",
+				},
+			},
+			wantErr: false,
 		},
 		{
 			name: "Job with special characters",
@@ -320,9 +334,9 @@ func TestJobService_GetJobOutcome(t *testing.T) {
 		Status:          "completed",
 		Result:          "Analysis complete. Results stored in /data/analysis/output.txt.",
 		ErrorMessage:    "",
-		ComputeZone:     "", // Assuming not updated, left empty
-		CarbonIntensity: 0,  // Assuming default value
-		CarbonSavings:   0,  // Assuming default value
+		ComputeZone:     "DE", // Assuming this is set in the scheduler update
+		CarbonIntensity: 100,  // Example value
+		CarbonSavings:   30,
 	}
 
 	tests := []struct {
