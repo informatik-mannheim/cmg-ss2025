@@ -79,7 +79,7 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 		
-		resp, err := h.service.Login(req, r.Context())
+	resp, err := h.service.Login(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
