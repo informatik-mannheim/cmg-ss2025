@@ -321,17 +321,30 @@ func TestJobService_GetJobOutcome(t *testing.T) {
 	}
 	createdJob, _ := service.CreateJob(ctx, jobCreate)
 
-	updateData := ports.WorkerDaemonUpdateData{
+	updateDataScheduler := ports.SchedulerUpdateData{
+		WorkerID:        uuid.NewString(),
+		ComputeZone:     "DE",
+		CarbonIntensity: 100,
+		CarbonSaving:    30,
+		Status:          ports.StatusScheduled,
+	}
+	if _, err := service.UpdateJobScheduler(ctx, createdJob.Id, updateDataScheduler); err != nil {
+		t.Fatalf("Failed to update job scheduler data: %v", err)
+	}
+
+	updateDataDaemon := ports.WorkerDaemonUpdateData{
 		Status:       ports.StatusCompleted,
 		Result:       "Analysis complete. Results stored in /data/analysis/output.txt.",
 		ErrorMessage: "",
 	}
-	service.UpdateJobWorkerDaemon(ctx, createdJob.Id, updateData) // Ensure job outcome data is updated
+	if _, err := service.UpdateJobWorkerDaemon(ctx, createdJob.Id, updateDataDaemon); err != nil {
+		t.Fatalf("Failed to update job worker daemon data: %v", err)
+	}
 
 	// Expected outcome setup
 	expectedOutcome := ports.JobOutcome{
 		JobName:         "Outcome Test Job",
-		Status:          "completed",
+		Status:          ports.StatusCompleted,
 		Result:          "Analysis complete. Results stored in /data/analysis/output.txt.",
 		ErrorMessage:    "",
 		ComputeZone:     "DE", // Assuming this is set in the scheduler update

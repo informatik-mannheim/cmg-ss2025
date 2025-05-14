@@ -30,13 +30,13 @@ type WorkerDaemonUpdateData struct {
 
 // JobOutcome represents the outcome of a job
 type JobOutcome struct {
-	JobName         string `json:"jobName"`
-	Status          string `json:"status"`
-	Result          string `json:"result"`
-	ErrorMessage    string `json:"errorMessage"`
-	ComputeZone     string `json:"computeZone"`
-	CarbonIntensity int    `json:"carbonIntensity"`
-	CarbonSavings   int    `json:"carbonSavings"`
+	JobName         string    `json:"jobName"`
+	Status          JobStatus `json:"status"`
+	Result          string    `json:"result"`
+	ErrorMessage    string    `json:"errorMessage"`
+	ComputeZone     string    `json:"computeZone"`
+	CarbonIntensity int       `json:"carbonIntensity"`
+	CarbonSavings   int       `json:"carbonSavings"`
 }
 
 // JobService defines interfaces for interacting with Job resources

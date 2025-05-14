@@ -21,8 +21,17 @@ func NewMockJobStorage() *MockJobStorage {
 
 func (m *MockJobStorage) GetJobs(ctx context.Context, status []ports.JobStatus) ([]ports.Job, error) {
 	var results []ports.Job
+
+	if len(status) == 0 {
+		// Return all jobs if no specific status is provided
+		for _, job := range m.jobs {
+			results = append(results, job)
+		}
+		return results, nil
+	}
+
 	for _, job := range m.jobs {
-		if len(status) == 0 || utils.ContainsStatus(status, job.Status) {
+		if utils.ContainsStatus(status, job.Status) {
 			results = append(results, job)
 		}
 	}

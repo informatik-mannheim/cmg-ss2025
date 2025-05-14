@@ -34,9 +34,9 @@ func NewJobService(storage ports.JobStorage) (*JobService, error) {
 // It returns a slice of jobs that match the provided status.
 // If no status is provided, it returns all jobs.
 func (s *JobService) GetJobs(ctx context.Context, status []ports.JobStatus) ([]ports.Job, error) {
-	// If status is nil, return all jobs
-	if status == nil {
-		return nil, errors.New("atleast one status must be provided")
+
+	if len(status) == 0 {
+		return s.storage.GetJobs(ctx, nil)
 	}
 
 	// Filter out invalid statuses
@@ -127,7 +127,7 @@ func (s *JobService) GetJobOutcome(ctx context.Context, id string) (ports.JobOut
 
 	return ports.JobOutcome{
 		JobName:         job.JobName,
-		Status:          string(job.Status),
+		Status:          job.Status,
 		Result:          job.Result,
 		ErrorMessage:    job.ErrorMessage,
 		ComputeZone:     job.ComputeZone,
@@ -162,15 +162,14 @@ func (s *JobService) UpdateJobScheduler(ctx context.Context, id string, data por
 	updated_job, err := s.GetJob(ctx, id)
 
 	if err != nil {
-		updated_job.WorkerID = data.WorkerID
-		updated_job.ComputeZone = data.ComputeZone
-		updated_job.CarbonIntensity = data.CarbonIntensity
-		updated_job.CarbonSaving = data.CarbonSaving
-		updated_job.Status = data.Status
-		updated_job.UpdatedAt = time.Now()
-	} else {
 		return ports.Job{}, err
 	}
+	updated_job.WorkerID = data.WorkerID
+	updated_job.ComputeZone = data.ComputeZone
+	updated_job.CarbonIntensity = data.CarbonIntensity
+	updated_job.CarbonSaving = data.CarbonSaving
+	updated_job.Status = data.Status
+	updated_job.UpdatedAt = time.Now()
 
 	return s.storage.UpdateJob(ctx, id, updated_job)
 }
@@ -188,13 +187,19 @@ func (s *JobService) UpdateJobWorkerDaemon(ctx context.Context, id string, data 
 		return ports.Job{}, errors.New("job ID must be a valid UUID")
 	}
 
+	if data.Status == ports.StatusFailed && strings.TrimSpace(data.ErrorMessage) == "" {
+		return ports.Job{}, errors.New("error message must be provided for failed jobs")
+	}
+
 	updated_job, err := s.GetJob(ctx, id)
 
 	if err != nil {
-		updated_job.Result = data.Result
-		updated_job.ErrorMessage = data.ErrorMessage
-		updated_job.UpdatedAt = time.Now()
+		return ports.Job{}, err
 	}
+	updated_job.Status = data.Status
+	updated_job.Result = data.Result
+	updated_job.ErrorMessage = data.ErrorMessage
+	updated_job.UpdatedAt = time.Now()
 
 	return s.storage.UpdateJob(ctx, id, updated_job)
 }
