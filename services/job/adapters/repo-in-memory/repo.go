@@ -14,6 +14,8 @@ type MockJobStorage struct {
 }
 
 func NewMockJobStorage() *MockJobStorage {
+	var _ ports.JobStorage = (*MockJobStorage)(nil)
+
 	return &MockJobStorage{
 		jobs: make(map[string]ports.Job),
 	}
