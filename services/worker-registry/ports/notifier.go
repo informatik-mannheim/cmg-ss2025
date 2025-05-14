@@ -5,5 +5,6 @@ import (
 )
 
 type Notifier interface {
-	WorkerChanged(worker Worker, ctx context.Context)
+	WorkerCreated(worker Worker, ctx context.Context)
+	WorkerStatusChanged(worker Worker, ctx context.Context)
 }
