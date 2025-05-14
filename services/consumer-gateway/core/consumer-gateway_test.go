@@ -2,148 +2,226 @@ package core_test
 
 import (
 	"context"
-	"reflect"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
+
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
+	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/handler-http"
 )
 
-type MockRepo struct {
-	consumer      ports.Consumer
-	requestedId string
-	err         *error
-}
 
-func (m *MockRepo) Store(consumer ports.Consumer, ctx context.Context) error {
-	m.consumer = consumer
-	if m.err != nil {
-		return *m.err
+// This is to avoid using a string in the context
+type contextKey string
+const userContextKey contextKey = "user"
+
+
+// The following functions return mock data 
+type FakeService struct{}
+func (f *FakeService) Login(req ports.ConsumerLoginRequest, ctx context.Context) (ports.LoginResponse, error) {
+	if req.Username == "Alice Bob" {
+		return ports.LoginResponse{Secret: "abc-123"}, nil
 	}
-	return nil
+	return ports.LoginResponse{}, ports.ErrUnauthorized
 }
 
-func (m *MockRepo) FindById(id string, ctx context.Context) (ports.Consumer, error) {
-	m.requestedId = id
-	if m.err != nil {
-		return ports.Consumer{}, *m.err
+func (f *FakeService) Register(req ports.ConsumerRegistrationRequest, ctx context.Context) (ports.RegisterResponse, error) {
+	if req.Username == "Alice Bob" {
+		return ports.RegisterResponse{Secret: "abc-123"}, nil
 	}
-	return m.consumer, nil
-}
-
-var _ ports.Repo = (*MockRepo)(nil)
-
-type MockNotifier struct {
-	consumer    ports.Consumer
-	callcount int
-}
-
-func (m *MockNotifier) ConsumerChanged(consumer ports.Consumer, ctx context.Context) {
-	m.consumer = consumer
-	m.callcount++
-}
-
-var _ ports.Notifier = (*MockNotifier)(nil)
-
-func TestConsumerService_Set(t *testing.T) {
-
-	type fields struct {
-		repo     ports.Repo
-		notifier ports.Notifier
+	if req.Username == "invalid" || req.Username == "" {
+		return ports.RegisterResponse{}, ports.ErrInvalidInput
 	}
+	return ports.RegisterResponse{ 
+		Secret : "secret-123"}, ports.ErrUnauthorized
+}
 
-	testFields := fields{&MockRepo{}, &MockNotifier{}}
-	ctx := context.Background()
 
-	type args struct {
-		consumer ports.Consumer
-		ctx    context.Context
+func (f *FakeService) CreateJob(req ports.CreateJobRequest, ctx context.Context) (ports.CreateJobResponse, error) {
+	if req.ImageID == "" || req.ImageID == "invalid" {
+		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
+	if req.Zone == "" || req.Zone == "invalid" {
+		return ports.CreateJobResponse{}, ports.ErrInvalidInput
+	}
+	// Is allowed to be empty, but not invalid
+	if req.Param == "invalid" {
+		return ports.CreateJobResponse{}, ports.ErrInvalidInput
+	}
+	return ports.CreateJobResponse{
+		ImageID:     "job-123",
+		JobStatus: "queued",
+	}, nil
+}
+
+
+func (f *FakeService) GetJobResult(_ string, ctx context.Context) (ports.JobResultResponse, error) {
+	user := ctx.Value(userContextKey).(string)
+	if user == "alice" {
+		return ports.JobResultResponse{
+			ImageID: "job-123",
+			JobStatus: "completed",
+		}, nil
+	}
+	return ports.JobResultResponse{}, ports.ErrNotFound
+}
+
+
+/*
+Will be implemented, once the /zones endpoint is on main.
+func (f *FakeService) GetZones(ctx context.Context) (ports.ZonesResponse, error) {
+	return ports.ZonesResponse{}, nil // wenn nötig
+}*/ 
+
+
+
+func TestConsumerService(t *testing.T) {
+	
+	 tests := [] struct {
+		user 			string
+		name   			string
+		url 			string
+		method			string
+		code   			int
+		inputBody		string
+		responseBody 	string
+
+
+	}{ 		// Login Tests
+		{ 
+			name: "Successful Login",
+			url: "/auth/login",
+			method: "POST",
+			inputBody: `{"username" : "Alice Bob", "password": "SuperSecure123"}`,
+			responseBody: `{"secret": "super-secret-123"}`,
+			code: http.StatusOK,
+
+		},
 		{
-			name:   "Store some consumer",
-			fields: testFields,
-			args: args{
-				ports.Consumer{Id: "1", IntProp: 4711, StringProp: "Test"},
-				ctx,
-			},
-			wantErr: false,
+			name: "Unsuccessful Login",
+			url: "/auth/login",
+			method: "POST",
+			inputBody: `{"username" : "Bad User", "password": "wrong"}`,
+			responseBody: `{"error": "Unauthorized}`,
+			code: http.StatusBadRequest,
+		},
+		{
+			name: "Invalid JSON Login",
+			url: "/auth/login",
+			method: "POST",
+			inputBody: `{"username" : "", "password": ""}`,
+			responseBody: `{"error": "Invalid Request}`,
+			code: http.StatusBadRequest,			
+		},
+		
+
+			// Registration Tests
+		{
+			name: "Successful registration",
+			url: "/auth/register",
+			method: "POST",
+			code: http.StatusOK,
+			inputBody: `{"username" : "Alice Bob", "password": "SuperSecure123"}`,
+			responseBody: `{"secret": "super-secret-123"}`,
+		},
+		{
+			name: "Unsuccessful registration",
+			url: "/auth/register",
+			method: "POST",
+			code: http.StatusUnauthorized,
+			inputBody: `{"username" : "Bad User", "password": "wrong"}`,
+			responseBody: `{"error": "Unauthorized"}`,
+		},
+		{
+			name: "Invalid JSON Registration",
+			url: "/auth/register",
+			method: "POST",
+			code: http.StatusUnauthorized,
+			inputBody: `{"username" : "", "password": ""}`,
+			responseBody: `{"error": "Invalid Request"}`,
+		},
+			// Create Job test
+		{
+			name: "Create Job successfully",
+			url: "/jobs",
+			method: "POST",
+			code: http.StatusOK,
+			inputBody: `{"image_id": "123", "Zone" : "FR", "params":  "abc"}`,
+			responseBody: `{"image_id:" "job-123", "job_status": "queued"}`,
+
+		},
+		{
+			name: "Create Job – invalid ID",
+			url: "/jobs",
+			method: "POST",
+			code: http.StatusUnauthorized,
+			inputBody: `{"image_id": "invalid", "zone" : "FR", "params":  "abc"}`,
+			responseBody: `{"error": "Invalid Request"}`,
+
+		},
+		{
+			name: "Create Job – invalid zone",
+			url: "/jobs",
+			method: "POST",
+			code: http.StatusUnauthorized,
+			inputBody: `{"image_id": "123", "zone" : "invalid", "params":  "abc"}`,
+			responseBody: `{"error": "Invalid Request"}`,
+
+		},
+
+		{
+			name: "Create Job – wrong params",
+			url: "/jobs",
+			method: "POST",
+			code: http.StatusUnauthorized,
+			inputBody: `{"image_id": "123", "zone" : "FR", "params":  "invalid"}`,
+			responseBody: `{"error": "Invalid Request"}`,
+
+		},
+			// Get Job result tests
+		{
+			name: "Get a job result",
+			url: "/jobs/job-123/result",
+			method: "GET",
+			code: http.StatusOK,
+			user: "alice",
+			inputBody: ``,
+			responseBody: `{"image_id": "job-123", "job_status": "completed"}`,
+		},
+		{
+			name: "Job not found",
+			url: "/jobs/{id}/results",
+			method: "GET",
+			code: http.StatusNotFound,
+			inputBody: `{"image_id": "wrong"}`,
+			responseBody: `{"error": "Invalid Request"}`,
 		},
 	}
+
+
+		
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewConsumerService(tt.fields.repo, tt.fields.notifier)
+			service := &FakeService{}
+			router := handler_http.NewHandler(service)
 
-			if err := s.Set(tt.args.consumer, tt.args.ctx); (err != nil) != tt.wantErr {
-				t.Errorf("ConsumerService.Set() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			body := strings.NewReader(tt.inputBody)
+			req := httptest.NewRequest(tt.method, tt.url, body)
+			req.Header.Set("Content-Type", "application/json")
 
-			if tt.fields.repo.(*MockRepo).consumer != tt.args.consumer {
-				t.Errorf("ConsumerService.Set() repo consumer = %v, want %v", tt.fields.repo.(*MockRepo).consumer, tt.args.consumer)
-			}
+			// This simulates the JWT Token in the header
+			req.Header.Set("Authorization", "Bearer alice-token")
+			ctx := context.WithValue(req.Context(), userContextKey, "alice")
+			req = req.WithContext(ctx)
 
-			if tt.fields.notifier.(*MockNotifier).consumer != tt.args.consumer {
-				t.Errorf("ConsumerService.Set() notifier consumer = %v, want %v", tt.fields.notifier.(*MockNotifier).consumer, tt.args.consumer)
-			}
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
 
-			if tt.fields.notifier.(*MockNotifier).callcount != 1 {
-				t.Errorf("ConsumerService.Set() notifier callcount = %v, want %v", tt.fields.notifier.(*MockNotifier).callcount, 1)
-			}
-
-		})
-	}
+			if rr.Code != tt.code {
+				t.Errorf("expected code %d, got %d", tt.code, rr.Code)
+				}
+	})
 }
-
-func TestConsumerService_Get(t *testing.T) {
-	type fields struct {
-		repo     ports.Repo
-		notifier ports.Notifier
-	}
-
-	testFields := fields{&MockRepo{consumer: ports.Consumer{Id: "25", IntProp: 23, StringProp: "test"}}, nil}
-	ctx := context.Background()
-
-	type args struct {
-		id  string
-		ctx context.Context
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    ports.Consumer
-		wantErr bool
-	}{
-		{
-			name:   "Get existing consumer",
-			fields: testFields,
-			args: args{
-				"25",
-				ctx,
-			},
-			want:    ports.Consumer{Id: "25", IntProp: 23, StringProp: "test"},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewConsumerService(tt.fields.repo, tt.fields.notifier)
-			got, err := s.Get(tt.args.id, tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ConsumerService.Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ConsumerService.Get() = %v, want %v", got, tt.want)
-			}
-			if tt.fields.repo.(*MockRepo).requestedId != tt.args.id {
-				t.Errorf("ConsumerService.Get() repo requestedId = %v, want %v", tt.fields.repo.(*MockRepo).requestedId, tt.args.id)
-			}
-		})
-	}
 }
