@@ -8,25 +8,24 @@ import (
 )
 
 type WorkerGatewayService struct {
-	notifier ports.Notifier
+	registry ports.RegistryService
+	job      ports.JobService
 }
 
-func NewWorkerGatewayService(notifier ports.Notifier) *WorkerGatewayService {
-	return &WorkerGatewayService{
-		notifier: notifier,
-	}
+func NewWorkerGatewayService(registry ports.RegistryService, job ports.JobService) *WorkerGatewayService {
+	return &WorkerGatewayService{registry: registry, job: job}
 }
 
 func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.HeartbeatRequest) ([]ports.Job, error) {
 	log.Printf("Heartbeat received: %s is %s", req.WorkerID, req.Status)
 
-	if err := s.notifier.UpdateWorkerStatus(ctx, req); err != nil {
+	if err := s.registry.UpdateWorkerStatus(ctx, req); err != nil {
 		return nil, err
 	}
 
 	// Get scheduled jobs if available
 	if req.Status == "AVAILABLE" {
-		jobs, err := s.notifier.FetchScheduledJobs(ctx)
+		jobs, err := s.job.FetchScheduledJobs(ctx)
 		if err != nil {
 			log.Printf("error getting jobs: %v", err)
 			return nil, nil // Gateway still accepts heartbeat
@@ -46,14 +45,14 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 	return nil, nil
 }
 
-func (s *WorkerGatewayService) SubmitResult(ctx context.Context, result ports.ResultRequest) error {
+func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRequest) error {
 	log.Printf("Result for job %s received", result.JobID)
 
-	return s.notifier.UpdateJob(ctx, result)
+	return s.job.UpdateJob(ctx, result)
 }
 
-func (s *WorkerGatewayService) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
+func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) error {
 	log.Printf("Registering worker: %s", req.ID)
 
-	return s.notifier.RegisterWorker(ctx, req)
+	return s.registry.RegisterWorker(ctx, req)
 }

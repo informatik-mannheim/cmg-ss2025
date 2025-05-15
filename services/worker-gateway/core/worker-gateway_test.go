@@ -9,17 +9,14 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
 )
 
-// --- Dummy Notifier für Tests ---
-type dummyNotifier struct {
+// --- Dummy RegistryService für Tests ---
+type dummyRegistryService struct {
 	RegisterWorkerCalled     bool
-	UpdateJobCalled          bool
 	UpdateWorkerStatusCalled bool
-	FetchScheduledJobsCalled bool
-
-	ReturnErr bool
+	ReturnErr                bool
 }
 
-func (d *dummyNotifier) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
+func (d *dummyRegistryService) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
 	d.RegisterWorkerCalled = true
 	if d.ReturnErr {
 		return errors.New("register error")
@@ -27,15 +24,7 @@ func (d *dummyNotifier) RegisterWorker(ctx context.Context, req ports.RegisterRe
 	return nil
 }
 
-func (d *dummyNotifier) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
-	d.UpdateJobCalled = true
-	if d.ReturnErr {
-		return errors.New("update job error")
-	}
-	return nil
-}
-
-func (d *dummyNotifier) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
+func (d *dummyRegistryService) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
 	d.UpdateWorkerStatusCalled = true
 	if d.ReturnErr {
 		return errors.New("update worker status error")
@@ -43,7 +32,22 @@ func (d *dummyNotifier) UpdateWorkerStatus(ctx context.Context, req ports.Heartb
 	return nil
 }
 
-func (d *dummyNotifier) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error) {
+// --- Dummy JobService für Tests ---
+type dummyJobService struct {
+	UpdateJobCalled          bool
+	FetchScheduledJobsCalled bool
+	ReturnErr                bool
+}
+
+func (d *dummyJobService) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
+	d.UpdateJobCalled = true
+	if d.ReturnErr {
+		return errors.New("update job error")
+	}
+	return nil
+}
+
+func (d *dummyJobService) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error) {
 	d.FetchScheduledJobsCalled = true
 	if d.ReturnErr {
 		return nil, errors.New("fetch jobs error")
@@ -57,8 +61,9 @@ func (d *dummyNotifier) FetchScheduledJobs(ctx context.Context) ([]ports.Job, er
 // --- Tests ---
 
 func TestRegisterWorker_Success(t *testing.T) {
-	notifier := &dummyNotifier{}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{}
+	svc := core.NewWorkerGatewayService(reg, job)
 
 	req := ports.RegisterRequest{
 		ID:       "worker1",
@@ -66,30 +71,32 @@ func TestRegisterWorker_Success(t *testing.T) {
 		Location: "DE",
 	}
 
-	err := svc.RegisterWorker(context.Background(), req)
+	err := svc.Register(context.Background(), req)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if !notifier.RegisterWorkerCalled {
+	if !reg.RegisterWorkerCalled {
 		t.Error("expected RegisterWorker to be called")
 	}
 }
 
 func TestRegisterWorker_Error(t *testing.T) {
-	notifier := &dummyNotifier{ReturnErr: true}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{ReturnErr: true}
+	job := &dummyJobService{}
+	svc := core.NewWorkerGatewayService(reg, job)
 
-	err := svc.RegisterWorker(context.Background(), ports.RegisterRequest{})
+	err := svc.Register(context.Background(), ports.RegisterRequest{})
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 }
 
 func TestSubmitResult_Success(t *testing.T) {
-	notifier := &dummyNotifier{}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{}
+	svc := core.NewWorkerGatewayService(reg, job)
 
-	err := svc.SubmitResult(context.Background(), ports.ResultRequest{
+	err := svc.Result(context.Background(), ports.ResultRequest{
 		JobID:  "job123",
 		Status: "COMPLETED",
 		Result: "some output",
@@ -97,16 +104,17 @@ func TestSubmitResult_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if !notifier.UpdateJobCalled {
+	if !job.UpdateJobCalled {
 		t.Error("expected UpdateJob to be called")
 	}
 }
 
 func TestSubmitResult_Error(t *testing.T) {
-	notifier := &dummyNotifier{ReturnErr: true}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{ReturnErr: true}
+	svc := core.NewWorkerGatewayService(reg, job)
 
-	err := svc.SubmitResult(context.Background(), ports.ResultRequest{
+	err := svc.Result(context.Background(), ports.ResultRequest{
 		JobID: "job123",
 	})
 	if err == nil {
@@ -115,8 +123,9 @@ func TestSubmitResult_Error(t *testing.T) {
 }
 
 func TestHeartbeat_Available_WithJobs(t *testing.T) {
-	notifier := &dummyNotifier{}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{}
+	svc := core.NewWorkerGatewayService(reg, job)
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
@@ -127,10 +136,10 @@ func TestHeartbeat_Available_WithJobs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if !notifier.UpdateWorkerStatusCalled {
+	if !reg.UpdateWorkerStatusCalled {
 		t.Error("expected UpdateWorkerStatus to be called")
 	}
-	if !notifier.FetchScheduledJobsCalled {
+	if !job.FetchScheduledJobsCalled {
 		t.Error("expected FetchScheduledJobs to be called")
 	}
 	if len(jobs) != 1 || jobs[0].WorkerID != "worker1" {
@@ -139,8 +148,9 @@ func TestHeartbeat_Available_WithJobs(t *testing.T) {
 }
 
 func TestHeartbeat_Computing(t *testing.T) {
-	notifier := &dummyNotifier{}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{}
+	svc := core.NewWorkerGatewayService(reg, job)
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
@@ -154,17 +164,18 @@ func TestHeartbeat_Computing(t *testing.T) {
 	if len(jobs) != 0 {
 		t.Errorf("expected no jobs for COMPUTING, got %d", len(jobs))
 	}
-	if !notifier.UpdateWorkerStatusCalled {
+	if !reg.UpdateWorkerStatusCalled {
 		t.Error("expected UpdateWorkerStatus to be called")
 	}
-	if notifier.FetchScheduledJobsCalled {
+	if job.FetchScheduledJobsCalled {
 		t.Error("expected FetchScheduledJobs NOT to be called")
 	}
 }
 
 func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
-	notifier := &dummyNotifier{ReturnErr: true}
-	svc := core.NewWorkerGatewayService(notifier)
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{ReturnErr: true}
+	svc := core.NewWorkerGatewayService(reg, job)
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
