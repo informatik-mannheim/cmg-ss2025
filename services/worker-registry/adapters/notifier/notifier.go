@@ -2,23 +2,21 @@ package notifier
 
 import (
 	"context"
+	"log"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
-type Notifier interface {
-	WorkerChanged(worker ports.Worker, ctx context.Context)
+type Notifier struct{}
+
+func NewNotifier() ports.Notifier {
+	return &Notifier{}
 }
 
-type HttpNotifier struct{}
-
-func NewHttpNotifier() *HttpNotifier {
-	return &HttpNotifier{}
+func (n *Notifier) WorkerCreated(worker ports.Worker, ctx context.Context) {
+	log.Printf("[Notifier] New worker created: ID=%s, STATUS=%s, ZONE=%s ", worker.Id, worker.Status, worker.Zone)
 }
 
-var _ Notifier = (*HttpNotifier)(nil)
-
-// currently just dummy notifier to make the service runnable
-func (n *HttpNotifier) WorkerChanged(worker ports.Worker, ctx context.Context) {
-	// TODO implement Notifier method
+func (n *Notifier) WorkerStatusChanged(worker ports.Worker, ctx context.Context) {
+	log.Printf("[Notifier] Changed status from Worker with ID '%s' to status '%s'.", worker.Id, worker.Status)
 }
