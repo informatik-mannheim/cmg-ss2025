@@ -6,15 +6,16 @@ import (
 	"time"
 
 	"worker-daemon/internal/config"
-	"worker-daemon/internal/gateway"
+
+	"github.com/informatik-mannheim/cmg-ss2025/services/worker-deamon/internal/ports"
 )
 
 type Daemon struct {
 	cfg    *config.Config
-	client *gateway.Client
+	client *ports.GatewayClient
 }
 
-func NewDaemon(cfg *config.Config, client *gateway.Client) *Daemon {
+func NewDaemon(cfg *config.Config, client *ports.GatewayClient) *Daemon {
 	return &Daemon{cfg: cfg, client: client}
 }
 
