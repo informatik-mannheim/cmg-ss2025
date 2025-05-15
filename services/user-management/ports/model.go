@@ -24,7 +24,7 @@ type RegisterRequest struct {
 // registerResponse is the response payload for user registration.
 // It contains the generated user ID.
 type RegisterResponse struct {
-	ID string `json:"id"`
+	Secret string `json:"secret"`
 }
 
 // loginRequest is the request payload for user login.
