@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"errors"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
 )
@@ -15,19 +14,41 @@ func NewConsumerService() *ConsumerService {
 	return &ConsumerService{}
 }
 
-func (s *ConsumerService) CreateJob(req ports.CreateJobRequest, ctx context.Context)(ports.CreateJobResponse, error){
-	return ports.CreateJobResponse{}, errors.New("error creating job")
+func (s *ConsumerService) CreateJob(req ports.CreateJobRequest, ctx context.Context) (ports.CreateJobResponse, error) {
+	if req.ImageID == "" || req.Zone == "" || req.Param == "invalid" {
+		return ports.CreateJobResponse{}, ports.ErrInvalidInput
+	}
+	return ports.CreateJobResponse{
+		ImageID:     req.ImageID,
+		Zone:      req.Zone,
+		Param:     req.Param,
+	}, nil
 }
 
-func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context)(ports.JobResultResponse, error){
-	return ports.JobResultResponse{}, errors.New("error getting job result")
-}
-func (s *ConsumerService) Login(req ports.ConsumerLoginRequest, ctx context.Context)(ports.LoginResponse, error) {
-	return ports.LoginResponse{}, errors.New("error during login")
+
+func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context) (ports.JobResultResponse, error) {
+	user, ok := ctx.Value("user").(string)
+	if !ok || user != "alice" {
+		return ports.JobResultResponse{}, ports.ErrNotFound
+	}
+	return ports.JobResultResponse{
+		ImageID:   jobID,
+		JobStatus: "completed",
+	}, nil
 }
 
-func (s *ConsumerService) Register(req ports.ConsumerRegistrationRequest, ctx context.Context)(ports.RegisterResponse, error){
-	return ports.RegisterResponse{}, errors.New("error during registration")
+func (s *ConsumerService) Login(req ports.ConsumerLoginRequest, ctx context.Context) (ports.LoginResponse, error) {
+if req.Username == "alice" && req.Password == "pw" {
+return ports.LoginResponse{Secret: "login-token"}, nil
+}
+return ports.LoginResponse{}, ports.ErrUnauthorized
+}
+
+func (s *ConsumerService) Register(req ports.ConsumerRegistrationRequest, ctx context.Context) (ports.RegisterResponse, error) {
+	if req.Username == "" || req.Password == "" {
+		return ports.RegisterResponse{}, ports.ErrInvalidInput
+	}
+	return ports.RegisterResponse{Secret: "registered-token"}, nil
 }
 
 

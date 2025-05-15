@@ -18,7 +18,9 @@ type CreateJobRequest struct {
 
 type CreateJobResponse struct {
 	ImageID string `json:"image_id`
-	JobStatus string `json:"status"`
+	Zone string `json:"zone"`
+	Param string `json:"params"`
+	JobStatus string `json:"job_status"`
 }
 
 type GetJobResult struct {
