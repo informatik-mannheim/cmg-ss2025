@@ -1,0 +1,13 @@
+services:
+  job-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: job-scheduler
+    environment:
+      - WORKER_REGISTRY=http://localhost:8069
+      - JOB_SERVICE=http://localhost:8069
+      - CARBON_INTENSITY_PROVIDER=http://localhost:8069
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

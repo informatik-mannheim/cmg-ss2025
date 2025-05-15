@@ -31,10 +31,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.rtr.ServeHTTP(w, r) //delegate
 }
 
-
-/* 
+/*
 Creates a new job using the provided data by the client.
-The parameter req: contains the fields (imageID, zone) defined 
+The parameter req: contains the fields (imageID, zone) defined
 in the CreateJobRequest struct
 */
 func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request) {
@@ -43,8 +42,8 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
 		return
 	}
-		
-		resp, err := h.service.CreateJob(req, r.Context())
+
+	resp, err := h.service.CreateJob(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
@@ -54,13 +53,13 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(resp)
 }
 
-/* 
+/*
 Returns a job result that was requested by client.
 The parameter vars: is a map that extracts the pathparameters from client request.
 So jobs/<job-id>/result returns -> jobID: <job-id>
 */
 func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r) // 
+	vars := mux.Vars(r)     //
 	jobID := vars["job-id"] // "jobID" : "123-abc"
 
 	status, err := h.service.GetJobResult(jobID, r.Context())
@@ -78,7 +77,7 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
 		return
 	}
-		
+
 	resp, err := h.service.Login(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
@@ -90,13 +89,13 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) {
-	var req ports.ConsumerRegistrationRequest 
+	var req ports.ConsumerRegistrationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
 		return
 	}
-		
-		resp, err := h.service.Register(req, r.Context())
+
+	resp, err := h.service.Register(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return

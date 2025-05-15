@@ -1,0 +1,155 @@
+openapi: 3.1.0
+info:
+  title: Worker Gateway API
+  version: 1.0.0
+  description: API for communication between Worker Registry, Worker Daemon und Job-Service.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /worker/heartbeat:
+    post:
+      summary: Worker Daemon sends heartbeat with worker status
+      description: |
+        Called periodically by a worker daemon to indicate it's alive
+        and to report its current execution status (AVAILABLE or COMPUTING).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                required:
+                  - workerId
+                  - status
+                properties:
+                  workerId:
+                    type: string
+                    description: Unique identifier for the worker
+                    example: "worker123"
+                  status:
+                    type: string
+                    description: Current execution status of the worker
+                    enum: [AVAILABLE, COMPUTING ]
+                    example: "AVAILABLE"
+      responses:
+        '200':
+          description: Heartbeat received successfully
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /result:
+    post:
+      summary: Result of a job processed by the worker daemon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId, status, result]
+              properties:
+                jobId:
+                  type: string
+                  description: The unique identifier of the compute job
+                  example: "job123"
+                status:
+                  type: string
+                  description: The final status of the job (e.g., completed, failed)
+                  example: "completed"
+                result:
+                  type: string
+                  description: Result description or output
+                  example: "Execution completed with output saved to /data/output/result.txt."
+                errorMessage: 
+                  type: string
+                  description: Optional error message if job failed
+                  example: "Compute job failed"
+      responses:
+        '200':
+          description: Result received and processed.
+        '400':
+          description: Invalid job result payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /register:
+    post:
+      summary: Registering a new worker daemon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              required: [id, key, location]
+              properties:
+                id:
+                  type: string
+                  description: Unique identifier of the worker daemon
+                  example: "worker123"
+                key:
+                  type: string
+                  description: Shared secret key
+                  example: "12345678"
+                location:
+                  type: string
+                  description: Geographical location of the worker
+                  example: "DE"
+      responses:
+        '200':
+          description: Worker successfully registered
+        '400':
+          description: Invalid registration data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized – invalid key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error while registering worker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Example Error"
+        code:
+          type: integer
+          example: 400
+        details:
+          type: string
+          example: "Detailed description of example error."

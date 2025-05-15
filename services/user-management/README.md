@@ -114,8 +114,8 @@ curl -X POST http://localhost:8080/auth/login \
 make run          # Start the service
 make test         # Run tests with coverage
 make fmt          # Format code
-make docker-up    # Start service with Docker Compose
 make docker-down  # Tear down
+make clean        
 ```
 
 ---
