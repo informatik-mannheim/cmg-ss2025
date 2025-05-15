@@ -21,12 +21,12 @@ var _ http.Handler = (*Handler)(nil)
 // NewHandler initializes the HTTP handlers for each API endpoint
 func NewHandler(service ports.JobService) *Handler {
 	h := &Handler{service: service, rtr: mux.NewRouter()}
-	h.rtr.HandleFunc("/jobs", h.getJobs).Methods("GET")
-	h.rtr.HandleFunc("/jobs", h.createJob).Methods("POST")
-	h.rtr.HandleFunc("/jobs/{id}", h.getJob).Methods("GET")
-	h.rtr.HandleFunc("/jobs/{id}/outcome", h.getJobOutcome).Methods("GET")
-	h.rtr.HandleFunc("/jobs/{id}/update-scheduler", h.updateJobScheduler).Methods("PATCH")
-	h.rtr.HandleFunc("/jobs/{id}/update-workerdaemon", h.updateJobWorkerDaemon).Methods("PATCH")
+	h.rtr.HandleFunc("/jobs", h.GetJobs).Methods("GET")
+	h.rtr.HandleFunc("/jobs", h.CreateJob).Methods("POST")
+	h.rtr.HandleFunc("/jobs/{id}", h.GetJob).Methods("GET")
+	h.rtr.HandleFunc("/jobs/{id}/outcome", h.GetJobOutcome).Methods("GET")
+	h.rtr.HandleFunc("/jobs/{id}/update-scheduler", h.UpdateJobScheduler).Methods("PATCH")
+	h.rtr.HandleFunc("/jobs/{id}/update-workerdaemon", h.UpdateJobWorkerDaemon).Methods("PATCH")
 	return h
 }
 
@@ -36,7 +36,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // getJobs handles GET requests to retrieve jobs, possibly filtered by status
-func (h *Handler) getJobs(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetJobs(w http.ResponseWriter, r *http.Request) {
 	statusStrings := r.URL.Query()["status"]
 	var statuses []ports.JobStatus
 
@@ -44,8 +44,9 @@ func (h *Handler) getJobs(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(s, ",") // Split comma-separated values
 		for _, part := range parts {
 			part = strings.TrimSpace(part)
-			switch part {
-			case "queued", "scheduled", "running", "completed", "failed", "cancelled":
+			switch ports.JobStatus(part) {
+			case ports.StatusQueued, ports.StatusScheduled, ports.StatusRunning,
+				ports.StatusCompleted, ports.StatusFailed, ports.StatusCancelled:
 				statuses = append(statuses, ports.JobStatus(part))
 			default:
 				http.Error(w, `{"error": "Bad Request", 
@@ -71,23 +72,15 @@ func (h *Handler) getJobs(w http.ResponseWriter, r *http.Request) {
 }
 
 // createJob handles POST requests to create a new job
-func (h *Handler) createJob(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
 	var job ports.JobCreate
-	err := json.NewDecoder(r.Body).Decode(&job)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
 		http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
 		return
 	}
 
-	// Validate required fields in `job` (adjust validation according to your struct and requirements)
-	if job.JobName == "" || job.CreationZone == "" || job.Image.Name == "" {
-		http.Error(w, ports.HTTPErr400FieldEmpty, http.StatusBadRequest)
-		return
-	}
-
 	createdJob, err := h.service.CreateJob(r.Context(), job)
-	if err != nil {
-		http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
+	if CheckAndSetErr(w, err) {
 		return
 	}
 
@@ -97,22 +90,13 @@ func (h *Handler) createJob(w http.ResponseWriter, r *http.Request) {
 }
 
 // getJob retrieves a specific job by ID from the GET request
-func (h *Handler) getJob(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetJob(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	// Check if the ID is a valid UUID
 	job, err := h.service.GetJob(r.Context(), id)
-	if err != nil {
-		if err == ports.ErrNotExistingID {
-			http.Error(w, ports.HTTPErr400MissId, http.StatusBadRequest)
-		} else if err == ports.ErrInvalidIDFormat {
-			http.Error(w, ports.HTTPErr400InvalidId, http.StatusBadRequest)
-		} else if err == ports.ErrJobNotFound {
-			http.Error(w, ports.HTTPErr400JobNotFound, http.StatusNotFound)
-		} else {
-			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
-		}
+	if CheckAndSetErr(w, err) {
 		return
 	}
 
@@ -121,21 +105,12 @@ func (h *Handler) getJob(w http.ResponseWriter, r *http.Request) {
 }
 
 // getJobOutcome retrieves the outcome of a job by its ID
-func (h *Handler) getJobOutcome(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetJobOutcome(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	jobOutcome, err := h.service.GetJobOutcome(r.Context(), id)
-	if err != nil {
-		if err == ports.ErrNotExistingID {
-			http.Error(w, ports.HTTPErr400MissId, http.StatusBadRequest)
-		} else if err == ports.ErrInvalidIDFormat {
-			http.Error(w, ports.HTTPErr400InvalidId, http.StatusBadRequest)
-		} else if err == ports.ErrJobNotFound {
-			http.Error(w, ports.HTTPErr400JobNotFound, http.StatusNotFound)
-		} else {
-			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
-		}
+	if CheckAndSetErr(w, err) {
 		return
 	}
 
@@ -144,7 +119,7 @@ func (h *Handler) getJobOutcome(w http.ResponseWriter, r *http.Request) {
 }
 
 // updateJobScheduler handles PATCH requests to update job properties from a scheduler's perspective
-func (h *Handler) updateJobScheduler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateJobScheduler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -156,16 +131,7 @@ func (h *Handler) updateJobScheduler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updatedJob, err := h.service.UpdateJobScheduler(r.Context(), id, updateData)
-	if err != nil {
-		if err == ports.ErrNotExistingID {
-			http.Error(w, ports.HTTPErr400MissId, http.StatusBadRequest)
-		} else if err == ports.ErrInvalidIDFormat {
-			http.Error(w, ports.HTTPErr400InvalidId, http.StatusBadRequest)
-		} else if err == ports.ErrJobNotFound {
-			http.Error(w, ports.HTTPErr400JobNotFound, http.StatusNotFound)
-		} else {
-			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
-		}
+	if CheckAndSetErr(w, err) {
 		return
 	}
 
@@ -174,7 +140,7 @@ func (h *Handler) updateJobScheduler(w http.ResponseWriter, r *http.Request) {
 }
 
 // updateJobWorkerDaemon handles PATCH requests to update job properties from a worker daemon's perspective
-func (h *Handler) updateJobWorkerDaemon(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateJobWorkerDaemon(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -186,19 +152,32 @@ func (h *Handler) updateJobWorkerDaemon(w http.ResponseWriter, r *http.Request) 
 	}
 
 	updatedJob, err := h.service.UpdateJobWorkerDaemon(r.Context(), id, updateData)
-	if err != nil {
-		if err == ports.ErrNotExistingID {
-			http.Error(w, ports.HTTPErr400MissId, http.StatusBadRequest)
-		} else if err == ports.ErrInvalidIDFormat {
-			http.Error(w, ports.HTTPErr400InvalidId, http.StatusBadRequest)
-		} else if err == ports.ErrJobNotFound {
-			http.Error(w, ports.HTTPErr400JobNotFound, http.StatusNotFound)
-		} else {
-			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
-		}
+	if CheckAndSetErr(w, err) {
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedJob)
+}
+
+// checkAndSetErr checks for errors and sets the appropriate HTTP response status and message
+func CheckAndSetErr(w http.ResponseWriter, err error) bool {
+	if err != nil {
+		switch err {
+		case ports.ErrNotExistingID:
+			http.Error(w, ports.HTTPErr400MissId, http.StatusBadRequest)
+		case ports.ErrInvalidIDFormat:
+			http.Error(w, ports.HTTPErr400InvalidId, http.StatusBadRequest)
+		case ports.ErrJobNotFound:
+			http.Error(w, ports.HTTPErr400JobNotFound, http.StatusNotFound)
+		case ports.ErrNotExistingJobName, ports.ErrNotExistingZone, ports.ErrNotExistingImageName:
+			http.Error(w, ports.HTTPErr400FieldEmpty, http.StatusBadRequest)
+		case ports.ErrImageVersionIsInvalid, ports.ErrParamKeyValueEmpty:
+			http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
+		default:
+			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
+		}
+		return true
+	}
+	return false
 }
