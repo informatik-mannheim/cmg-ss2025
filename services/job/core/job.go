@@ -163,6 +163,9 @@ func (s *JobService) UpdateJobScheduler(ctx context.Context, id string, data por
 	if _, err := uuid.Parse(id); err != nil {
 		return ports.Job{}, ports.ErrInvalidIDFormat
 	}
+	if strings.TrimSpace(string(data.Status)) == "" {
+		return ports.Job{}, ports.ErrNotExistingStatus
+	}
 
 	// Validate WorkerID
 	if len(strings.TrimSpace(data.WorkerID)) == 0 {
@@ -201,7 +204,9 @@ func (s *JobService) UpdateJobWorkerDaemon(ctx context.Context, id string, data 
 	if _, err := uuid.Parse(id); err != nil {
 		return ports.Job{}, ports.ErrInvalidIDFormat
 	}
-
+	if strings.TrimSpace(string(data.Status)) == "" {
+		return ports.Job{}, ports.ErrNotExistingStatus
+	}
 	if data.Status == ports.StatusFailed && strings.TrimSpace(data.ErrorMessage) == "" {
 		return ports.Job{}, ports.ErrErrorMessageEmpty
 	}

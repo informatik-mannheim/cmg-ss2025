@@ -174,6 +174,8 @@ func CheckAndSetErr(w http.ResponseWriter, err error) bool {
 			http.Error(w, ports.HTTPErr400FieldEmpty, http.StatusBadRequest)
 		case ports.ErrImageVersionIsInvalid, ports.ErrParamKeyValueEmpty:
 			http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
+		case ports.ErrNotExistingStatus:
+			http.Error(w, ports.HTTPErr400StatusEmpty, http.StatusBadRequest)
 		default:
 			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
 		}

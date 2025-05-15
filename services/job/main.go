@@ -17,7 +17,7 @@ func main() {
 	storage := repo_in_memory.NewMockJobStorage()
 	jobService, err := core.NewJobService(storage)
 	if err != nil {
-		log.Fatal("could not initialize job service: %v", err)
+		log.Fatalf("could not initialize job service: %v", err)
 	}
 
 	port := os.Getenv("PORT")
