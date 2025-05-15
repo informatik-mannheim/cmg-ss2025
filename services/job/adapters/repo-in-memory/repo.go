@@ -2,7 +2,6 @@ package repo_in_memory
 
 import (
 	"context"
-	"errors"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job/utils"
@@ -48,7 +47,7 @@ func (m *MockJobStorage) CreateJob(ctx context.Context, job ports.Job) error {
 func (m *MockJobStorage) GetJob(ctx context.Context, id string) (ports.Job, error) {
 	job, ok := m.jobs[id]
 	if !ok {
-		return ports.Job{}, errors.New("job not found")
+		return ports.Job{}, ports.ErrJobNotFound
 	}
 	return job, nil
 }
@@ -56,7 +55,7 @@ func (m *MockJobStorage) GetJob(ctx context.Context, id string) (ports.Job, erro
 func (m *MockJobStorage) UpdateJob(ctx context.Context, id string, updatedJob ports.Job) (ports.Job, error) {
 	_, exists := m.jobs[id]
 	if !exists {
-		return ports.Job{}, errors.New("job not found")
+		return ports.Job{}, ports.ErrJobNotFound
 	}
 	m.jobs[id] = updatedJob
 	return updatedJob, nil

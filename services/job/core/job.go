@@ -62,22 +62,21 @@ func (s *JobService) GetJobs(ctx context.Context, status []ports.JobStatus) ([]p
 func (s *JobService) CreateJob(ctx context.Context, jobCreate ports.JobCreate) (ports.Job, error) {
 	// Input validation
 	if strings.TrimSpace(jobCreate.JobName) == "" {
-		return ports.Job{}, errors.New("job name must be provided")
+		return ports.Job{}, ports.ErrNotExistingJobName
 	}
 	if strings.TrimSpace(jobCreate.CreationZone) == "" {
-		return ports.Job{}, errors.New("creation zone must be provided")
+		return ports.Job{}, ports.ErrNotExistingZone
 	}
 	if strings.TrimSpace(jobCreate.Image.Name) == "" {
-		return ports.Job{}, errors.New("both image name and version must be provided")
+		return ports.Job{}, ports.ErrNotExistingImageName
 	}
-
 	if !isSimpleValidVersion(jobCreate.Image.Version) {
-		return ports.Job{}, errors.New("image version format is invalid")
+		return ports.Job{}, ports.ErrImageVersionIsInvalid
 	}
 
 	for key, value := range jobCreate.Parameters {
 		if strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
-			return ports.Job{}, errors.New("parameters cannot have empty keys or values")
+			return ports.Job{}, ports.ErrParamKeyValueEmpty
 		}
 	}
 
@@ -106,13 +105,17 @@ func (s *JobService) CreateJob(ctx context.Context, jobCreate ports.JobCreate) (
 func (s *JobService) GetJob(ctx context.Context, id string) (ports.Job, error) {
 	// Check for empty or whitespace-only ID
 	if len(strings.TrimSpace(id)) == 0 {
-		return ports.Job{}, errors.New("job ID must be provided")
+		return ports.Job{}, ports.ErrNotExistingID
 	}
-
 	// Validate UUID format
 	if _, err := uuid.Parse(id); err != nil {
-		return ports.Job{}, errors.New("job ID must be a valid UUID")
+		return ports.Job{}, ports.ErrInvalidIDFormat
 	}
+	// Check if the job exists in the storage
+	if _, err := s.storage.GetJob(ctx, id); err != nil {
+		return ports.Job{}, ports.ErrJobNotFound
+	}
+
 	return s.storage.GetJob(ctx, id)
 }
 
@@ -121,9 +124,20 @@ func (s *JobService) GetJob(ctx context.Context, id string) (ports.Job, error) {
 // If the job is not found, it returns an error.
 // This method is useful for getting detailed information about a job's execution.
 func (s *JobService) GetJobOutcome(ctx context.Context, id string) (ports.JobOutcome, error) {
-	job, err := s.GetJob(ctx, id)
+	var job ports.Job
+
+	// Check for empty or whitespace-only ID
+	if len(strings.TrimSpace(id)) == 0 {
+		return ports.JobOutcome{}, ports.ErrNotExistingID
+	}
+	// Validate UUID format
+	if _, err := uuid.Parse(id); err != nil {
+		return ports.JobOutcome{}, ports.ErrInvalidIDFormat
+	}
+	// Check if the job exists in the storage
+	job, err := s.storage.GetJob(ctx, id)
 	if err != nil {
-		return ports.JobOutcome{}, err
+		return ports.JobOutcome{}, ports.ErrJobNotFound
 	}
 
 	return ports.JobOutcome{
@@ -144,20 +158,23 @@ func (s *JobService) GetJobOutcome(ctx context.Context, id string) (ports.JobOut
 func (s *JobService) UpdateJobScheduler(ctx context.Context, id string, data ports.SchedulerUpdateData) (ports.Job, error) {
 	// Validate ID
 	if len(strings.TrimSpace(id)) == 0 {
-		return ports.Job{}, errors.New("job ID must be provided")
+		return ports.Job{}, ports.ErrNotExistingID
 	}
 	if _, err := uuid.Parse(id); err != nil {
-		return ports.Job{}, errors.New("job ID must be a valid UUID")
+		return ports.Job{}, ports.ErrInvalidIDFormat
+	}
+	if strings.TrimSpace(string(data.Status)) == "" {
+		return ports.Job{}, ports.ErrNotExistingStatus
 	}
 
 	// Validate WorkerID
 	if len(strings.TrimSpace(data.WorkerID)) == 0 {
-		return ports.Job{}, errors.New("worker ID must be provided")
+		return ports.Job{}, ports.ErrNotExistingWorkerID
 	}
 
 	// Validate CarbonIntensity
 	if data.CarbonIntensity < 0 {
-		return ports.Job{}, errors.New("carbon intensity must be non-negative")
+		return ports.Job{}, ports.ErrCarbonIsNegative
 	}
 
 	updated_job, err := s.GetJob(ctx, id)
@@ -182,14 +199,16 @@ func (s *JobService) UpdateJobScheduler(ctx context.Context, id string, data por
 func (s *JobService) UpdateJobWorkerDaemon(ctx context.Context, id string, data ports.WorkerDaemonUpdateData) (ports.Job, error) {
 	// Validate ID
 	if len(strings.TrimSpace(id)) == 0 {
-		return ports.Job{}, errors.New("job ID must be provided")
+		return ports.Job{}, ports.ErrNotExistingID
 	}
 	if _, err := uuid.Parse(id); err != nil {
-		return ports.Job{}, errors.New("job ID must be a valid UUID")
+		return ports.Job{}, ports.ErrInvalidIDFormat
 	}
-
+	if strings.TrimSpace(string(data.Status)) == "" {
+		return ports.Job{}, ports.ErrNotExistingStatus
+	}
 	if data.Status == ports.StatusFailed && strings.TrimSpace(data.ErrorMessage) == "" {
-		return ports.Job{}, errors.New("error message must be provided for failed jobs")
+		return ports.Job{}, ports.ErrErrorMessageEmpty
 	}
 
 	updated_job, err := s.GetJob(ctx, id)
