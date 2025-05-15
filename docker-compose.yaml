@@ -1,0 +1,89 @@
+version: "3.8"
+services:
+  job-scheduler:
+    build:
+      context: ./services/job-scheduler
+      dockerfile: Dockerfile
+    container_name: job-scheduler
+    environment:
+      - WORKER_REGISTRY=http://worker-registry:8080
+      - JOB_SERVICE=http://job-service:8080
+      - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
+      - JOB_SCHEDULER_INTERVAL=5
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+  worker-registry:
+    build:
+      context: ./services/worker-registry
+      dockerfile: Dockerfile
+    container_name: worker-registry
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+  job-service:
+    build:
+      context: ./services/job-service
+      dockerfile: Dockerfile
+    container_name: job-service
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+  carbon-intensity-provider:
+    build:
+      context: ./services/carbon-intensity-provider
+      dockerfile: Dockerfile
+    container_name: carbon-intensity-provider
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+  worker-gateway:
+    build:
+      context: ./services/worker-gateway
+      dockerfile: Dockerfile
+    container_name: worker-gateway
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+  consumer-gateway:
+    build:
+      context: ./services/consumer-gateway
+      dockerfile: Dockerfile
+    container_name: consumer-gateway
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+  user-management:
+    build:
+      context: ./services/user-management
+      dockerfile: Dockerfile
+    container_name: user-management
+    expose:
+      - 8080
+    networks:
+      - private_network
+    restart: unless-stopped
+
+networks:
+  private_network:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
