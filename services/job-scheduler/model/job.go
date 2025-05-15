@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type JobStatus string
@@ -20,13 +22,13 @@ const (
 type Job struct {
 
 	// set by job-service, theyre set automatically
-	ID string `json:"id"` // generated as UUID // FIXME: actually UUID
+	ID uuid.UUID `json:"id"` // generated as UUID
 
 	// set by consumer-cli, theyre not empty by default
 	CreationZone string `json:"creationZone"` // origin of the job creation
 
 	// set by job-scheduler
-	WorkerID        string `json:"workerId"`        // default value is empty string - saved as UUID // FIXME: actually UUID
+	WorkerID        string `json:"workerId"`        // default value is empty string - saved as UUID
 	ComputeZone     string `json:"computeZone"`     // default value is empty string - saved as "zone key", we get from Electricity Maps API, e.g "DE" (germany)
 	CarbonIntensity int    `json:"carbonIntensity"` // default value is -1 - CO2eq/kWh which are emitted during job execution
 	CarbonSaving    int    `json:"carbonSavings"`   // default value is -1 - consumption savings compared to the actual consumer location
@@ -37,8 +39,7 @@ type Job struct {
 
 // -------------------------- Endpoints --------------------------
 
-func PatchJobStatusEndpoint(base string, id string) string {
-	// FIXME: change id string to UUID
+func PatchJobStatusEndpoint(base string, id uuid.UUID) string {
 	return fmt.Sprintf("%s/jobs/%s/update-scheduler", base, id)
 }
 
@@ -67,7 +68,7 @@ type GetJobsError struct {
 
 // This struct is used for the patch-request to the job service
 type UpdateJobPayload struct {
-	WorkerID        string    `json:"workerId"`        // FIXME: actually UUID
+	WorkerID        uuid.UUID `json:"workerId"`        //
 	ComputeZone     string    `json:"computeZone"`     //
 	CarbonIntensity int       `json:"carbonIntensity"` //
 	CarbonSaving    int       `json:"carbonSavings"`   //
@@ -76,7 +77,7 @@ type UpdateJobPayload struct {
 
 // This struct is returned by the job service as response to the patch-request
 type UpdateJobResponse struct {
-	JobID           string    `json:"jobId"`           // FIXME: actually UUID
+	JobID           uuid.UUID `json:"jobId"`           //
 	ComputeZone     string    `json:"computeZone"`     //
 	CarbonIntensity int       `json:"carbonIntensity"` //
 	CarbonSaving    int       `json:"carbonSavings"`   //
