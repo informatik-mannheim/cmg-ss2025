@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,7 +18,7 @@ func NewDaemon(cfg *config.Config, client *gateway.Client) *Daemon {
 	return &Daemon{cfg: cfg, client: client}
 }
 
-func (d *Daemon) StartHeartbeatLoop() {
+func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
 	if err := d.client.Register(d.cfg.WorkerID, d.cfg.Key, d.cfg.Location); err != nil {
 		fmt.Println("Registration failed:", err)
 		return
@@ -28,11 +29,16 @@ func (d *Daemon) StartHeartbeatLoop() {
 	defer ticker.Stop()
 
 	for {
-		if err := d.client.SendHeartbeat(d.cfg.WorkerID, "AVAILABLE"); err != nil {
-			fmt.Println("Heartbeat failed:", err)
-		} else {
-			fmt.Println("Heartbeat sent.")
+		select {
+		case <-ctx.Done():
+			fmt.Println("Heartbeat loop stopped.")
+			return
+		case <-ticker.C:
+			if err := d.client.SendHeartbeat(d.cfg.WorkerID, "AVAILABLE"); err != nil {
+				fmt.Println("Heartbeat failed:", err)
+			} else {
+				fmt.Println("Heartbeat sent.")
+			}
 		}
-		<-ticker.C
 	}
 }
