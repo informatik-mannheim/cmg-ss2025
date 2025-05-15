@@ -7,7 +7,6 @@ import (
 )
 
 type ConsumerService struct {
-
 }
 
 func NewConsumerService() *ConsumerService {
@@ -19,12 +18,12 @@ func (s *ConsumerService) CreateJob(req ports.CreateJobRequest, ctx context.Cont
 		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
 	return ports.CreateJobResponse{
-		ImageID:     req.ImageID,
-		Zone:      req.Zone,
-		Param:     req.Param,
+		ImageID: req.ImageID,
+		Zone:    req.Zone,
+		Param:   req.Param,
+		Status: req.JobStatus
 	}, nil
 }
-
 
 func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context) (ports.JobResultResponse, error) {
 	user, ok := ctx.Value("user").(string)
@@ -37,11 +36,20 @@ func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context) (ports
 	}, nil
 }
 
-func (s *ConsumerService) Login(req ports.ConsumerLoginRequest, ctx context.Context) (ports.LoginResponse, error) {
-if req.Username == "alice" && req.Password == "pw" {
-return ports.LoginResponse{Secret: "login-token"}, nil
+func (s *ConsumerService) GetZone(req ports.ZoneRequest, ctx context.Context) (ports.ZoneResponse, error) {
+	if req.Zone == "invalid"  {
+		return ports.ZoneResponse{}, ports.ErrInvalidInput
+	}
+	return ports.ZoneResponse{
+		Zone:	req.Zone,
+	}, nil
 }
-return ports.LoginResponse{}, ports.ErrUnauthorized
+
+func (s *ConsumerService) Login(req ports.ConsumerLoginRequest, ctx context.Context) (ports.LoginResponse, error) {
+	if req.Username == "alice" && req.Password == "pw" {
+		return ports.LoginResponse{Secret: "login-token"}, nil
+	}
+	return ports.LoginResponse{}, ports.ErrUnauthorized
 }
 
 func (s *ConsumerService) Register(req ports.ConsumerRegistrationRequest, ctx context.Context) (ports.RegisterResponse, error) {
@@ -51,5 +59,4 @@ func (s *ConsumerService) Register(req ports.ConsumerRegistrationRequest, ctx co
 	return ports.RegisterResponse{Secret: "registered-token"}, nil
 }
 
-
- var _ ports.Api = (*ConsumerService)(nil)
+var _ ports.Api = (*ConsumerService)(nil)

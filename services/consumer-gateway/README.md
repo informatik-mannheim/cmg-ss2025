@@ -7,6 +7,6 @@ The consumer-gateway service is a forwarding service that routes all client requ
 ## Usage
 
 ```bash
-curl -X PUT -d '{ "Id": "34", "IntProp" : 23, "StringProp": "test" }' localhost:8080/entity
-curl localhost:8080/entity/34
+curl -X POST -d '{ "image_id": "1234", "zone" : "GER", "params": "-a" }' localhost:8080/jobs
+
 ```
