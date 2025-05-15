@@ -7,13 +7,15 @@ import (
 
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo_in_memory "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
+	validator "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/zone-validator"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 func TestCreateWorker(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
-	service := NewWorkerRegistryService(repo, notifier)
+	notifier := notifier.NewNotifier()
+	zoneValidator := validator.NewZoneValidator()
+	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
 	t.Run("create worker with valid zone", func(t *testing.T) {
 		worker, err := service.CreateWorker("EN", context.Background())
@@ -30,12 +32,24 @@ func TestCreateWorker(t *testing.T) {
 			t.Errorf("expected a non-empty ID")
 		}
 	})
+
+	t.Run("create worker with invalid zone", func(t *testing.T) {
+		worker, err := service.CreateWorker("CMG", context.Background())
+		if err == nil {
+			t.Fatalf("expected error, got worker with ID %v", worker.Id)
+		}
+		expectedError := "creating worker failed due to invalid 'zone' CMG"
+		if err.Error() != expectedError {
+			t.Errorf("expected error: %v, got: %v", expectedError, err)
+		}
+	})
 }
 
 func TestGetWorkers(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
-	service := NewWorkerRegistryService(repo, notifier)
+	notifier := notifier.NewNotifier()
+	zoneValidator := validator.NewZoneValidator()
+	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
 	service.CreateWorker("DE", context.Background())
 	service.CreateWorker("EN", context.Background())
@@ -69,8 +83,9 @@ func TestGetWorkers(t *testing.T) {
 
 func TestGetWorkerById(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
-	service := NewWorkerRegistryService(repo, notifier)
+	notifier := notifier.NewNotifier()
+	zoneValidator := validator.NewZoneValidator()
+	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
 	worker, _ := service.CreateWorker("DE", context.Background())
 
@@ -95,10 +110,11 @@ func TestGetWorkerById(t *testing.T) {
 
 func TestUpdateWorkerStatus(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewHttpNotifier()
-	service := NewWorkerRegistryService(repo, notifier)
+	notifier := notifier.NewNotifier()
+	zoneValidator := validator.NewZoneValidator()
+	service := NewWorkerRegistryService(repo, notifier, zoneValidator)
 
-	worker, _ := service.CreateWorker("ZoneX", context.Background())
+	worker, _ := service.CreateWorker("DE", context.Background())
 
 	t.Run("valid status update", func(t *testing.T) {
 		updated, err := service.UpdateWorkerStatus(worker.Id, "RUNNING", context.Background())

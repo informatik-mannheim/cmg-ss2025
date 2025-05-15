@@ -17,6 +17,10 @@ func NewErrCreatingWorkerFailed() error {
 	return fmt.Errorf("creating worker failed due to missing parameter 'zone'")
 }
 
+func NewErrCreatingWorkerFailedInvalidZone(zone string) error {
+	return fmt.Errorf("creating worker failed due to invalid 'zone' %v", zone)
+}
+
 type Api interface {
 	GetWorkers(status WorkerStatus, zone string, ctx context.Context) ([]Worker, error)
 	GetWorkerById(id string, ctx context.Context) (Worker, error)

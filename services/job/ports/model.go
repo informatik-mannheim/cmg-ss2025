@@ -1,4 +1,4 @@
-package models
+package ports
 
 import "time"
 
@@ -23,7 +23,7 @@ type ContainerImage struct {
 type Job struct {
 
 	// set by job-service, theyre set automatically
-	ID        string    `json:"id"`        // generated as UUID
+	Id        string    `json:"id"`        // generated as UUID
 	UserID    string    `json:"userId"`    // get from JWT
 	CreatedAt time.Time `json:"createdAt"` // set at creation
 	UpdatedAt time.Time `json:"updatedAt"` // set at creation
