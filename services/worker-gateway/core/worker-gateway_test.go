@@ -190,4 +190,3 @@ func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 		t.Errorf("expected nil jobs on fetch error, got %v", jobs)
 	}
 }
-
