@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
 )
 
 type Handler struct {
-	wg *core.WorkerGatewayService
+	api ports.Api
 }
 
-func NewHandler(wg *core.WorkerGatewayService) *Handler {
-	return &Handler{wg: wg}
+func NewHandler(api ports.Api) *Handler {
+	return &Handler{api: api}
 }
 
 // POST /worker/heartbeat
@@ -24,7 +23,7 @@ func (h *Handler) HeartbeatHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobs, err := h.wg.Heartbeat(r.Context(), req)
+	jobs, err := h.api.Heartbeat(r.Context(), req)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
@@ -42,7 +41,7 @@ func (h *Handler) SubmitResultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.wg.SubmitResult(r.Context(), result); err != nil {
+	if err := h.api.Result(r.Context(), result); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -58,7 +57,7 @@ func (h *Handler) RegisterWorkerHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.wg.RegisterWorker(r.Context(), req); err != nil {
+	if err := h.api.Register(r.Context(), req); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
