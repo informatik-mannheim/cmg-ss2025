@@ -1,8 +1,2 @@
-github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
-github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
-github.com/informatik-mannheim/cmg-ss2025 v0.0.0-20250505142927-df7751f10f13 h1:+RzrPKSfigAHlls8kBDnihO68qYcHbBKt8/xu7/94rw=
-github.com/informatik-mannheim/cmg-ss2025 v0.0.0-20250505142927-df7751f10f13/go.mod h1:cyC9q5Zrd/sauYhdmQ1VaRpIBULQH/3i1aJJtMa3os8=
-github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider v0.0.0-20250505142927-df7751f10f13 h1:boXGpf6Z1sKT1x9DjEThMN0t1Kea0yjvidrjFdav0Oo=
-github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider v0.0.0-20250505142927-df7751f10f13/go.mod h1:3wuMoyl9jB8nETvJC4fhLq/PxxQLUxxYgie7QKwH1wg=
-github.com/informatik-mannheim/cmg-ss2025/services/worker-registry v0.0.0-20250505142927-df7751f10f13 h1:bIJ1AVwHUIPvSVMYd04IxmugpDbcMFtRIZWEXRSUNr0=
-github.com/informatik-mannheim/cmg-ss2025/services/worker-registry v0.0.0-20250505142927-df7751f10f13/go.mod h1:UeQpPbg5rVSbN9aoX3dyypBv38wgiOim0xQlDou1g+Y=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

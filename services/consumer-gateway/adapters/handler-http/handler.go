@@ -31,7 +31,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.rtr.ServeHTTP(w, r) //delegate
 }
 
-
 /* 
 Creates a new job using the provided data by the client.
 The parameter req: contains the fields (imageID, zone) defined 
@@ -46,7 +45,7 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 		
 		resp, err := h.service.CreateJob(req, r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		return
 	}
 
@@ -65,7 +64,7 @@ func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Reque
 
 	status, err := h.service.GetJobResult(jobID, r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -75,13 +74,13 @@ func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Reque
 func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 	var req ports.ConsumerLoginRequest // Example: req.Username == "Bob", req.Password == "SuperSecure"
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
+		http.Error(w, `{"error":"invalid request"}`, http.StatusUnauthorized)
 		return
 	}
 		
 		resp, err := h.service.Login(req, r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -98,7 +97,7 @@ func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) 
 		
 		resp, err := h.service.Register(req, r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		return
 	}
 

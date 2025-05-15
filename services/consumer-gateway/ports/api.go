@@ -5,7 +5,10 @@ import (
 	"errors"
 )
 
-var ErrConsumerNotFound = errors.New("Consumer Gateway not found")
+var ErrNotFound = errors.New("not found")
+var ErrUnauthorized = errors.New("unauthorized")
+var ErrBadRequest = errors.New("bad Request")
+var ErrInvalidInput = errors.New("invalid Input")
 
 type CreateJobRequest struct {
 	ImageID string `json:"image_id"`
@@ -14,16 +17,18 @@ type CreateJobRequest struct {
 }
 
 type CreateJobResponse struct {
-	JobID string `json:"job_id"`
-	JobStatus string `json:"status"`
+	ImageID string `json:"image_id`
+	Zone string `json:"zone"`
+	Param string `json:"params"`
+	JobStatus string `json:"job_status"`
 }
 
 type GetJobResult struct {
-	JobID string `json:"job_id"`
+	ImageID string `json:"image_id"`
 }
 
 type JobResultResponse struct {
-	JobID string `json:"job_id"`
+	ImageID string `json:"image_id"`
 	JobStatus string `json:"status"`
 }
 
@@ -33,7 +38,7 @@ type ConsumerLoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
+	Secret string `json:"secret"`
 }
 
 type ConsumerRegistrationRequest struct {
@@ -43,7 +48,7 @@ type ConsumerRegistrationRequest struct {
 }
 
 type RegisterResponse struct {
-	Token string `json:"token"`
+	Secret string `json:"secret"`
 }
 
 type ZoneRequest struct {
@@ -59,7 +64,7 @@ type ZoneResponse struct {
 type Api interface {
 
 	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
-	GetJobResult(jobID string, ctx context.Context) (JobResultResponse, error)
+	GetJobResult(ImageID string, ctx context.Context) (JobResultResponse, error)
 
 	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
 	Register(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)

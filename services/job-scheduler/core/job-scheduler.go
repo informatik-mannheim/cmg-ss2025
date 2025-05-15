@@ -1,148 +1,162 @@
 package core
 
 import (
+	"fmt"
 	"log"
 
-	CarbonIntensityProvider "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/model"
-	Job "github.com/informatik-mannheim/cmg-ss2025/services/job"
+	"github.com/google/uuid"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
-	WorkerRegistry "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 type JobSchedulerService struct {
-	Notifier ports.Notifier
+	JobAdapter             ports.JobAdapter
+	WorkerAdapter          ports.WorkerAdapter
+	CarbonIntensityAdapter ports.CarbonIntensityAdapter
+	Notifier               ports.Notifier
 }
 
 var _ ports.JobScheduler = (*JobSchedulerService)(nil)
 
-func NewJobSchedulerService(notifier ports.Notifier) *JobSchedulerService {
+func NewJobSchedulerService(
+	jobAdapter ports.JobAdapter,
+	workerAdapter ports.WorkerAdapter,
+	carbonIntensityAdapter ports.CarbonIntensityAdapter,
+	notifier ports.Notifier,
+) *JobSchedulerService {
 	return &JobSchedulerService{
-		Notifier: notifier,
+		JobAdapter:             jobAdapter,
+		WorkerAdapter:          workerAdapter,
+		CarbonIntensityAdapter: carbonIntensityAdapter,
+		Notifier:               notifier,
 	}
 }
 
 func (js *JobSchedulerService) ScheduleJob() error {
 	log.Printf("Scheduling job...\n")
 
-	// 1. Get Jobs
-	jobs, err := js.Notifier.GetJobs()
+	// 1. Get Jobs and workers
+	// I do not know what vscode has drunk, but this value of workers is clearly used, im ignoring the warning
+	jobs, workers, err := js.getJobsAndWorkers()
 	if err != nil {
-		log.Printf("Error while getting jobs, aborting job-schedule: %v\n", err)
-		return err
-	}
-	log.Printf("Jobs: %v\n", jobs)
-
-	// 2. Get Workers
-	workers, err := js.Notifier.GetWorkers()
-	if err != nil {
-		log.Printf("Error while getting workers, aborting job-schedule: %v\n", err)
-		return err
-	}
-	log.Printf("Workers: %v\n", workers)
-
-	// 3. Check already assigned
-	jobs, workers, err = js.checkAlreadyAssignedJobs(jobs, workers)
-	if err != nil {
-		log.Printf("Error while checking already assigned jobs, aborting job-schedule: %v\n", err)
 		return err
 	}
 
-	// 4. Get Carbon Intensity Data
-	carbonIntensities, err := js.getCarbonIntensities(workers)
+	// 2. Reassign Workers if any
+	assignedJobs := GetAlreadyAssigned(jobs, workers)
+	unassignedJobs, err := js.reassignWorkers(assignedJobs)
 	if err != nil {
-		log.Printf("Error while getting carbon intensities, aborting job-schedule: %v\n", err)
+		return err
+	}
+	jobs, workers = GetAllUnassigned(jobs, unassignedJobs, workers)
+
+	// 3. Get Carbon Intensity Data
+	zones := GetCarbonZones(jobs, workers)
+	carbons, err := js.getCarbonIntensities(zones)
+	if err != nil {
 		return err
 	}
 
-	// 5. Assign Jobs to Workers
-	err = js.assignJobs(jobs, workers, carbonIntensities)
+	// 4. Distribute Jobs
+	jobUpdates := DistributeJobs(jobs, workers, carbons)
+
+	// 5. Assign Jobs
+	err = js.assignJobsToWorkers(jobUpdates)
 	if err != nil {
-		log.Printf("Error while assigning jobs, aborting job-schedule: %v\n", err)
 		return err
 	}
 
 	log.Printf("Jobs assigned successfully.\n")
-
 	return nil
 }
 
-// https://planka.123.123.123.123:8080
+func (js *JobSchedulerService) getJobsAndWorkers() ([]model.Job, []model.Worker, error) {
+	jobs, err := js.JobAdapter.GetJobs()
+	if err != nil {
+		log.Printf("Error getting jobs: %v\n", err)
+		return nil, nil, err
+	}
+	if len(jobs) == 0 {
+		log.Printf("No jobs available.\n")
+		return nil, nil, fmt.Errorf("no jobs available")
+	}
 
-func (js *JobSchedulerService) checkAlreadyAssignedJobs(jobs []Job.Job, workers []WorkerRegistry.Worker) ([]Job.Job, []WorkerRegistry.Worker, error) {
-	var unassignedJobs []Job.Job
+	workers, err := js.WorkerAdapter.GetWorkers()
+	if err != nil {
+		log.Printf("Error getting workers: %v\n", err)
+		return nil, nil, err
+	}
+	if len(workers) == 0 {
+		log.Printf("No workers available.\n")
+		return nil, nil, fmt.Errorf("no workers available")
+	}
+
+	return jobs, workers, nil
+}
+
+func (js *JobSchedulerService) getCarbonIntensities(zones []string) (model.CarbonIntensityResponse, error) {
+	carbons, err := js.CarbonIntensityAdapter.GetCarbonIntensities(zones)
+	if err != nil {
+		log.Printf("Error getting carbon intensity data: %v\n", err)
+		return nil, err
+	}
+	if len(carbons) == 0 {
+		log.Printf("No carbon intensity data available.\n")
+		return nil, fmt.Errorf("no carbon intensity data available")
+	}
+	return carbons, nil
+}
+
+func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error {
 	for _, job := range jobs {
-		if job.Status == Job.StatusScheduled && checkAlreadyAssignedWorker(workers, job) {
-			err := js.Notifier.AssignWorker(ports.UpdateWorker{
-				ID: job.WorkerID,
-			})
-			if err != nil {
-				return nil, nil, err
+		err := js.JobAdapter.AssignJob(job)
+		if err != nil {
+			log.Printf("Error updating job: %v\n", err)
+			return err
+		}
+
+		workerUpdate := ports.UpdateWorker{
+			ID: job.WorkerID,
+		}
+		err = js.WorkerAdapter.AssignWorker(workerUpdate)
+		if err != nil {
+			log.Printf("Error updating worker: %v\n", err)
+			if err2 := js.Notifier.NotifyWorkerAssignmentFailed(job.ID, job.WorkerID); err2 != nil {
+				log.Printf("Error notifying worker assignment failed: %v\n", err)
+				return err2
 			}
-		} else {
-			unassignedJobs = append(unassignedJobs, job)
+			return err
+		}
+		err = js.Notifier.NotifyAssignment(job.ID, job.WorkerID)
+		if err != nil {
+			log.Printf("Error notifying assignment: %v\n", err)
+			return err
 		}
 	}
-	unassignedWorkers := utils.Filter(workers, func(worker WorkerRegistry.Worker) bool {
-		return worker.Status == WorkerRegistry.StatusAvailable
-	})
-
-	return unassignedJobs, unassignedWorkers, nil
+	return nil
 }
 
-func checkAlreadyAssignedWorker(workers []WorkerRegistry.Worker, job Job.Job) bool {
-	checkWorker := func(worker WorkerRegistry.Worker) bool {
-		return worker.Id == job.WorkerID
-	}
-	return utils.Some(workers, checkWorker)
-}
+// returns all jobs that could not be assigned to a worker for whatever reason, those are then considered
+// "not assigned" and go back into the pool
+func (js *JobSchedulerService) reassignWorkers(jobs []model.Job) ([]model.Job, error) {
+	var unassignedJobs []model.Job
 
-func (js *JobSchedulerService) getCarbonIntensities(workers []WorkerRegistry.Worker) ([]CarbonIntensityProvider.CarbonIntensityData, error) {
-	zones := utils.Map(workers, func(worker WorkerRegistry.Worker) string {
-		return worker.Zone
-	})
-	return js.Notifier.GetCarbonIntensities(zones)
-}
+	for _, job := range jobs {
+		// error ignored on purpose, since here can only be jobs that have an workerId
+		// for an worker that was fetched, and since the Id in the worker is typesafe as
+		// uuid, we can safely ignore the error since it will never happen
+		uuid, _ := uuid.Parse(job.WorkerID)
 
-func (js *JobSchedulerService) assignJobs(jobs []Job.Job, workers []WorkerRegistry.Worker, carbons []CarbonIntensityProvider.CarbonIntensityData) error {
-	// May execute some complex algorithm to assign jobs, but for now we just assign the first available worker to the job
-
-	var jobIndex int = 0
-	for _, worker := range workers {
-		if worker.Status != WorkerRegistry.StatusAvailable {
+		if err := js.WorkerAdapter.AssignWorker(ports.UpdateWorker{ID: uuid}); err != nil {
+			unassignedJobs = append(unassignedJobs, job)
 			continue
 		}
 
-		for jobIndex < len(jobs) && jobs[jobIndex].Status != Job.StatusScheduled {
-			jobIndex++
-		}
-		if jobIndex >= len(jobs) {
-			break
-		}
-
-		var jobPayload ports.UpdateJob = ports.UpdateJob{
-			ID:              jobs[jobIndex].ID,
-			WorkerID:        worker.Id,
-			ComputeZone:     worker.Zone,
-			CarbonIntensity: 0.0, // FIXME: mock-value for now
-			CarbonSavings:   0.0, // FIXME: mock-value for now
-		}
-		err := js.Notifier.AssignJob(jobPayload)
-		if err != nil {
-			return err
-		}
-
-		// Increment so it does not get assigned again
-		jobIndex++
-
-		var workerPayload ports.UpdateWorker = ports.UpdateWorker{
-			ID: worker.Id,
-		}
-		err = js.Notifier.AssignWorker(workerPayload)
-		if err != nil {
-			return err
+		if err := js.Notifier.NotifyAssignmentCorrection(job.ID, uuid); err != nil {
+			log.Printf("Error notifying assignment correction: %v\n", err)
+			return nil, err
 		}
 	}
 
-	return nil
+	return unassignedJobs, nil
 }

@@ -2,148 +2,121 @@ package core_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
 )
 
-type MockRepo struct {
-	consumer      ports.Consumer
-	requestedId string
-	err         *error
-}
+func TestCreateJob(t *testing.T) {
+	service := core.NewConsumerService()
 
-func (m *MockRepo) Store(consumer ports.Consumer, ctx context.Context) error {
-	m.consumer = consumer
-	if m.err != nil {
-		return *m.err
-	}
-	return nil
-}
-
-func (m *MockRepo) FindById(id string, ctx context.Context) (ports.Consumer, error) {
-	m.requestedId = id
-	if m.err != nil {
-		return ports.Consumer{}, *m.err
-	}
-	return m.consumer, nil
-}
-
-var _ ports.Repo = (*MockRepo)(nil)
-
-type MockNotifier struct {
-	consumer    ports.Consumer
-	callcount int
-}
-
-func (m *MockNotifier) ConsumerChanged(consumer ports.Consumer, ctx context.Context) {
-	m.consumer = consumer
-	m.callcount++
-}
-
-var _ ports.Notifier = (*MockNotifier)(nil)
-
-func TestConsumerService_Set(t *testing.T) {
-
-	type fields struct {
-		repo     ports.Repo
-		notifier ports.Notifier
-	}
-
-	testFields := fields{&MockRepo{}, &MockNotifier{}}
-	ctx := context.Background()
-
-	type args struct {
-		consumer ports.Consumer
-		ctx    context.Context
-	}
 	tests := []struct {
 		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		req     ports.CreateJobRequest
+		wantErr error
 	}{
 		{
-			name:   "Store some entity",
-			fields: testFields,
-			args: args{
-				ports.Consumer{Id: "1", IntProp: 4711, StringProp: "Test"},
-				ctx,
-			},
-			wantErr: false,
+			name: "valid job",
+			req:  ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "-x"},
+			wantErr: nil,
+		},
+		{
+			name: "missing image_id",
+			req:  ports.CreateJobRequest{ImageID: "", Zone: "EU", Param: "-x"},
+			wantErr: ports.ErrInvalidInput,
+		},
+		{
+			name: "invalid param",
+			req:  ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "invalid"},
+			wantErr: ports.ErrInvalidInput,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewConsumerService(tt.fields.repo, tt.fields.notifier)
-
-			if err := s.Set(tt.args.consumer, tt.args.ctx); (err != nil) != tt.wantErr {
-				t.Errorf("ConsumerService.Set() error = %v, wantErr %v", err, tt.wantErr)
+			_, err := service.CreateJob(tt.req, context.Background())
+			if err != tt.wantErr {
+				t.Errorf("expected error %v, got %v", tt.wantErr, err)
 			}
-
-			if tt.fields.repo.(*MockRepo).consumer != tt.args.consumer {
-				t.Errorf("ConsumerService.Set() repo consumer = %v, want %v", tt.fields.repo.(*MockRepo).consumer, tt.args.consumer)
-			}
-
-			if tt.fields.notifier.(*MockNotifier).consumer != tt.args.consumer {
-				t.Errorf("ConsumerService.Set() notifier consumer = %v, want %v", tt.fields.notifier.(*MockNotifier).consumer, tt.args.consumer)
-			}
-
-			if tt.fields.notifier.(*MockNotifier).callcount != 1 {
-				t.Errorf("ConsumerService.Set() notifier callcount = %v, want %v", tt.fields.notifier.(*MockNotifier).callcount, 1)
-			}
-
 		})
 	}
 }
 
-func TestConsumerService_Get(t *testing.T) {
-	type fields struct {
-		repo     ports.Repo
-		notifier ports.Notifier
-	}
+func TestRegister(t *testing.T) {
+	service := core.NewConsumerService()
 
-	testFields := fields{&MockRepo{consumer: ports.Consumer{Id: "25", IntProp: 23, StringProp: "test"}}, nil}
-	ctx := context.Background()
-
-	type args struct {
-		id  string
-		ctx context.Context
-	}
 	tests := []struct {
 		name    string
-		fields  fields
-		args    args
-		want    ports.Consumer
-		wantErr bool
+		req     ports.ConsumerRegistrationRequest
+		wantErr error
 	}{
 		{
-			name:   "Get existing consumer",
-			fields: testFields,
-			args: args{
-				"25",
-				ctx,
-			},
-			want:    ports.Consumer{Id: "25", IntProp: 23, StringProp: "test"},
-			wantErr: false,
+			name: "valid",
+			req:  ports.ConsumerRegistrationRequest{Username: "alice", Password: "pw"},
+			wantErr: nil,
+		},
+		{
+			name: "invalid",
+			req:  ports.ConsumerRegistrationRequest{Username: "", Password: ""},
+			wantErr: ports.ErrInvalidInput,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := core.NewConsumerService(tt.fields.repo, tt.fields.notifier)
-			got, err := s.Get(tt.args.id, tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ConsumerService.Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ConsumerService.Get() = %v, want %v", got, tt.want)
-			}
-			if tt.fields.repo.(*MockRepo).requestedId != tt.args.id {
-				t.Errorf("ConsumerService.Get() repo requestedId = %v, want %v", tt.fields.repo.(*MockRepo).requestedId, tt.args.id)
+			_, err := service.Register(tt.req, context.Background())
+			if err != tt.wantErr {
+				t.Errorf("expected %v, got %v", tt.wantErr, err)
 			}
 		})
 	}
+}
+
+func TestLogin(t *testing.T) {
+	service := core.NewConsumerService()
+
+	tests := []struct {
+		name    string
+		req     ports.ConsumerLoginRequest
+		wantErr error
+	}{
+		{
+			name: "valid login",
+			req:  ports.ConsumerLoginRequest{Username: "alice", Password: "pw"},
+			wantErr: nil,
+		},
+		{
+			name: "unauthorized",
+			req:  ports.ConsumerLoginRequest{Username: "invalid", Password: "wrong"},
+			wantErr: ports.ErrUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := service.Login(tt.req, context.Background())
+			if err != tt.wantErr {
+				t.Errorf("expected %v, got %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestGetJobResult(t *testing.T) {
+	service := core.NewConsumerService()
+
+	t.Run("found", func(t *testing.T) {
+		resp, err := service.GetJobResult("job-123", context.WithValue(context.Background(), "user", "alice"))
+		if err != nil || resp.ImageID == "" {
+			t.Errorf("expected job result, got error: %v", err)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		_, err := service.GetJobResult("wrong-id", context.WithValue(context.Background(), "user", "other"))
+		if err != ports.ErrNotFound {
+			t.Errorf("expected not found, got %v", err)
+		}
+	})
 }
