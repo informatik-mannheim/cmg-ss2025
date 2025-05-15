@@ -21,7 +21,7 @@ func (s *ConsumerService) CreateJob(req ports.CreateJobRequest, ctx context.Cont
 		ImageID: req.ImageID,
 		Zone:    req.Zone,
 		Param:   req.Param,
-		Status: req.JobStatus
+		JobStatus: "queued",
 	}, nil
 }
 
