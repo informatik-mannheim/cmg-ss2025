@@ -1,5 +1,5 @@
 {
-    "gateway_url": "http://localhost:8080",
+    "gateway_url": "http://host.docker.internal:8080",
     "worker_id": "worker-001",
     "key": "12345678",
     "location": "DE",
