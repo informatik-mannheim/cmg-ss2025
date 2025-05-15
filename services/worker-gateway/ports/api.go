@@ -1,11 +1,11 @@
 package ports
 
-//"context"
-//"errors"
-
-//var ErrEntityNotFound = errors.New("entity not found")
+import (
+	"context"
+)
 
 type Api interface {
-	//Set(entity Entity, ctx context.Context) error
-	//Get(id string, ctx context.Context) (Entity, error)
+	Heartbeat(ctx context.Context, req HeartbeatRequest) ([]Job, error)
+	Result(ctx context.Context, result ResultRequest) error
+	Register(ctx context.Context, req RegisterRequest) error
 }
