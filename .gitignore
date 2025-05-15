@@ -34,5 +34,4 @@ go.work.sum
 docker-compose.override.yml
 
 # Environment variables
->>>>>>> origin
 .env
