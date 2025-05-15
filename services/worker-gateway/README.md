@@ -57,7 +57,8 @@ curl -X POST -H "Content-Type: application/json" -d '{
 curl -X POST -H "Content-Type: application/json" -d '{
   "jobId": "job456",
   "status": "completed",
-  "result": "Job Computed."
+  "result": "Job Computed.",
+  "errorMessage": ""
 }' http://localhost:8080/result
 ```
 
