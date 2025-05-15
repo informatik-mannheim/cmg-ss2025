@@ -17,18 +17,18 @@ func TestCreateJob(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "valid job",
-			req:  ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "-x"},
+			name:    "valid job",
+			req:     ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "-x"},
 			wantErr: nil,
 		},
 		{
-			name: "missing image_id",
-			req:  ports.CreateJobRequest{ImageID: "", Zone: "EU", Param: "-x"},
+			name:    "missing image_id",
+			req:     ports.CreateJobRequest{ImageID: "", Zone: "EU", Param: "-x"},
 			wantErr: ports.ErrInvalidInput,
 		},
 		{
-			name: "invalid param",
-			req:  ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "invalid"},
+			name:    "invalid param",
+			req:     ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "invalid"},
 			wantErr: ports.ErrInvalidInput,
 		},
 	}
@@ -52,13 +52,13 @@ func TestRegister(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "valid",
-			req:  ports.ConsumerRegistrationRequest{Username: "alice", Password: "pw"},
+			name:    "valid",
+			req:     ports.ConsumerRegistrationRequest{Username: "alice", Password: "pw"},
 			wantErr: nil,
 		},
 		{
-			name: "invalid",
-			req:  ports.ConsumerRegistrationRequest{Username: "", Password: ""},
+			name:    "invalid",
+			req:     ports.ConsumerRegistrationRequest{Username: "", Password: ""},
 			wantErr: ports.ErrInvalidInput,
 		},
 	}
@@ -82,13 +82,13 @@ func TestLogin(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "valid login",
-			req:  ports.ConsumerLoginRequest{Username: "alice", Password: "pw"},
+			name:    "valid login",
+			req:     ports.ConsumerLoginRequest{Username: "alice", Password: "pw"},
 			wantErr: nil,
 		},
 		{
-			name: "unauthorized",
-			req:  ports.ConsumerLoginRequest{Username: "invalid", Password: "wrong"},
+			name:    "unauthorized",
+			req:     ports.ConsumerLoginRequest{Username: "invalid", Password: "wrong"},
 			wantErr: ports.ErrUnauthorized,
 		},
 	}
