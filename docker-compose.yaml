@@ -29,7 +29,7 @@ services:
 
   job-service:
     build:
-      context: ./services/job-service
+      context: ./services/job
       dockerfile: Dockerfile
     container_name: job-service
     expose:
