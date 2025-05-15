@@ -45,7 +45,7 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 
 	resp, err := h.service.CreateJob(req, r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Reque
 
 	status, err := h.service.GetJobResult(jobID, r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -74,13 +74,13 @@ func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Reque
 func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 	var req ports.ConsumerLoginRequest // Example: req.Username == "Bob", req.Password == "SuperSecure"
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
 		return
 	}
 
 	resp, err := h.service.Login(req, r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"unauthorized"}`, http.StatusBadRequest)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) 
 
 	resp, err := h.service.Register(req, r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
 	}
 
