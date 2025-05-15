@@ -52,11 +52,15 @@ func (h *HTTPHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := uuid.NewString()
-	notifier.UserRegistered(id, string(req.Role), r.Context())
+	clientID := uuid.NewString()
+	notifier.UserRegistered(clientID, string(req.Role), r.Context())
 	notifier.Event("Registration successful for role: "+string(req.Role), r.Context())
 
-	resp := ports.RegisterResponse{ID: id}
+	clientSecret := uuid.NewString()
+	notifier.Event("Client ID: "+clientID+" and Secret: "+clientSecret, r.Context())
+
+	combinedSecret := clientID + "." + clientSecret
+	resp := ports.RegisterResponse{Secret: combinedSecret}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(resp)
