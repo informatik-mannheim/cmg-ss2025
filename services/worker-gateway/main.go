@@ -46,8 +46,10 @@ func main() {
 	}
 
 	// init service and handler
-	notifier := &testNotifier{} // TODO: replace
-	service := core.NewWorkerGatewayService(notifier)
+	testNotifier := &testNotifier{} // TODO: replace
+	service := core.NewWorkerGatewayService(testNotifier)
+	//client := client_http.NewHTTPClient("http://localhost:8080", "http://localhost:8080")
+	//service := core.NewWorkerGatewayService(client)
 	handler := handler_http.NewHandler(service)
 
 	// Router (mux)

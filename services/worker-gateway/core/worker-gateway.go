@@ -21,7 +21,7 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 	log.Printf("Heartbeat received: %s is %s", req.WorkerID, req.Status)
 
 	if err := s.notifier.UpdateWorkerStatus(ctx, req); err != nil {
-		log.Printf("update worker status error: %v", err)
+		return nil, err
 	}
 
 	// Get scheduled jobs if available
