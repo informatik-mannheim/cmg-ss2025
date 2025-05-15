@@ -2,36 +2,62 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/repo-in-memory"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
+	auth0adapter "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/auth"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/notifier"
+	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 func main() {
+	ctx := context.Background()
+	useLive := os.Getenv("USE_LIVE") == "true"
 
-	core := core.NewUserManagementService(repo.NewRepo(), nil)
+	n := notifier.New()
+	auth := auth0adapter.New(useLive, n)
 
-	srv := &http.Server{Addr: ":8080"}
+	notifierFn := func() ports.Notifier {
+		return n
+	}
 
-	h := handler_http.NewHandler(core)
-	http.Handle("/", h)
+	h := handler.New(auth, useLive, handler.IsAdmin, notifierFn)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/auth/register", h.RegisterHandler)
+	mux.HandleFunc("/auth/login", h.LoginHandler)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	n.Event("Listening on :8080", ctx)
+
+	// Graceful shutdown handling
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			n.Event("Server error: "+err.Error(), ctx)
+			os.Exit(1)
+		}
 	}()
 
-	log.Print("listening...")
-	srv.ListenAndServe()
-	log.Print("Done")
+	<-stop
+	n.Event("Shutdown signal received", ctx)
+
+	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		n.Event("Shutdown failed: "+err.Error(), ctx)
+	} else {
+		n.Event("Server shut down gracefully", ctx)
+	}
 }

@@ -3,7 +3,7 @@ package handler_http
 import (
 	"net/http"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
+  "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
 )
 
 type Handler struct {

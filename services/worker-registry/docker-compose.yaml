@@ -1,0 +1,9 @@
+services:
+  worker-registry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-registry
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

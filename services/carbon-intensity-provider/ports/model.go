@@ -1,4 +1,4 @@
-package model
+package ports
 
 type CarbonIntensityData struct {
 	Zone            string  `json:"zone"`

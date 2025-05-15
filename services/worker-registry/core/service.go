@@ -2,25 +2,26 @@ package core
 
 import (
 	"context"
-	"strconv"
 
+	uuid "github.com/google/uuid"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 type WorkerRegistryService struct {
-	repo     ports.Repo
-	notifier ports.Notifier
+	repo          ports.Repo
+	notifier      ports.Notifier
+	zoneValidator ports.ZoneValidator
 }
 
-func NewWorkerRegistryService(repo ports.Repo, notifier ports.Notifier) *WorkerRegistryService {
+func NewWorkerRegistryService(repo ports.Repo, notifier ports.Notifier, validator ports.ZoneValidator) *WorkerRegistryService {
 	return &WorkerRegistryService{
-		repo:     repo,
-		notifier: notifier,
+		repo:          repo,
+		notifier:      notifier,
+		zoneValidator: validator,
 	}
 }
 
 var _ ports.Api = (*WorkerRegistryService)(nil)
-var workerId = 0
 
 func (s *WorkerRegistryService) GetWorkers(status ports.WorkerStatus, zone string, ctx context.Context) ([]ports.Worker, error) {
 	return s.repo.GetWorkers(status, zone, ctx)
@@ -31,8 +32,12 @@ func (s *WorkerRegistryService) GetWorkerById(id string, ctx context.Context) (p
 }
 
 func (s *WorkerRegistryService) CreateWorker(zone string, ctx context.Context) (ports.Worker, error) {
+	if !s.zoneValidator.IsValidZone(zone, ctx) {
+		return ports.Worker{}, ports.NewErrCreatingWorkerFailedInvalidZone(zone)
+	}
+
 	newWorker := ports.Worker{
-		Id:     strconv.Itoa(workerId),
+		Id:     uuid.NewString(),
 		Status: ports.StatusAvailable,
 		Zone:   zone,
 	}
@@ -40,10 +45,16 @@ func (s *WorkerRegistryService) CreateWorker(zone string, ctx context.Context) (
 	if err != nil {
 		return ports.Worker{}, err
 	}
-	workerId += 1
+
+	s.notifier.WorkerCreated(newWorker, ctx)
 	return newWorker, nil
 }
 
 func (s *WorkerRegistryService) UpdateWorkerStatus(id string, status ports.WorkerStatus, ctx context.Context) (ports.Worker, error) {
-	return s.repo.UpdateWorkerStatus(id, status, ctx)
+	newWorker, err := s.repo.UpdateWorkerStatus(id, status, ctx)
+	if err != nil {
+		return ports.Worker{}, err
+	}
+	s.notifier.WorkerStatusChanged(newWorker, ctx)
+	return newWorker, nil
 }
