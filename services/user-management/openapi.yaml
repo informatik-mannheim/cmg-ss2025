@@ -37,7 +37,7 @@ paths:
                 properties:
                   secret:
                     type: string
-                    example: some secret
+                    example: client_id.client_secret
         '400':
           description: Invalid request
 
