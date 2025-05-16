@@ -15,7 +15,7 @@ It acts as a compute node that periodically contacts the central system via HTTP
 
 ## Building
 ```bash
-go build ./cmd
+go build ./cmd/worker-deamon
 ```
 
 ## Testing
@@ -30,7 +30,7 @@ go build ./cmd
 
 ## Running
 
-Inside the dev container: `go run ./cmd`
+Inside the dev container: `go run ./cmd/worker-deamon`
 
 Make sure a valid config.json file is present in the working directory.
 
@@ -56,5 +56,5 @@ The mock gateway simulates the worker gateway for testing purposes.
 Start mock gateway:
 
 ```bash
-go run ./mock/mock-gateway.go
+go run ./internal/test/mock-gateway.go
 ```

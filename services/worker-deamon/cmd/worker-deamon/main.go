@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"worker-daemon/internal/adapters/gateway"
+	worker "worker-daemon/internal/app"
 	"worker-daemon/internal/config"
-	"worker-daemon/internal/gateway"
-	"worker-daemon/internal/worker"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 	}
 
 	client := gateway.NewClient(cfg.GatewayURL)
-	daemon := worker.NewDaemon(cfg, client)
+	daemon := worker.NewDaemon(*cfg, client)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

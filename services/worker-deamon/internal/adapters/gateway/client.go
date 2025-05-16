@@ -3,7 +3,10 @@ package gateway
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"worker-daemon/internal/ports"
 )
 
 type Client struct {
@@ -14,39 +17,81 @@ func NewClient(baseURL string) *Client {
 	return &Client{BaseURL: baseURL}
 }
 
+func checkStatusOK(resp *http.Response) error {
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("http error: status code " + http.StatusText(resp.StatusCode))
+	}
+	return nil
+}
+
 func (c *Client) Register(workerId, key, location string) error {
 	payload := map[string]string{
 		"id":       workerId,
 		"key":      key,
 		"location": location,
 	}
-	return c.postJSON("/register", payload)
-}
 
-func (c *Client) SendHeartbeat(workerId, status string) error {
-	payload := map[string]string{
-		"workerId": workerId,
-		"status":   status,
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
 	}
-	return c.postJSON("/worker/heartbeat", payload)
-}
 
-func (c *Client) ReportResult(jobId, status, result, errorMsg string) error {
-	payload := map[string]string{
-		"jobId":        jobId,
-		"status":       status,
-		"result":       result,
-		"errorMessage": errorMsg,
-	}
-	return c.postJSON("/result", payload)
-}
-
-func (c *Client) postJSON(path string, payload any) error {
-	data, _ := json.Marshal(payload)
-	resp, err := http.Post(c.BaseURL+path, "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(c.BaseURL+"/register", "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	return nil
+
+	return checkStatusOK(resp)
+}
+
+func (c *Client) SendHeartbeat(workerId, status string) ([]ports.Job, error) {
+	payload := map[string]string{
+		"workerId": workerId,
+		"status":   status,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(c.BaseURL+"/worker/heartbeat", "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := checkStatusOK(resp); err != nil {
+		return nil, err
+	}
+
+	var jobs []ports.Job
+	if err := json.NewDecoder(resp.Body).Decode(&jobs); err != nil {
+		return nil, err
+	}
+
+	return jobs, nil
+}
+
+func (c *Client) SendResult(j ports.Job) error {
+	payload := map[string]string{
+		"jobId":        j.ID,
+		"status":       j.Status,
+		"result":       j.Result,
+		"errorMessage": j.ErrorMessage,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(c.BaseURL+"/result", "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return checkStatusOK(resp)
 }

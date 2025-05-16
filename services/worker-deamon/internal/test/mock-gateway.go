@@ -38,8 +38,22 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]any{
 			"jobs": []map[string]any{
 				{
-					"id":   "job123",
-					"name": "MockJob",
+					"id":           "job123",
+					"status":       "scheduled",
+					"result":       "",
+					"errorMessage": "",
+				},
+				{
+					"id":           "job456",
+					"status":       "scheduled",
+					"result":       "",
+					"errorMessage": "",
+				},
+				{
+					"id":           "job789",
+					"status":       "scheduled",
+					"result":       "",
+					"errorMessage": "",
 				},
 			},
 		})
