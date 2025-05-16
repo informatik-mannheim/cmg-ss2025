@@ -8,8 +8,8 @@ services:
       - "8080:8080"
     environment:
       - USE_LIVE=false
-      - TOKEN_GB=QNk1Rdt3g3GGEnbPCROu
-      - TOKEN_DE=MSUX5RJxZtdO2avdqoXY
+      # If necessary, set the following environment variables
+      # - CARBON_INTENSITY_API_KEY=your_api_key
     volumes:
       - ./zones.json:/app/zones.json
       - ./zones_metadata.json:/app/zones_metadata.json
