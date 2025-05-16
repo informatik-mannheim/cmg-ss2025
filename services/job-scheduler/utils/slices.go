@@ -22,14 +22,18 @@ func Filter[T any](input []T, predicate func(T) bool) []T {
 	return output
 }
 
-// .foreach function from JavaScript Arrays in Go
-func ForEach[T any](input []T, action func(T)) {
-	for _, v := range input {
-		action(v)
-	}
-}
-
 // .some function from JavaScript Arrays in Go
 func Some[T any](input []T, predicate func(T) bool) bool {
 	return slices.ContainsFunc(input, predicate)
+}
+
+// .find function from JavaScript Arrays in Go
+func Find[T any](input []T, predicate func(T) bool) (T, bool) {
+	for _, v := range input {
+		if predicate(v) {
+			return v, true
+		}
+	}
+	var zero T
+	return zero, false
 }

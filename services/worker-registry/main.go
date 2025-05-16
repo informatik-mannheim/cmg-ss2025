@@ -11,18 +11,23 @@ import (
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
+	validator "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/zone-validator"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 func main() {
 	repository := repo.NewRepo()
-	notifier := notifier.NewHttpNotifier()
-	service := core.NewWorkerRegistryService(repository, notifier)
+	notifier := notifier.NewNotifier()
+	zoneValidator := validator.NewZoneValidator()
+	service := core.NewWorkerRegistryService(repository, notifier, zoneValidator)
 
 	CreateDummyWorkers(*service)
 
-	srv := &http.Server{Addr: "127.0.0.1:8080"}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	srv := &http.Server{Addr: ":" + port}
 
 	h := handler.NewHandler(service)
 	http.Handle("/", h)
@@ -45,7 +50,4 @@ func main() {
 func CreateDummyWorkers(service core.WorkerRegistryService) {
 	service.CreateWorker("DE", context.Background())
 	service.CreateWorker("EN", context.Background())
-	service.CreateWorker("DE", context.Background())
-	service.CreateWorker("DE", context.Background())
-	service.UpdateWorkerStatus("3", ports.StatusRunning, context.Background())
 }
