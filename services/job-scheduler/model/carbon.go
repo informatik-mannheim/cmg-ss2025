@@ -10,7 +10,6 @@ type CarbonIntensityData struct {
 // -------------------------- Endpoints --------------------------
 
 func GetCarbonEndpoint(base, zone string) string {
-	// FIXME: change string to UUID
 	return fmt.Sprintf("%s/carbon-intensity/%s", base, zone)
 }
 
