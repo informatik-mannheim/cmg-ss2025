@@ -21,17 +21,6 @@ func (f *FakeService) Login(req ports.ConsumerLoginRequest, ctx context.Context)
 	return ports.LoginResponse{}, ports.ErrUnauthorized
 }
 
-func (f *FakeService) Register(req ports.ConsumerRegistrationRequest, ctx context.Context) (ports.RegisterResponse, error) {
-	if req.Username == "Alice Bob" {
-		return ports.RegisterResponse{Secret: "abc-123"}, nil
-	}
-	if req.Username == "invalid" || req.Username == "" {
-		return ports.RegisterResponse{}, ports.ErrInvalidInput
-	}
-	return ports.RegisterResponse{
-		Secret: "secret-123"}, ports.ErrUnauthorized
-}
-
 func (f *FakeService) CreateJob(req ports.CreateJobRequest, ctx context.Context) (ports.CreateJobResponse, error) {
 	if req.ImageID == "" || req.ImageID == "invalid" {
 		return ports.CreateJobResponse{}, ports.ErrInvalidInput

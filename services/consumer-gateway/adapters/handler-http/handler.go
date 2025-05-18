@@ -23,7 +23,6 @@ func NewHandler(service ports.Api) *Handler {
 	h.rtr.HandleFunc("/jobs/{id}/result", h.handleGetJobResultRequest).Methods("GET")
 
 	h.rtr.HandleFunc("/auth/login", h.handleLoginRequest).Methods("POST")
-	h.rtr.HandleFunc("/auth/register", h.handleRegisterRequest).Methods("POST")
 	return &h
 }
 
@@ -86,21 +85,4 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp) // Token: 123-abc
-}
-
-func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) {
-	var req ports.ConsumerRegistrationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
-		return
-	}
-
-	resp, err := h.service.Register(req, r.Context())
-	if err != nil {
-		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
 }

@@ -18,14 +18,10 @@ func (s *ConsumerService) CreateJob(req ports.CreateJobRequest, ctx context.Cont
 		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
 	return ports.CreateJobResponse{
-		ImageID: req.ImageID,
-		Zone:    req.Zone,
-		Param:   req.Param,
-<<<<<<< HEAD
-		Status: req.JobStatus
-=======
+		ImageID:   req.ImageID,
+		Zone:      req.Zone,
+		Param:     req.Param,
 		JobStatus: "queued",
->>>>>>> origin/main
 	}, nil
 }
 
@@ -41,11 +37,11 @@ func (s *ConsumerService) GetJobResult(jobID string, ctx context.Context) (ports
 }
 
 func (s *ConsumerService) GetZone(req ports.ZoneRequest, ctx context.Context) (ports.ZoneResponse, error) {
-	if req.Zone == "invalid"  {
+	if req.Zone == "invalid" {
 		return ports.ZoneResponse{}, ports.ErrInvalidInput
 	}
 	return ports.ZoneResponse{
-		Zone:	req.Zone,
+		Zone: req.Zone,
 	}, nil
 }
 
@@ -54,13 +50,6 @@ func (s *ConsumerService) Login(req ports.ConsumerLoginRequest, ctx context.Cont
 		return ports.LoginResponse{Secret: "login-token"}, nil
 	}
 	return ports.LoginResponse{}, ports.ErrUnauthorized
-}
-
-func (s *ConsumerService) Register(req ports.ConsumerRegistrationRequest, ctx context.Context) (ports.RegisterResponse, error) {
-	if req.Username == "" || req.Password == "" {
-		return ports.RegisterResponse{}, ports.ErrInvalidInput
-	}
-	return ports.RegisterResponse{Secret: "registered-token"}, nil
 }
 
 var _ ports.Api = (*ConsumerService)(nil)

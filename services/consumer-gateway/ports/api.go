@@ -41,16 +41,6 @@ type LoginResponse struct {
 	Secret string `json:"secret"`
 }
 
-type ConsumerRegistrationRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
-}
-
-type RegisterResponse struct {
-	Secret string `json:"secret"`
-}
-
 // Get all available zones
 type ZoneRequest struct {
 	Zone string `json:"zone"`
@@ -68,5 +58,4 @@ type Api interface {
 	GetZone(req ZoneRequest, ctx context.Context) (ZoneResponse, error)
 
 	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
-	Register(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)
 }
