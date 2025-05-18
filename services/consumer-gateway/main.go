@@ -8,15 +8,19 @@ import (
 	"os/signal"
 	"syscall"
 
-	jobclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/handler-http"
+	jobclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/job_client-http"
+	loginclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/job_client-http"
+	zoneclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/job_client-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 )
 
 func main() {
 
-	jobClient := jobclient.New("http://job-service:8080")
-	service := core.NewConsumerService(jobClient)
+	job := jobclient.New("http://job:8080")
+	user := loginclient.New("http://user-management:8080")
+	zone := zoneclient.New("http://carbon-intensity-provider:8080")
+	service := core.NewConsumerService(job, zone, user)
 
 	srv := &http.Server{Addr: ":8080"}
 

@@ -1,4 +1,4 @@
-package client_http
+package job_client_http
 
 import (
 	"bytes"
