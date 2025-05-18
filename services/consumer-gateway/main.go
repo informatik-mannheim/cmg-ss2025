@@ -8,13 +8,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	jobclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 )
 
 func main() {
 
-	service := core.NewConsumerService()
+	jobClient := jobclient.New("http://job-service:8080")
+	service := core.NewConsumerService(jobClient)
 
 	srv := &http.Server{Addr: ":8080"}
 

@@ -10,20 +10,20 @@ import (
 )
 
 type Handler struct {
-	service ports.Api
-	rtr     mux.Router
+	job   ports.JobClient
+	login ports.LoginClient
+	rtr   mux.Router
 }
 
 var _ http.Handler = (*Handler)(nil)
 
-func NewHandler(service ports.Api) *Handler {
-	h := Handler{service: service, rtr: *mux.NewRouter()}
+func NewHandler(service ports.JobClient) *Handler {
+	h := Handler{job: service, rtr: *mux.NewRouter()}
 
 	h.rtr.HandleFunc("/jobs", h.handleCreateJobRequest).Methods("POST")
-	h.rtr.HandleFunc("/jobs/{id}/result", h.handleGetJobResultRequest).Methods("GET")
+	h.rtr.HandleFunc("/jobs/{id}/outcome", h.handleGetJobOutcomeRequest).Methods("GET")
 
 	h.rtr.HandleFunc("/auth/login", h.handleLoginRequest).Methods("POST")
-	h.rtr.HandleFunc("/auth/register", h.handleRegisterRequest).Methods("POST")
 	return &h
 }
 
@@ -43,7 +43,7 @@ func (h *Handler) handleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp, err := h.service.CreateJob(req, r.Context())
+	resp, err := h.job.CreateJob(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		return
@@ -58,11 +58,11 @@ Returns a job result that was requested by client.
 The parameter vars: is a map that extracts the pathparameters from client request.
 So jobs/<job-id>/result returns -> jobID: <job-id>
 */
-func (h *Handler) handleGetJobResultRequest(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetJobOutcomeRequest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)     //
 	jobID := vars["job-id"] // "jobID" : "123-abc"
 
-	status, err := h.service.GetJobResult(jobID, r.Context())
+	status, err := h.job.GetJobOutcome(r.Context(), jobID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -78,7 +78,7 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.Login(req, r.Context())
+	resp, err := h.login.Login(req, r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusBadRequest)
 		return
@@ -86,21 +86,4 @@ func (h *Handler) handleLoginRequest(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp) // Token: 123-abc
-}
-
-func (h *Handler) handleRegisterRequest(w http.ResponseWriter, r *http.Request) {
-	var req ports.ConsumerRegistrationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
-		return
-	}
-
-	resp, err := h.service.Register(req, r.Context())
-	if err != nil {
-		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
 }

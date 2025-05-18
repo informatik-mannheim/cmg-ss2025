@@ -11,25 +11,31 @@ var ErrBadRequest = errors.New("bad Request")
 var ErrInvalidInput = errors.New("invalid Input")
 
 type CreateJobRequest struct {
-	ImageID string `json:"image_id"`
-	Zone    string `json:"zone"` // is optional
-	Param   string `json:"params"`
+	ImageID      string            `json:"image_id"`
+	JobName      string            `json:"jobName"`
+	CreationZone string            `json:"creationZone"`
+	Parameters   map[string]string `json:"parameters"`
 }
 
 type CreateJobResponse struct {
-	ImageID   string `json:"image_id`
-	Zone      string `json:"zone"`
-	Param     string `json:"params"`
-	JobStatus string `json:"job_status"`
+	ImageID      string            `json:"image_id"`
+	JobName      string            `json:"jobName"`
+	CreationZone string            `json:"creationZone"`
+	Parameters   map[string]string `json:"parameters"`
 }
 
-type GetJobResult struct {
-	ImageID string `json:"image_id"`
+// Returns a singular job
+type GetJob struct {
 }
 
-type JobResultResponse struct {
-	ImageID   string `json:"image_id"`
-	JobStatus string `json:"status"`
+type JobOutcomeResponse struct {
+	JobName         string    `json:"jobName"`
+	Status          JobStatus `json:"status"`
+	Result          string    `json:"result"`
+	ErrorMessage    string    `json:"errorMessage"`
+	ComputeZone     string    `json:"computeZone"`
+	CarbonIntensity int       `json:"carbonIntensity"`
+	CarbonSavings   int       `json:"carbonSavings"`
 }
 
 type ConsumerLoginRequest struct {
@@ -60,13 +66,15 @@ type ZoneResponse struct {
 	Zone string `json:"zone"`
 }
 
-type Api interface {
-	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
-	GetJobResult(ImageID string, ctx context.Context) (JobResultResponse, error)
-
-	// Get available zones from carbon intesity provider
+type CarbonIntensityClient interface {
 	GetZone(req ZoneRequest, ctx context.Context) (ZoneResponse, error)
+}
 
+type LoginClient interface {
 	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
-	Register(req ConsumerRegistrationRequest, ctx context.Context) (RegisterResponse, error)
+}
+
+type JobClient interface {
+	GetJobOutcome(ctx context.Context, jobID string) (JobOutcomeResponse, error)
+	CreateJob(ctx context.Context, req CreateJobRequest) (CreateJobResponse, error)
 }

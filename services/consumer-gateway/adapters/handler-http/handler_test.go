@@ -49,15 +49,15 @@ func (f *FakeService) CreateJob(req ports.CreateJobRequest, ctx context.Context)
 	}, nil
 }
 
-func (f *FakeService) GetJobResult(_ string, ctx context.Context) (ports.JobResultResponse, error) {
+func (f *FakeService) GetJobResult(_ string, ctx context.Context) (ports.JobOutcomeResponse, error) {
 	user := ctx.Value(userContextKey).(string)
 	if user == "alice" {
-		return ports.JobResultResponse{
+		return ports.JobOutcomeResponse{
 			ImageID:   "job-123",
 			JobStatus: "completed",
 		}, nil
 	}
-	return ports.JobResultResponse{}, ports.ErrNotFound
+	return ports.JobOutcomeResponse{}, ports.ErrNotFound
 }
 
 /*
