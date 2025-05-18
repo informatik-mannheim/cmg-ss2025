@@ -21,19 +21,35 @@ func NewConsumerService(jobClient ports.JobClient, zoneClient ports.CarbonIntens
 }
 
 func (s *ConsumerGatewayService) CreateJob(ctx context.Context, req ports.CreateJobRequest) (ports.CreateJobResponse, error) {
-	return s.job.CreateJob(ctx, req)
+	resp, err := s.job.CreateJob(ctx, req)
+	if err != nil {
+		return ports.CreateJobResponse{}, err
+	}
+	return resp, nil
 }
 
 func (s *ConsumerGatewayService) GetJobOutcome(ctx context.Context, jobID string) (ports.JobOutcomeResponse, error) {
-	return s.job.GetJobOutcome(ctx, jobID)
+	resp, err := s.job.GetJobOutcome(ctx, jobID)
+	if err != nil {
+		return ports.JobOutcomeResponse{}, err
+	}
+	return resp, nil
 }
 
-func (s *ConsumerGatewayService) GetZone(req ports.ZoneRequest, ctx context.Context) (ports.ZoneResponse, error) {
-	return s.zone.GetZone(req, ctx)
+func (s *ConsumerGatewayService) GetZone(ctx context.Context, req ports.ZoneRequest) (ports.ZoneResponse, error) {
+	resp, err := s.zone.GetZone(req, ctx)
+	if err != nil {
+		return ports.ZoneResponse{}, err
+	}
+	return resp, nil
 }
 
-func (s *ConsumerGatewayService) Login(req ports.ConsumerLoginRequest, ctx context.Context) (ports.LoginResponse, error) {
-	return s.login.Login(req, ctx)
+func (s *ConsumerGatewayService) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
+	resp, err := s.login.Login(req, ctx)
+	if err != nil {
+		return ports.LoginResponse{}, err
+	}
+	return resp, nil
 }
 
 var _ ports.JobClient = (*ConsumerGatewayService)(nil)
