@@ -20,6 +20,7 @@ func main() {
 		port = "8080"
 	}
 
+
 	// set port manually with "export PORT"
 	job := jobclient.NewJobClient("http://job:" + port)
 	user := jobclient.NewLoginClient("http://auth/login:" + port)
@@ -29,6 +30,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
+
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
 
 	mux.HandleFunc("/jobs", handler.HandleCreateJobRequest)
@@ -47,7 +49,9 @@ func main() {
 		}
 	}()
 
+
 	log.Print("listening on port " + port + " ...")
+
 	err := srv.ListenAndServe()
 	if err != nil {
 		return
