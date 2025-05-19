@@ -66,12 +66,12 @@ type ZoneResponse struct {
 	Zone string `json:"zone"`
 }
 
-type CarbonIntensityClient interface {
-	GetZone(req ZoneRequest, ctx context.Context) (ZoneResponse, error)
+type ZoneClient interface {
+	GetZone(ctx context.Context, req ZoneRequest) (ZoneResponse, error)
 }
 
 type LoginClient interface {
-	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
+	Login(ctx context.Context, req ConsumerLoginRequest) (LoginResponse, error)
 }
 
 type JobClient interface {

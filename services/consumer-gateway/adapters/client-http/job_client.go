@@ -1,4 +1,4 @@
-package job_client_http
+package client_http
 
 import (
 	"bytes"
@@ -10,15 +10,16 @@ import (
 	"net/http"
 )
 
-type Client struct {
-	baseURL string
+type JobClient struct {
+	baseURL    string
+	httpClient *http.Client
 }
 
-func New(baseURL string) *Client {
-	return &Client{baseURL: baseURL}
+func NewJobClient(baseURL string) *JobClient {
+	return &JobClient{baseURL: baseURL, httpClient: &http.Client{}}
 }
 
-func (c *Client) CreateJob(ctx context.Context, req ports.CreateJobRequest) (ports.CreateJobResponse, error) {
+func (c *JobClient) CreateJob(ctx context.Context, req ports.CreateJobRequest) (ports.CreateJobResponse, error) {
 	url := fmt.Sprintf("%s/jobs", c.baseURL)
 
 	body, err := json.Marshal(req)
@@ -55,7 +56,7 @@ func (c *Client) CreateJob(ctx context.Context, req ports.CreateJobRequest) (por
 	return out, nil
 }
 
-func (c *Client) GetJobOutcome(ctx context.Context, jobID string) (ports.JobOutcomeResponse, error) {
+func (c *JobClient) GetJobOutcome(ctx context.Context, jobID string) (ports.JobOutcomeResponse, error) {
 	url := fmt.Sprintf("%s/jobs/%s/outcome", c.baseURL, jobID)
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
