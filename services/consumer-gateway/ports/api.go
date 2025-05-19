@@ -11,25 +11,32 @@ var ErrBadRequest = errors.New("bad Request")
 var ErrInvalidInput = errors.New("invalid Input")
 
 type CreateJobRequest struct {
-	ImageID string `json:"image_id"`
-	Zone    string `json:"zone"` // is optional
-	Param   string `json:"params"`
+	ImageID      string            `json:"image_id"`
+	JobName      string            `json:"job_name"`
+	CreationZone string            `json:"creation_zone"`
+	Parameters   map[string]string `json:"parameters"`
 }
 
 type CreateJobResponse struct {
-	ImageID   string `json:"image_id`
-	Zone      string `json:"zone"`
-	Param     string `json:"params"`
-	JobStatus string `json:"job_status"`
+	ImageID      string            `json:"image_id"`
+	JobName      string            `json:"job_name"`
+	CreationZone string            `json:"creation_zone"`
+	Parameters   map[string]string `json:"parameters"`
+	Status       string            `json:"status"`
 }
 
-type GetJobResult struct {
-	ImageID string `json:"image_id"`
+// Returns a singular job
+type GetJob struct {
 }
 
-type JobResultResponse struct {
-	ImageID   string `json:"image_id"`
-	JobStatus string `json:"status"`
+type JobOutcomeResponse struct {
+	JobName         string    `json:"job_name"`
+	Status          JobStatus `json:"status"`
+	Result          string    `json:"result"`
+	ErrorMessage    string    `json:"error_message"`
+	ComputeZone     string    `json:"compute_zone"`
+	CarbonIntensity int       `json:"carbon_intensity"`
+	CarbonSavings   int       `json:"carbon_savings"`
 }
 
 type ConsumerLoginRequest struct {
@@ -48,14 +55,4 @@ type ZoneRequest struct {
 
 type ZoneResponse struct {
 	Zone string `json:"zone"`
-}
-
-type Api interface {
-	CreateJob(req CreateJobRequest, ctx context.Context) (CreateJobResponse, error)
-	GetJobResult(ImageID string, ctx context.Context) (JobResultResponse, error)
-
-	// Get available zones from carbon intesity provider
-	GetZone(req ZoneRequest, ctx context.Context) (ZoneResponse, error)
-
-	Login(req ConsumerLoginRequest, ctx context.Context) (LoginResponse, error)
 }
