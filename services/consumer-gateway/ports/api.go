@@ -1,7 +1,6 @@
 package ports
 
 import (
-	"context"
 	"errors"
 )
 
