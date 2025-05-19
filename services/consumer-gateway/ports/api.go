@@ -12,16 +12,17 @@ var ErrInvalidInput = errors.New("invalid Input")
 
 type CreateJobRequest struct {
 	ImageID      string            `json:"image_id"`
-	JobName      string            `json:"jobName"`
-	CreationZone string            `json:"creationZone"`
+	JobName      string            `json:"job_name"`
+	CreationZone string            `json:"creation_zone"`
 	Parameters   map[string]string `json:"parameters"`
 }
 
 type CreateJobResponse struct {
 	ImageID      string            `json:"image_id"`
-	JobName      string            `json:"jobName"`
-	CreationZone string            `json:"creationZone"`
+	JobName      string            `json:"job_name"`
+	CreationZone string            `json:"creation_zone"`
 	Parameters   map[string]string `json:"parameters"`
+	Status       string            `json:"status"`
 }
 
 // Returns a singular job
@@ -29,13 +30,13 @@ type GetJob struct {
 }
 
 type JobOutcomeResponse struct {
-	JobName         string    `json:"jobName"`
+	JobName         string    `json:"job_name"`
 	Status          JobStatus `json:"status"`
 	Result          string    `json:"result"`
-	ErrorMessage    string    `json:"errorMessage"`
-	ComputeZone     string    `json:"computeZone"`
-	CarbonIntensity int       `json:"carbonIntensity"`
-	CarbonSavings   int       `json:"carbonSavings"`
+	ErrorMessage    string    `json:"error_message"`
+	ComputeZone     string    `json:"compute_zone"`
+	CarbonIntensity int       `json:"carbon_intensity"`
+	CarbonSavings   int       `json:"carbon_savings"`
 }
 
 type ConsumerLoginRequest struct {
@@ -44,16 +45,6 @@ type ConsumerLoginRequest struct {
 }
 
 type LoginResponse struct {
-	Secret string `json:"secret"`
-}
-
-type ConsumerRegistrationRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
-}
-
-type RegisterResponse struct {
 	Secret string `json:"secret"`
 }
 

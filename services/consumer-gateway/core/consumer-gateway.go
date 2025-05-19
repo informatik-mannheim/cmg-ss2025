@@ -8,11 +8,11 @@ import (
 
 type ConsumerGatewayService struct {
 	job   ports.JobClient
-	zone  ports.CarbonIntensityClient
+	zone  ports.ZoneClient
 	login ports.LoginClient
 }
 
-func NewConsumerService(jobClient ports.JobClient, zoneClient ports.CarbonIntensityClient, loginClient ports.LoginClient) *ConsumerGatewayService {
+func NewConsumerService(jobClient ports.JobClient, zoneClient ports.ZoneClient, loginClient ports.LoginClient) *ConsumerGatewayService {
 	return &ConsumerGatewayService{
 		job:   jobClient,
 		zone:  zoneClient,
@@ -37,7 +37,7 @@ func (s *ConsumerGatewayService) GetJobOutcome(ctx context.Context, jobID string
 }
 
 func (s *ConsumerGatewayService) GetZone(ctx context.Context, req ports.ZoneRequest) (ports.ZoneResponse, error) {
-	resp, err := s.zone.GetZone(req, ctx)
+	resp, err := s.zone.GetZone(ctx, req)
 	if err != nil {
 		return ports.ZoneResponse{}, err
 	}
@@ -45,7 +45,7 @@ func (s *ConsumerGatewayService) GetZone(ctx context.Context, req ports.ZoneRequ
 }
 
 func (s *ConsumerGatewayService) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
-	resp, err := s.login.Login(req, ctx)
+	resp, err := s.login.Login(ctx, req)
 	if err != nil {
 		return ports.LoginResponse{}, err
 	}

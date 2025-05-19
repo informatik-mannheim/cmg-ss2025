@@ -26,13 +26,13 @@ func main() {
 	service := core.NewConsumerService(job, zone, user)
 	handler := handler_http.NewHandler(service, service, service)
 
-	// Router (mux)
 	mux := http.NewServeMux()
+	mux.Handle("/", handler)
+	srv := &http.Server{Addr: ":8080", Handler: mux}
+
 	mux.HandleFunc("/jobs", handler.HandleCreateJobRequest)
 	mux.HandleFunc("jobs/{id}/result", handler.HandleGetJobOutcomeRequest)
 	mux.HandleFunc("/auth/login", handler.HandleLoginRequest)
-
-	srv := &http.Server{Addr: ":8080"}
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
@@ -40,10 +40,16 @@ func main() {
 		<-sigChan
 
 		log.Print("The service is shutting down...")
-		srv.Shutdown(context.Background())
+		err := srv.Shutdown(context.Background())
+		if err != nil {
+			return
+		}
 	}()
 
 	log.Print("listening...")
-	srv.ListenAndServe()
+	err := srv.ListenAndServe()
+	if err != nil {
+		return
+	}
 	log.Print("Done")
 }

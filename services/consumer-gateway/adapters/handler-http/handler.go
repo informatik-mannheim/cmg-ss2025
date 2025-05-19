@@ -13,13 +13,20 @@ type Handler struct {
 	job   ports.JobClient
 	login ports.LoginClient
 	zone  ports.ZoneClient
-	rtr   mux.Router
+	rtr   *mux.Router
 }
 
 var _ http.Handler = (*Handler)(nil)
 
 func NewHandler(job ports.JobClient, login ports.LoginClient, zone ports.ZoneClient) *Handler {
-	return &Handler{job: job, login: login, zone: zone}
+	r := mux.NewRouter()
+	h := &Handler{job: job, login: login, zone: zone, rtr: r}
+
+	r.HandleFunc("/jobs", h.HandleCreateJobRequest).Methods("POST")
+	r.HandleFunc("/jobs/{job-id}/outcome", h.HandleGetJobOutcomeRequest).Methods("GET")
+	r.HandleFunc("/auth/login", h.HandleLoginRequest).Methods("POST")
+
+	return h
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
