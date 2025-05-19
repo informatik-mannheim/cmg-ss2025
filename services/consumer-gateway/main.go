@@ -20,15 +20,16 @@ func main() {
 		port = "8080"
 	}
 
-	job := jobclient.NewJobClient("http://job:8080")
-	user := jobclient.NewLoginClient("http://auth/login:8080")
-	zone := jobclient.NewZoneClient("http://carbon-intensity-provider:8080")
+	// set port manually with "export PORT"
+	job := jobclient.NewJobClient("http://job:" + port)
+	user := jobclient.NewLoginClient("http://auth/login:" + port)
+	zone := jobclient.NewZoneClient("http://carbon-intensity-provider:" + port)
 	service := core.NewConsumerService(job, zone, user)
 	handler := handler_http.NewHandler(service, service, service)
 
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
-	srv := &http.Server{Addr: ":8080", Handler: mux}
+	srv := &http.Server{Addr: ":" + port, Handler: mux}
 
 	mux.HandleFunc("/jobs", handler.HandleCreateJobRequest)
 	mux.HandleFunc("jobs/{id}/result", handler.HandleGetJobOutcomeRequest)
@@ -46,7 +47,7 @@ func main() {
 		}
 	}()
 
-	log.Print("listening...")
+	log.Print("listening on port " + port + " ...")
 	err := srv.ListenAndServe()
 	if err != nil {
 		return
