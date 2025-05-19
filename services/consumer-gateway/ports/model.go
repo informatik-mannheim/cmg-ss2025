@@ -6,3 +6,4 @@ type Consumer struct {
 	IntProp    int
 	StringProp string
 }
+type JobStatus string
