@@ -2,92 +2,129 @@ package core_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
 )
 
-func TestCreateJob(t *testing.T) {
-	service := core.NewConsumerService()
-
-	tests := []struct {
-		name    string
-		req     ports.CreateJobRequest
-		wantErr error
-	}{
-		{
-			name:    "valid job",
-			req:     ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "-x"},
-			wantErr: nil,
-		},
-		{
-			name:    "missing image_id",
-			req:     ports.CreateJobRequest{ImageID: "", Zone: "EU", Param: "-x"},
-			wantErr: ports.ErrInvalidInput,
-		},
-		{
-			name:    "invalid param",
-			req:     ports.CreateJobRequest{ImageID: "img1", Zone: "EU", Param: "invalid"},
-			wantErr: ports.ErrInvalidInput,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.CreateJob(tt.req, context.Background())
-			if err != tt.wantErr {
-				t.Errorf("expected error %v, got %v", tt.wantErr, err)
-			}
-		})
-	}
-
+type mockJobClient struct {
+	createJobCalled  bool
+	getOutcomeCalled bool
+	failCreate       bool
+	failOutcome      bool
 }
 
-func TestLogin(t *testing.T) {
-	service := core.NewConsumerService()
-
-	tests := []struct {
-		name    string
-		req     ports.ConsumerLoginRequest
-		wantErr error
-	}{
-		{
-			name:    "valid login",
-			req:     ports.ConsumerLoginRequest{Username: "alice", Password: "pw"},
-			wantErr: nil,
-		},
-		{
-			name:    "unauthorized",
-			req:     ports.ConsumerLoginRequest{Username: "invalid", Password: "wrong"},
-			wantErr: ports.ErrUnauthorized,
-		},
+func (m *mockJobClient) CreateJob(ctx context.Context, req ports.CreateJobRequest) (ports.CreateJobResponse, error) {
+	m.createJobCalled = true
+	if m.failCreate {
+		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
+	return ports.CreateJobResponse{
+		ImageID: req.ImageID,
+		JobName: req.JobName,
+	}, nil
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.Login(tt.req, context.Background())
-			if err != tt.wantErr {
-				t.Errorf("expected %v, got %v", tt.wantErr, err)
-			}
-		})
+func (m *mockJobClient) GetJobOutcome(ctx context.Context, jobID string) (ports.JobOutcomeResponse, error) {
+	m.getOutcomeCalled = true
+	if m.failOutcome {
+		return ports.JobOutcomeResponse{}, ports.ErrNotFound
+	}
+	return ports.JobOutcomeResponse{
+		JobName: "job-1", Status: ports.JobStatus("done"), Result: "http://example.com/image.png",
+	}, nil
+}
+
+type mockZoneClient struct {
+	fail bool
+}
+
+func (m *mockZoneClient) GetZone(ctx context.Context, req ports.ZoneRequest) (ports.ZoneResponse, error) {
+	if m.fail {
+		return ports.ZoneResponse{}, ports.ErrBadRequest
+	}
+	return ports.ZoneResponse{Zone: req.Zone}, nil
+}
+
+type mockLoginClient struct {
+	fail bool
+}
+
+func (m *mockLoginClient) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
+	if m.fail {
+		return ports.LoginResponse{}, ports.ErrUnauthorized
+	}
+	return ports.LoginResponse{Secret: "token-123"}, nil
+}
+
+func TestConsumerGatewayService_CreateJob(t *testing.T) {
+	jobMock := &mockJobClient{}
+	service := core.NewConsumerService(jobMock, &mockZoneClient{}, &mockLoginClient{})
+
+	resp, err := service.CreateJob(context.Background(), ports.CreateJobRequest{
+		ImageID:      "img1",
+		JobName:      "job-1",
+		CreationZone: "GER",
+	})
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp.ImageID != "img1" {
+		t.Errorf("unexpected ImageID: %v", resp.ImageID)
 	}
 }
 
-func TestGetJobResult(t *testing.T) {
-	service := core.NewConsumerService()
+func TestConsumerGatewayService_GetJobOutcome(t *testing.T) {
+	jobMock := &mockJobClient{}
+	service := core.NewConsumerService(jobMock, &mockZoneClient{}, &mockLoginClient{})
 
-	t.Run("found", func(t *testing.T) {
-		resp, err := service.GetJobResult("job-123", context.WithValue(context.Background(), "user", "alice"))
-		if err != nil || resp.ImageID == "" {
-			t.Errorf("expected job result, got error: %v", err)
-		}
-	})
+	resp, err := service.GetJobOutcome(context.Background(), "job-123")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp.Status != "done" {
+		t.Errorf("unexpected status: %v", resp.Status)
+	}
+}
 
-	t.Run("not found", func(t *testing.T) {
-		_, err := service.GetJobResult("wrong-id", context.WithValue(context.Background(), "user", "other"))
-		if err != ports.ErrNotFound {
-			t.Errorf("expected not found, got %v", err)
-		}
+func TestConsumerGatewayService_GetZone(t *testing.T) {
+	service := core.NewConsumerService(&mockJobClient{}, &mockZoneClient{}, &mockLoginClient{})
+
+	resp, err := service.GetZone(context.Background(), ports.ZoneRequest{Zone: "GER"})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp.Zone != "GER" {
+		t.Errorf("unexpected zone: %v", resp.Zone)
+	}
+}
+
+func TestConsumerGatewayService_Login(t *testing.T) {
+	service := core.NewConsumerService(&mockJobClient{}, &mockZoneClient{}, &mockLoginClient{})
+
+	resp, err := service.Login(context.Background(), ports.ConsumerLoginRequest{
+		Username: "alice",
+		Password: "pw",
 	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp.Secret != "token-123" {
+		t.Errorf("unexpected secret: %v", resp.Secret)
+	}
+}
+
+func TestConsumerGatewayService_Login_Unauthorized(t *testing.T) {
+	service := core.NewConsumerService(&mockJobClient{}, &mockZoneClient{}, &mockLoginClient{fail: true})
+
+	_, err := service.Login(context.Background(), ports.ConsumerLoginRequest{
+		Username: "wrong",
+		Password: "bad",
+	})
+	if !errors.Is(err, ports.ErrUnauthorized) {
+		t.Errorf("expected ErrUnauthorized, got %v", err)
+	}
 }
