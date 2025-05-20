@@ -1,0 +1,82 @@
+openapi: 3.1.1
+info:
+  title: User Management API
+  description: Handles user registration, login, and authentication.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [consumer, provider, job_scheduler]
+      responses:
+        '201':
+          description: User created successfully + JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                    example: client_id.client_secret
+        '400':
+          description: Invalid request
+
+  /auth/login:
+    post:
+      summary: Log in and receive a JWT
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                secret:
+                  type: string
+                  example: client_id.client_secret
+      responses:
+        '200':
+          description: JWT issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid credentials
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
