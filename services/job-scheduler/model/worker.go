@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/google/uuid"
 )
 
 type WorkerStatus string
@@ -13,15 +15,14 @@ const (
 )
 
 type Worker struct {
-	Id     string       `json:"id"` // FIXME: actually UUID
+	Id     uuid.UUID    `json:"id"`
 	Status WorkerStatus `json:"status"`
 	Zone   string       `json:"zone"`
 }
 
 // -------------------------- Endpoints --------------------------
 
-func PutWorkerStatusEndpoint(base string, id string) string {
-	// FIXME: change string to UUID
+func PutWorkerStatusEndpoint(base string, id uuid.UUID) string {
 	return fmt.Sprintf("%s/workers/%s/status", base, id)
 }
 
@@ -45,8 +46,4 @@ type UpdateWorkerPayload struct {
 }
 
 // This struct is returned by the worker service as response to the put-request
-type UpdateWorkerResponse []struct {
-	ID     string       `json:"id"` // generated as UUID
-	Status WorkerStatus `json:"status"`
-	Zone   string       `json:"zone"`
-}
+type UpdateWorkerResponse GetWorkersResponse
