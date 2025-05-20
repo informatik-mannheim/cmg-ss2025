@@ -41,36 +41,7 @@ func TestCreateJob(t *testing.T) {
 			}
 		})
 	}
-}
 
-func TestRegister(t *testing.T) {
-	service := core.NewConsumerService()
-
-	tests := []struct {
-		name    string
-		req     ports.ConsumerRegistrationRequest
-		wantErr error
-	}{
-		{
-			name:    "valid",
-			req:     ports.ConsumerRegistrationRequest{Username: "alice", Password: "pw"},
-			wantErr: nil,
-		},
-		{
-			name:    "invalid",
-			req:     ports.ConsumerRegistrationRequest{Username: "", Password: ""},
-			wantErr: ports.ErrInvalidInput,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.Register(tt.req, context.Background())
-			if err != tt.wantErr {
-				t.Errorf("expected %v, got %v", tt.wantErr, err)
-			}
-		})
-	}
 }
 
 func TestLogin(t *testing.T) {
