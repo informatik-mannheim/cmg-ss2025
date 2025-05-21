@@ -1,7 +1,6 @@
 {
     "gateway_url": "http://host.docker.internal:8080",
-    "worker_id": "worker-001",
-    "key": "12345678",
-    "location": "DE",
-    "heartbeat_interval_seconds": 10
+    "secret": "PLACEHOLDER",
+    "zone": "DE",
+    "heartbeat_interval_seconds": 3
   }

@@ -8,8 +8,8 @@ import (
 	"syscall"
 
 	"worker-daemon/internal/adapters/gateway"
-	worker "worker-daemon/internal/app"
 	"worker-daemon/internal/config"
+	worker "worker-daemon/internal/core"
 )
 
 func main() {
@@ -27,15 +27,14 @@ func main() {
 	go daemon.StartHeartbeatLoop(ctx)
 
 	// Graceful shutdown handling
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	<-stop // Wait for termination signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
 	log.Println("Shutting down daemon...")
 
 	cancel()
 
 	log.Println("Shutdown complete")
 
-	select {} // Block forever
+	//select {} // Block forever
 }

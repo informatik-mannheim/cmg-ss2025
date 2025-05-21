@@ -24,28 +24,35 @@ func checkStatusOK(resp *http.Response) error {
 	return nil
 }
 
-func (c *Client) Register(workerId, key, location string) error {
+func (c *Client) Register(key string, zone string) (*ports.RegisterResponse, error) {
 	payload := map[string]string{
-		"id":       workerId,
-		"key":      key,
-		"location": location,
+		"key":  key,
+		"zone": zone,
 	}
 
 	data, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := http.Post(c.BaseURL+"/register", "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	return checkStatusOK(resp)
+	if err := checkStatusOK(resp); err != nil {
+		return nil, err
+	}
+	var regResp *ports.RegisterResponse
+	if err := json.NewDecoder(resp.Body).Decode(&regResp); err != nil {
+		return nil, err
+	}
+
+	return regResp, err
 }
 
-func (c *Client) SendHeartbeat(workerId, status string) ([]ports.Job, error) {
+func (c *Client) SendHeartbeat(workerId string, status string) ([]ports.Job, error) {
 	payload := map[string]string{
 		"workerId": workerId,
 		"status":   status,

@@ -44,7 +44,7 @@ The daemon is configured using a config.json file:
 {
   "id": "worker123",
   "key": "12345678",
-  "location": "DE",
+  "zone": "DE",
   "gateway_url": "http://localhost:8080",
   "heartbeat_interval_seconds": 10
 }
