@@ -90,7 +90,10 @@ func DistributeJobs(jobs []model.Job, workers []model.Worker, carbons []model.Ca
 		job := sortedJobs[jobsIndex]
 		worker := sortedWorkers[workersIndex]
 
-		if job.CreationZone == worker.Zone {
+		jobCarbons := carbonsMap[job.CreationZone]
+		workerCarbons := carbonsMap[worker.Zone]
+
+		if workerCarbons >= jobCarbons {
 			workersIndex--
 			continue
 		}

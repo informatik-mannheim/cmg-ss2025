@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	client_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
@@ -46,10 +47,9 @@ func main() {
 	}
 
 	// init service and handler
-	testNotifier := &testNotifier{} // TODO: replace
-	service := core.NewWorkerGatewayService(testNotifier)
-	//client := client_http.NewHTTPClient("http://localhost:8080", "http://localhost:8080")
-	//service := core.NewWorkerGatewayService(client)
+	registryClient := client_http.NewRegistryClient("http://registry:8080")
+	jobClient := client_http.NewJobClient("http://job:8080")
+	service := core.NewWorkerGatewayService(registryClient, jobClient)
 	handler := handler_http.NewHandler(service)
 
 	// Router (mux)
