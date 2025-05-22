@@ -58,7 +58,7 @@ func (h *Handler) GetJobs(w http.ResponseWriter, r *http.Request) {
 
 	jobs, err := h.service.GetJobs(r.Context(), statuses)
 	if err != nil {
-		http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
+		http.Error(w, HTTPErr500, http.StatusInternalServerError)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (h *Handler) GetJobs(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
 	var job ports.JobCreate
 	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
-		http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
+		http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *Handler) UpdateJobScheduler(w http.ResponseWriter, r *http.Request) {
 	var updateData ports.SchedulerUpdateData
 	err := json.NewDecoder(r.Body).Decode(&updateData)
 	if err != nil {
-		http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
+		http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h *Handler) UpdateJobWorkerDaemon(w http.ResponseWriter, r *http.Request) 
 	var updateData ports.WorkerDaemonUpdateData
 	err := json.NewDecoder(r.Body).Decode(&updateData)
 	if err != nil {
-		http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
+		http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
 		return
 	}
 
@@ -165,19 +165,19 @@ func CheckAndSetErr(w http.ResponseWriter, err error) bool {
 	if err != nil {
 		switch err {
 		case ports.ErrNotExistingID:
-			http.Error(w, ports.HTTPErr400MissId, http.StatusBadRequest)
+			http.Error(w, HTTPErr400MissId, http.StatusBadRequest)
 		case ports.ErrInvalidIDFormat:
-			http.Error(w, ports.HTTPErr400InvalidId, http.StatusBadRequest)
+			http.Error(w, HTTPErr400InvalidId, http.StatusBadRequest)
 		case ports.ErrJobNotFound:
-			http.Error(w, ports.HTTPErr400JobNotFound, http.StatusNotFound)
-		case ports.ErrNotExistingJobName, ports.ErrNotExistingZone, ports.ErrNotExistingImageName:
-			http.Error(w, ports.HTTPErr400FieldEmpty, http.StatusBadRequest)
+			http.Error(w, HTTPErr400JobNotFound, http.StatusNotFound)
+		case ports.ErrNotExistingJobName, ports.ErrNotExistingImageName:
+			http.Error(w, HTTPErr400FieldEmpty, http.StatusBadRequest)
 		case ports.ErrImageVersionIsInvalid, ports.ErrParamKeyValueEmpty:
-			http.Error(w, ports.HTTPErr400InvalidInputData, http.StatusBadRequest)
+			http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
 		case ports.ErrNotExistingStatus:
-			http.Error(w, ports.HTTPErr400StatusEmpty, http.StatusBadRequest)
+			http.Error(w, HTTPErr400StatusEmpty, http.StatusBadRequest)
 		default:
-			http.Error(w, ports.HTTPErr500, http.StatusInternalServerError)
+			http.Error(w, HTTPErr500, http.StatusInternalServerError)
 		}
 		return true
 	}
