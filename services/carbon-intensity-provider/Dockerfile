@@ -24,12 +24,7 @@ RUN apk add --no-cache ca-certificates
 # Copy the binary
 COPY --from=builder /app/carbon-intensity-provider .
 
-# Copy persistent storage files (optional, if you want to seed local files)
-COPY zones.json zones.json
-COPY zones_metadata.json zones_metadata.json
-
 # Expose the service port
 EXPOSE 8080
 
-# Set environment variables via docker-compose
 CMD ["./carbon-intensity-provider"]
