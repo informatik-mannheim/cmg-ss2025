@@ -1,9 +1,9 @@
-package client
+package cli
 
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -17,7 +17,7 @@ func CreateJob(image_id string, job_name string, creation_zone string, parameter
 		port = "8080"
 	}
 
-	request := ports.CreateJobRequest{
+	request := CreateJobRequest{
 		ImageID:      image_id,
 		JobName:      job_name,
 		CreationZone: creation_zone,
@@ -36,4 +36,22 @@ func CreateJob(image_id string, job_name string, creation_zone string, parameter
 	body, _ := io.ReadAll(resp.Body)
 	log.Println("Response status: ", resp.Status)
 	log.Println("Response body: ", string(body))
+}
+func GetJobById(id string) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	url := fmt.Sprintf("http://localhost:%s/jobs/%s/outcome", port, id)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal("Error getting job outcome:", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Response:", string(body))
 }

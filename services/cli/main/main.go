@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/informatik-mannheim/cmg-ss2025.git/client"
+	"github.com/informatik-mannheim/cmg-ss2025.git"
 	"os"
 	"strings"
 )
@@ -145,7 +145,7 @@ func registerCommands() []Command {
 		}
 
 		// create the job once all checks have passed
-		client.CreateJob(imageId, jobName, zone, parameters)
+		cli.CreateJob(imageId, jobName, zone, parameters)
 		return nil
 	}
 	allCommands = append(allCommands, createJobCommand)
@@ -163,7 +163,7 @@ func registerCommands() []Command {
 
 	getJobByIdCommand := Command{
 		Name:        "get-job",
-		Description: "Get job by id",
+		Description: "Get job by its id",
 		Parameters: map[string]bool{
 			"--id": true,
 		},
@@ -173,6 +173,8 @@ func registerCommands() []Command {
 		if getJobByIdCommand.isMissingArguments(args) {
 			return nil
 		}
+		Id := getValue(args, "--id")
+		cli.GetJobById(Id)
 		fmt.Printf("Getting job by id %s\n", getValue(args, "--id"))
 		return nil
 	}
