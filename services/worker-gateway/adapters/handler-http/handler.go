@@ -57,10 +57,12 @@ func (h *Handler) RegisterWorkerHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.api.Register(r.Context(), req); err != nil {
+	regResp, err := h.api.Register(r.Context(), req)
+	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(regResp)
 }

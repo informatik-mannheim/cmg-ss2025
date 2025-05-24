@@ -7,20 +7,19 @@ import (
 type Api interface {
 	Heartbeat(ctx context.Context, req HeartbeatRequest) ([]Job, error)
 	Result(ctx context.Context, result ResultRequest) error
-	Register(ctx context.Context, req RegisterRequest) error
+	Register(ctx context.Context, req RegisterRequest) (*RegisterRespose, error)
 }
 
 // incoming heartbeat from a worker
 type HeartbeatRequest struct {
 	WorkerID string `json:"workerId"`
-	Status   string `json:"status"` // AVAILABLE or COMPUTING
+	Status   string `json:"status"` // AVAILABLE or RUNNING
 }
 
 // new worker registration
 type RegisterRequest struct {
-	ID       string `json:"id"`
-	Key      string `json:"key"`
-	Location string `json:"location"`
+	Key  string `json:"key"`
+	Zone string `json:"zone"`
 }
 
 // a finished job result
@@ -29,4 +28,10 @@ type ResultRequest struct {
 	Status       string `json:"status"`
 	Result       string `json:"result"`
 	ErrorMessage string `json:"errorMessage,omitempty"`
+}
+
+type RegisterRespose struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+	Zone   string `json:"zone"`
 }

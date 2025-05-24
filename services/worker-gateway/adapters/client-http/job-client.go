@@ -14,10 +14,36 @@ import (
 type JobClient struct {
 	BaseURL    string
 	httpClient *http.Client
+	//testJobs   []ports.Job
 }
 
 func NewJobClient(baseURL string) *JobClient {
 	return &JobClient{BaseURL: baseURL, httpClient: &http.Client{}}
+	/*testJobs: []ports.Job{
+		{
+			ID:       "job123",
+			WorkerID: "worker123",
+			Status:   "scheduled",
+			Result:   "",
+			ErrorMsg: "",
+		},
+		{
+			ID:       "job456",
+			WorkerID: "worker123",
+			Status:   "scheduled",
+			Result:   "",
+			ErrorMsg: "",
+		},
+		{
+			ID:       "job789",
+			WorkerID: "worker123",
+			Status:   "scheduled",
+			Result:   "",
+			ErrorMsg: "",
+		},
+	},
+	*/
+
 }
 
 func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
@@ -42,6 +68,14 @@ func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest) erro
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		return err
+		//filtered := make([]ports.Job, 0, len(c.testJobs))
+		//for _, job := range c.testJobs {
+		//	if job.ID != req.JobID {
+		//		filtered = append(filtered, job)
+		//	}
+		//}
+		//c.testJobs = filtered
+		//return nil
 	}
 	defer resp.Body.Close()
 
@@ -65,6 +99,8 @@ func (c *JobClient) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error)
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, err
+		//var testJobs1 = c.testJobs
+		//return testJobs1, nil
 	}
 	defer resp.Body.Close()
 

@@ -32,7 +32,7 @@ paths:
                   status:
                     type: string
                     description: Current execution status of the worker
-                    enum: [AVAILABLE, COMPUTING ]
+                    enum: [AVAILABLE, RUNNING ]
                     example: "AVAILABLE"
       responses:
         '200':
@@ -102,17 +102,13 @@ paths:
           application/json:
             schema: 
               type: object
-              required: [id, key, location]
+              required: [key, zone]
               properties:
-                id:
-                  type: string
-                  description: Unique identifier of the worker daemon
-                  example: "worker123"
                 key:
                   type: string
                   description: Shared secret key
                   example: "12345678"
-                location:
+                zone:
                   type: string
                   description: Geographical location of the worker
                   example: "DE"

@@ -1,0 +1,6 @@
+{
+    "gateway_url": "http://host.docker.internal:8080",
+    "secret": "PLACEHOLDER",
+    "zone": "DE",
+    "heartbeat_interval_seconds": 3
+  }
