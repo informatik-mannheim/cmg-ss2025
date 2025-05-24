@@ -119,6 +119,7 @@ func (c *Command) isMissingArguments(args []string) bool {
 }
 
 func registerCommands() []Command {
+	// Create Job Command
 	createJobCommand := Command{
 		Name:        "create-job",
 		Description: "Create a new job",
@@ -150,6 +151,7 @@ func registerCommands() []Command {
 	}
 	allCommands = append(allCommands, createJobCommand)
 
+	// Help command
 	helpCommand := Command{
 		Name:        "help",
 		Description: "Show this help",
@@ -161,6 +163,7 @@ func registerCommands() []Command {
 	}
 	allCommands = append(allCommands, helpCommand)
 
+	// Get job by its id
 	getJobByIdCommand := Command{
 		Name:        "get-job",
 		Description: "Get job by its id",
@@ -179,6 +182,26 @@ func registerCommands() []Command {
 		return nil
 	}
 	allCommands = append(allCommands, getJobByIdCommand)
+
+	// Get the outcome of job
+	getJobOutcomeCommand := Command{
+		Name:        "get-job",
+		Description: "Get job outcome",
+		Parameters: map[string]bool{
+			"--id": true,
+		},
+		ParamOrder: []string{"--id"},
+	}
+	getJobOutcomeCommand.Execute = func(args []string) error {
+		if getJobOutcomeCommand.isMissingArguments(args) {
+			return nil
+		}
+		Id := getValue(args, "--id")
+		cli.GetJobOutcome(Id)
+		fmt.Printf("Getting job outcome for job  %s\n", getValue(args, "--id"))
+		return nil
+	}
+	allCommands = append(allCommands, getJobOutcomeCommand)
 	return allCommands
 }
 

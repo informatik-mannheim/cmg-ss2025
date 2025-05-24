@@ -10,13 +10,16 @@ import (
 	"os"
 )
 
-func CreateJob(image_id string, job_name string, creation_zone string, parameters map[string]string) {
+var port string
 
-	port := os.Getenv("PORT")
+func init() {
+	port = os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+}
 
+func CreateJob(image_id string, job_name string, creation_zone string, parameters map[string]string) {
 	request := CreateJobRequest{
 		ImageID:      image_id,
 		JobName:      job_name,
@@ -37,11 +40,22 @@ func CreateJob(image_id string, job_name string, creation_zone string, parameter
 	log.Println("Response status: ", resp.Status)
 	log.Println("Response body: ", string(body))
 }
+
 func GetJobById(id string) {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	url := fmt.Sprintf("http://localhost:%s/jobs/%s", port, id)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal("Error getting job:", err)
 	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Response:", string(body))
+}
+
+func GetJobOutcome(id string) {
 
 	url := fmt.Sprintf("http://localhost:%s/jobs/%s/outcome", port, id)
 
