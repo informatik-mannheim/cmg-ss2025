@@ -124,21 +124,31 @@ func registerCommands() []Command {
 		Name:        "create-job",
 		Description: "Create a new job",
 		Parameters: map[string]bool{
-			"--image-id":      true,
+			"--image-name":    true,
+			"--image-version": true,
 			"--job-name":      true,
 			"--creation-zone": false,
 			"--parameters":    true,
 		},
-		ParamOrder: []string{"--image-id", "--job-name", "--creation-zone", "--parameters"},
+		ParamOrder: []string{"--job-name", "--creation-zone", "--image-name", "--image-version", "--parameters"},
 	}
 	createJobCommand.Execute = func(args []string) error {
 		// handle image_id
 		if createJobCommand.isMissingArguments(args) {
 			return nil
 		}
-		imageId := getValue(args, "--image-id")
+		imageName := getValue(args, "--image-name")
+		imageVersion := getValue(args, "--image-version")
+		containerImage := cli.ContainerImage{
+			Name:    imageName,
+			Version: imageVersion,
+		}
 		jobName := getValue(args, "--job-name")
-		zone := "DE"
+		creationZone := "DE"
+		zoneValue := getValue(args, "--creation-zone")
+		if zoneValue != "NO_VALUE" {
+			creationZone = zoneValue
+		}
 		parametersValue := getValue(args, "--parameters")
 		parameters := parseParameters(parametersValue)
 		if parameters == nil {
@@ -146,7 +156,7 @@ func registerCommands() []Command {
 		}
 
 		// create the job once all checks have passed
-		cli.CreateJob(imageId, jobName, zone, parameters)
+		cli.CreateJob(jobName, creationZone, containerImage, parameters)
 		return nil
 	}
 	allCommands = append(allCommands, createJobCommand)
@@ -215,9 +225,9 @@ func printHelp(arg string) {
 			usage := "Usage: \n\t" + arg
 			for _, param := range command.ParamOrder {
 				required := command.Parameters[param]
-				usage += " " + param
+				usage += " " + param + " <value>"
 				if required {
-					usage += " (required)"
+					usage += " [required]"
 				}
 			}
 			fmt.Println(usage)
@@ -244,7 +254,6 @@ func main() {
 			}
 			for _, command := range commands {
 				if command.Name == args[0] {
-					fmt.Println("Executing command:", command.Name)
 					command.Execute(args[1:])
 				}
 			}

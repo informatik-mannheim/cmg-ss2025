@@ -19,11 +19,11 @@ func init() {
 	}
 }
 
-func CreateJob(image_id string, job_name string, creation_zone string, parameters map[string]string) {
+func CreateJob(jobName string, creationZone string, imageId ContainerImage, parameters map[string]string) {
 	request := CreateJobRequest{
-		ImageID:      image_id,
-		JobName:      job_name,
-		CreationZone: creation_zone,
+		JobName:      jobName,
+		CreationZone: creationZone,
+		Image:        imageId,
 		Parameters:   parameters}
 
 	jsonRequest, err := json.Marshal(request)

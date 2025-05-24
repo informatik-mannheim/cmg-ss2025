@@ -1,9 +1,12 @@
 package cli
 
 type CreateJobRequest struct {
-	ImageID      string            `json:"image_id"`
-	Id           string            `json:"id"`
-	JobName      string            `json:"job_name"`
-	CreationZone string            `json:"creation_zone"`
+	JobName      string            `json:"jobName"`
+	CreationZone string            `json:"creationZone"`
+	Image        ContainerImage    `json:"image"`
 	Parameters   map[string]string `json:"parameters"`
+}
+type ContainerImage struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
