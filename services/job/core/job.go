@@ -64,9 +64,6 @@ func (s *JobService) CreateJob(ctx context.Context, jobCreate ports.JobCreate) (
 	if strings.TrimSpace(jobCreate.JobName) == "" {
 		return ports.Job{}, ports.ErrNotExistingJobName
 	}
-	if strings.TrimSpace(jobCreate.CreationZone) == "" {
-		return ports.Job{}, ports.ErrNotExistingZone
-	}
 	if strings.TrimSpace(jobCreate.Image.Name) == "" {
 		return ports.Job{}, ports.ErrNotExistingImageName
 	}
