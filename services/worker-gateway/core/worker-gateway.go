@@ -27,18 +27,21 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 	if req.Status == "AVAILABLE" {
 		jobs, err := s.job.FetchScheduledJobs(ctx)
 		if err != nil {
-			log.Printf("error getting jobs: %v", err)
-			return nil, nil // Gateway still accepts heartbeat
+			log.Printf("error getting jobs: %s", err)
+			return nil, err
 		}
+		log.Printf("provided jobs: %+v", jobs)
 
-		// Filter for this worker
-		var assigned []ports.Job
+		var filteredJobs []ports.Job
 		for _, job := range jobs {
 			if job.WorkerID == req.WorkerID {
-				assigned = append(assigned, job)
+				filteredJobs = append(filteredJobs, job)
 			}
 		}
-		return assigned, nil
+
+		log.Printf("filtered jobs: %+v", filteredJobs)
+
+		return filteredJobs, nil
 	}
 
 	// Comuting
