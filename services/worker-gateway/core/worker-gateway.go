@@ -20,6 +20,7 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 	log.Printf("Heartbeat received: %s is %s", req.WorkerID, req.Status)
 
 	if err := s.registry.UpdateWorkerStatus(ctx, req); err != nil {
+		log.Printf("UpdateWorkerStatus failed: %s ", err)
 		return nil, err
 	}
 
@@ -27,21 +28,15 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 	if req.Status == "AVAILABLE" {
 		jobs, err := s.job.FetchScheduledJobs(ctx)
 		if err != nil {
-			log.Printf("error getting jobs: %v", err)
-			return nil, nil // Gateway still accepts heartbeat
+			log.Printf("error getting jobs: %s", err)
+			return nil, err
 		}
+		log.Printf("provide jobs: %+v", jobs)
 
-		// Filter for this worker
-		var assigned []ports.Job
-		for _, job := range jobs {
-			if job.WorkerID == req.WorkerID {
-				assigned = append(assigned, job)
-			}
-		}
-		return assigned, nil
+		return jobs, nil
 	}
 
-	// Comuting
+	// Computing
 	return nil, nil
 }
 
@@ -51,8 +46,14 @@ func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRe
 	return s.job.UpdateJob(ctx, result)
 }
 
-func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) error {
-	log.Printf("Registering worker: %s", req.ID)
+func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
+	log.Printf("Registering worker from: %s", req.Zone)
 
-	return s.registry.RegisterWorker(ctx, req)
+	regResp, err := s.registry.RegisterWorker(ctx, req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return regResp, err
 }

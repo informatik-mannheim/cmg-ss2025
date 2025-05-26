@@ -21,27 +21,33 @@ func NewRegistryClient(baseURL string) *RegistryClient {
 	return &RegistryClient{BaseURL: baseURL, httpClient: &http.Client{}}
 }
 
-func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
-	url := fmt.Sprintf("%s/workers?zone=%s", c.BaseURL, url.QueryEscape(req.Location))
+func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
+	url := fmt.Sprintf("%s/workers?zone=%s", c.BaseURL, url.QueryEscape(req.Zone))
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		return err
+		return nil, err
+		//return &ports.RegisterRespose{ID: "worker123", Status: "AVAILABLE", Zone: "DE"}, nil
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("register worker failed: %s", body)
+		return nil, fmt.Errorf("register worker failed: %s", body)
 	}
 
-	return nil
+	var regResp ports.RegisterRespose
+	if err := json.NewDecoder(resp.Body).Decode(&regResp); err != nil {
+		return nil, err
+	}
+
+	return &regResp, nil
 }
 
 func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
@@ -62,6 +68,7 @@ func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.Heart
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		return err
+		//return nil
 	}
 	defer resp.Body.Close()
 

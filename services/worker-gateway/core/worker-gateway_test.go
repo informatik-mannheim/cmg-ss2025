@@ -16,12 +16,16 @@ type dummyRegistryService struct {
 	ReturnErr                bool
 }
 
-func (d *dummyRegistryService) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
+func (d *dummyRegistryService) RegisterWorker(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
 	d.RegisterWorkerCalled = true
 	if d.ReturnErr {
-		return errors.New("register error")
+		return nil, errors.New("register worker error")
 	}
-	return nil
+	return &ports.RegisterRespose{
+		ID:     "worker123",
+		Status: "AVAILABLE",
+		Zone:   "DE",
+	}, nil
 }
 
 func (d *dummyRegistryService) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
@@ -66,17 +70,16 @@ func TestRegisterWorker_Success(t *testing.T) {
 	svc := core.NewWorkerGatewayService(reg, job)
 
 	req := ports.RegisterRequest{
-		ID:       "worker1",
-		Key:      "secret",
-		Location: "DE",
+		Key:  "secret",
+		Zone: "DE",
 	}
 
-	err := svc.Register(context.Background(), req)
+	resp, err := svc.Register(context.Background(), req)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if !reg.RegisterWorkerCalled {
-		t.Error("expected RegisterWorker to be called")
+		t.Error("expected RegisterWorker to be called", resp)
 	}
 }
 
@@ -85,9 +88,9 @@ func TestRegisterWorker_Error(t *testing.T) {
 	job := &dummyJobService{}
 	svc := core.NewWorkerGatewayService(reg, job)
 
-	err := svc.Register(context.Background(), ports.RegisterRequest{})
+	resp, err := svc.Register(context.Background(), ports.RegisterRequest{})
 	if err == nil {
-		t.Fatal("expected error, got nil")
+		t.Fatal("expected error, got nil", resp)
 	}
 }
 
@@ -154,7 +157,7 @@ func TestHeartbeat_Computing(t *testing.T) {
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
-		Status:   "COMPUTING",
+		Status:   "RUNNING",
 	}
 
 	jobs, err := svc.Heartbeat(context.Background(), req)
@@ -162,7 +165,7 @@ func TestHeartbeat_Computing(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 	if len(jobs) != 0 {
-		t.Errorf("expected no jobs for COMPUTING, got %d", len(jobs))
+		t.Errorf("expected no jobs for RUNNING, got %d", len(jobs))
 	}
 	if !reg.UpdateWorkerStatusCalled {
 		t.Error("expected UpdateWorkerStatus to be called")

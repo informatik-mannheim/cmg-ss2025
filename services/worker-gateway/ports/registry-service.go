@@ -5,6 +5,6 @@ import (
 )
 
 type RegistryService interface {
-	RegisterWorker(ctx context.Context, req RegisterRequest) error
+	RegisterWorker(ctx context.Context, req RegisterRequest) (*RegisterRespose, error)
 	UpdateWorkerStatus(ctx context.Context, req HeartbeatRequest) error
 }
