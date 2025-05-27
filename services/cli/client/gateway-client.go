@@ -1,9 +1,10 @@
-package cli
+package client
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/informatik-mannheim/cmg-ss2025.git"
 	"io"
 	"log"
 	"net/http"
@@ -19,8 +20,8 @@ func init() {
 	}
 }
 
-func CreateJob(jobName string, creationZone string, imageId ContainerImage, parameters map[string]string) {
-	request := CreateJobRequest{
+func CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, parameters map[string]string) {
+	request := cli.CreateJobRequest{
 		JobName:      jobName,
 		CreationZone: creationZone,
 		Image:        imageId,

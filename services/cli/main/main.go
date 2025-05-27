@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/informatik-mannheim/cmg-ss2025.git"
+	"github.com/informatik-mannheim/cmg-ss2025.git/client"
 	"os"
 	"strings"
 )
@@ -156,7 +157,7 @@ func registerCommands() []Command {
 		}
 
 		// create the job once all checks have passed
-		cli.CreateJob(jobName, creationZone, containerImage, parameters)
+		client.CreateJob(jobName, creationZone, containerImage, parameters)
 		return nil
 	}
 	allCommands = append(allCommands, createJobCommand)
@@ -187,7 +188,7 @@ func registerCommands() []Command {
 			return nil
 		}
 		Id := getValue(args, "--id")
-		cli.GetJobById(Id)
+		client.GetJobById(Id)
 		fmt.Printf("Getting job by id %s\n", getValue(args, "--id"))
 		return nil
 	}
@@ -207,7 +208,7 @@ func registerCommands() []Command {
 			return nil
 		}
 		Id := getValue(args, "--id")
-		cli.GetJobOutcome(Id)
+		client.GetJobOutcome(Id)
 		fmt.Printf("Getting job outcome for job  %s\n", getValue(args, "--id"))
 		return nil
 	}
