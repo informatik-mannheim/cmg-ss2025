@@ -45,11 +45,6 @@ services:
     container_name: carbon-intensity-provider
     environment:
       - USE_LIVE=false
-      - TOKEN_GB=QNk1Rdt3g3GGEnbPCROu
-      - TOKEN_DE=MSUX5RJxZtdO2avdqoXY
-    volumes:
-      - ./zones.json:/app/zones.json
-      - ./zones_metadata.json:/app/zones_metadata.json
     expose:
       - 8080
     networks:
@@ -96,6 +91,4 @@ services:
 
 networks:
   private_network:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    
