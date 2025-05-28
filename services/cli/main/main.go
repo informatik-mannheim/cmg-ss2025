@@ -55,13 +55,6 @@ func parseParameters(paramsCsv string) map[string]string {
 	return result
 }
 
-func createJob(image_id string, job_name string, creation_zone string, parameters map[string]string) {
-	fmt.Printf("Creating job %s\n", job_name)
-	fmt.Println("Parameters: ", parameters)
-	fmt.Println("ImageId: ", image_id)
-	fmt.Println("Zone: ", creation_zone)
-}
-
 func printGeneralHelp() {
 	fmt.Println("COMMAND DESCRIPTION")
 	for _, command := range allCommands {
@@ -89,7 +82,6 @@ func contains(slice []string, value string) bool {
 
 func (c *Command) allRequiredArgumentsProvided(providedArgs []string) bool {
 	allArgumentsProvided := true
-	fmt.Println(providedArgs)
 	for param, required := range c.Parameters {
 		if required {
 			// handle missing required argument
@@ -145,10 +137,9 @@ func registerCommands() []Command {
 			Version: imageVersion,
 		}
 		jobName := getValue(args, "--job-name")
-		creationZone := "DE"
-		zoneValue := getValue(args, "--creation-zone")
-		if zoneValue != "NO_VALUE" {
-			creationZone = zoneValue
+		creationZone := getValue(args, "--creation-zone")
+		if creationZone == "NO_VALUE" {
+			creationZone = ""
 		}
 		parametersValue := getValue(args, "--parameters")
 		parameters := parseParameters(parametersValue)
@@ -253,9 +244,14 @@ func main() {
 				fmt.Print("> ")
 				continue
 			}
+			// check if the provided command exists
 			for _, command := range commands {
 				if command.Name == args[0] {
-					command.Execute(args[1:])
+					// execute the function associated with the provided command
+					err := command.Execute(args[1:])
+					if err != nil {
+						return
+					}
 				}
 			}
 		}

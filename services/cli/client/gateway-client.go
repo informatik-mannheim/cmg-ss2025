@@ -35,11 +35,12 @@ func CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, 
 	if err != nil {
 		log.Fatal("Error creating job", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
 
-	body, _ := io.ReadAll(resp.Body)
-	log.Println("Response status: ", resp.Status)
-	log.Println("Response body: ", string(body))
+		}
+	}(resp.Body)
 }
 
 func GetJobById(id string) {
@@ -49,11 +50,13 @@ func GetJobById(id string) {
 	if err != nil {
 		log.Fatal("Error getting job:", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
 
-	body, _ := io.ReadAll(resp.Body)
-	fmt.Println("Status:", resp.Status)
-	fmt.Println("Response:", string(body))
+		}
+	}(resp.Body)
+
 }
 
 func GetJobOutcome(id string) {
@@ -64,9 +67,11 @@ func GetJobOutcome(id string) {
 	if err != nil {
 		log.Fatal("Error getting job outcome:", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
 
-	body, _ := io.ReadAll(resp.Body)
-	fmt.Println("Status:", resp.Status)
-	fmt.Println("Response:", string(body))
+		}
+	}(resp.Body)
+
 }
