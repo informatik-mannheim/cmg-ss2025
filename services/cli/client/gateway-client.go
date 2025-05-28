@@ -76,7 +76,6 @@ func GetJobOutcome(id string) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
 		}
 	}(resp.Body)
 	body, _ := io.ReadAll(resp.Body)
