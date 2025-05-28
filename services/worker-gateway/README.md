@@ -40,7 +40,7 @@ As a container:
 curl -X POST -H "Content-Type: application/json" -d '{
   "id": "worker123",
   "key": "12345678",
-  "location": "DE"
+  "zone": "DE"
 }' http://localhost:8080/register
 ```
 

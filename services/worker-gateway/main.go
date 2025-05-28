@@ -35,7 +35,7 @@ func (t *testNotifier) UpdateJob(ctx context.Context, req ports.ResultRequest) e
 }
 
 func (t *testNotifier) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
-	log.Printf("[MOCK] RegisterWorker: %s (%s, %s)", req.ID, req.Key, req.Location)
+	log.Printf("[MOCK] RegisterWorker: (%s, %s)", req.Key, req.Zone)
 	return nil
 }
 
