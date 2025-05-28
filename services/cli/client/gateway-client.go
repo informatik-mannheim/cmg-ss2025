@@ -41,6 +41,10 @@ func CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, 
 
 		}
 	}(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Response:", string(body))
+
 }
 
 func GetJobById(id string) {
@@ -56,7 +60,9 @@ func GetJobById(id string) {
 
 		}
 	}(resp.Body)
-
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Response:", string(body))
 }
 
 func GetJobOutcome(id string) {
@@ -73,5 +79,8 @@ func GetJobOutcome(id string) {
 
 		}
 	}(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("Status:", resp.Status)
+	fmt.Println("Response:", string(body))
 
 }
