@@ -10,7 +10,4 @@ services:
       - USE_LIVE=false
       # If necessary, set the following environment variables
       # - CARBON_INTENSITY_API_KEY=your_api_key
-    volumes:
-      - ./zones.json:/app/zones.json
-      - ./zones_metadata.json:/app/zones_metadata.json
     restart: unless-stopped
