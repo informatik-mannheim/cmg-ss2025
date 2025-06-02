@@ -147,7 +147,7 @@ A sample JWT issued to an internal service using the Client Credentials flow:
 * **Endpoint:** `POST /login`
 * **Flow:** Resource Owner Password (for users) or Client Credentials (for services)
 * **Response:** JWT token with custom claims used for RBAC
-* **Type of Roles:** There exists consumer, provider and job_scheduler
+* **Type of Roles:** consumer / provider / job_scheduler
 
 ---
 
