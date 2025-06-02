@@ -29,9 +29,10 @@ A Bash script for managing Docker images in Azure Container Registry with easy p
 ## 🚀 Usage
 ```
 1 - Login to ACR          # Authenticates with your registry
-2 - Push image            # Tags and uploads a local image
-3 - Delete image          # Removes tags or purges entire repository
-4 - Exit
+2 - Push specific image   # Tags and uploads a local image
+3 - Push all images       # Pushes all images and tags them as `latest`
+4 - Delete image          # Removes tags or purges entire repository
+5 - Exit
 ```
 
 ## 🛠️ How It Works
@@ -39,7 +40,7 @@ A Bash script for managing Docker images in Azure Container Registry with easy p
 - Uses `az acr login` to authenticate Docker with your ACR
 - Required only once per session
 
-### 📤 Pushing Images
+### 📤 Pushing specific Images
 - Enter local image name (e.g., `cmg-ss2025-job-service`)
 - Target tag (e.g., `v1`)
 - Actions:
