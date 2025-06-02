@@ -14,6 +14,15 @@ import (
 var port string
 var AuthToken string
 
+type JobClient struct {
+	baseURL    string
+	httpClient *http.Client
+}
+
+func NewJobClient(baseURL string) *JobClient {
+	return &JobClient{baseURL: baseURL, httpClient: &http.Client{}}
+}
+
 func init() {
 	port = os.Getenv("PORT")
 	if port == "" {
@@ -21,7 +30,7 @@ func init() {
 	}
 }
 
-func CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, parameters map[string]string) {
+func (c *JobClient) CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, parameters map[string]string) {
 	request := cli.CreateJobRequest{
 		JobName:      jobName,
 		CreationZone: creationZone,
@@ -33,7 +42,7 @@ func CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, 
 		log.Fatal("Error creating job", err)
 	}
 
-	url := "http://localhost:" + port + "/jobs"
+	url := port + "/jobs"
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonRequest))
 	if err != nil {
@@ -60,8 +69,8 @@ func CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, 
 
 }
 
-func GetJobById(id string) {
-	url := fmt.Sprintf("http://localhost:%s/jobs/%s", port, id)
+func (c *JobClient) GetJobById(id string) {
+	url := fmt.Sprintf("%s/jobs/%s", c.baseURL, id)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -82,8 +91,8 @@ func GetJobById(id string) {
 	fmt.Println("Response:", string(body))
 }
 
-func GetJobOutcome(id string) {
-	url := fmt.Sprintf("http://localhost:%s/jobs/%s/outcome", port, id)
+func (c *JobClient) GetJobOutcome(id string) {
+	url := fmt.Sprintf("http://localhost:%s/jobs/%s/outcome", c.baseURL, id)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -105,8 +114,8 @@ func GetJobOutcome(id string) {
 
 }
 
-func Login(secret string) {
-	url := fmt.Sprintf("http://localhost:%s/auth/login", port)
+func (c *JobClient) Login(secret string) {
+	url := fmt.Sprintf("%s/auth/login", c.baseURL)
 
 	payload := map[string]string{
 		"secret": secret,
