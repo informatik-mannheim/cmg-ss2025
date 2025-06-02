@@ -102,7 +102,7 @@ We use **Auth0** as our centralized identity provider.
 
 #### b. **User Management Provider (Internal)**
 
-* The only service allowed to call the `/register` endpoint.
+* The only service allowed to call the `/login` endpoint.
 * Uses `client_credentials` flow to obtain JWT.
 * Role-based access ensures only the provider can manage users.
 
