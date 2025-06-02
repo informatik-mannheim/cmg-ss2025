@@ -75,80 +75,142 @@ Tag to delete: v1
 ✅ Deleted tag: my-app:v1
 ```
 
-Here’s a clean and structured README section based on your steps, titled **🔐 Using Azure Key Vault Secrets in Container Apps**:
+---
+
+## 🔐 Authentication & Secrets Overview
+
+This document outlines the authentication flows, JWT usage, registration restrictions, and secure secret handling for the Green Load Shifting Platform.
 
 ---
 
-## 🔐 Using Azure Key Vault Secrets in Container Apps
+### 1. ✅ Identity Provider
 
-Follow these steps to securely provide secrets from Azure Key Vault to your Container App using managed identity:
+We use **Auth0** as our centralized identity provider.
 
-### 1. Create and Add Secrets in Key Vault
-
-1. Go to your **Azure Key Vault** in the portal.
-2. Under **Objects → Secrets**, click **+ Generate/Import**.
-3. Provide:
-
-   * A **Name** for your secret.
-   * The **Value** (actual secret content).
-4. Click **Create**.
+* **Token URL:** `https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/oauth/token`
+* **Audience:** `https://green-load-shifting-platform/`
 
 ---
 
-### 2. Enable Managed Identity on Container App
+### 2. 🔁 Auth Flows
 
-1. Go to your **Container App** in the Azure portal.
-2. Navigate to **Security → Identity**.
-3. Under **System-assigned managed identity**, switch **Status** to **On**.
-4. Click **Save**.
+#### a. **Consumers (external users)**
 
-> ✅ This identity will be used to securely access the Key Vault without hardcoding credentials.
+* Not permitted to self-register.
+* Must contact the system admin for access.
+* Receive JWTs via internal issuance if authorized.
 
----
+#### b. **User Management Provider (Internal)**
 
-### 3. Assign Key Vault Access to the Managed Identity
+* The only service allowed to call the `/register` endpoint.
+* Uses `client_credentials` flow to obtain JWT.
+* Role-based access ensures only the provider can manage users.
 
-1. Go back to your **Key Vault**.
-2. Navigate to the **Secrets** section, click on the specific secret you want to share.
-3. On the left panel, go to **Access Control (IAM)**.
-4. Click **+ Add → Add role assignment**.
-5. Choose the role **Key Vault Secrets User**.
-6. Under **Assign access to**, select **Managed identity**.
-7. Click **+ Select members**, choose your **Container App’s managed identity**, and click **Select**.
-8. Save the role assignment.
+#### c. **Other Internal Services**
+
+* Use **client credentials** grant to authenticate.
+* Tokens are attached as `Authorization: Bearer <token>` in requests.
 
 ---
 
-### 4. Reference the Key Vault Secret in Container App
+### 3. 📦 JWT Payload Example
 
-1. In the **Container App**, go to **Security → Secrets**.
-2. Click **+ Add**.
+A sample JWT issued to an internal service using the Client Credentials flow:
+
+```json
+{
+  "https://green-load-shifting-platform/role": "dummy_role",
+  "https://green-load-shifting-platform/client_id": "QgXJrkSv5Z5dF8hc8wrfODv2VOHeWBj9",
+  "iss": "https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/",
+  "sub": "QgXJrkSv5Z5dF8hc8wrfODv2VOHeWBj9@clients",
+  "aud": "https://green-load-shifting-platform/",
+  "iat": 1746911116,
+  "exp": 1746997516,
+  "gty": "client-credentials",
+  "azp": "QgXJrkSv5Z5dF8hc8wrfODv2VOHeWBj9",
+  "permissions": []
+}
+```
+
+---
+
+### 4. 📝 User Registration
+
+* Only the **User Management Provider** is allowed to access the `/register` endpoint.
+* Manual onboarding: External users must **contact the administrator** to request access.
+* Unauthorized clients will be **rejected at gateway level**.
+
+---
+
+### 5. 🔐 JWT Issuance
+
+* **Endpoint:** `POST /login`
+* **Flow:** Resource Owner Password (for users) or Client Credentials (for services)
+* **Response:** JWT token with custom claims used for RBAC
+
+---
+
+### 6. 🧠 Secret Management with Azure Key Vault
+
+Secrets such as DB credentials, certificates, or external API keys are **never stored in code**. They are securely managed using Azure Key Vault and injected into container apps via managed identity.
+
+#### 🔑 Key Vault Setup
+
+1. Go to **Key Vault → Secrets → + Generate/Import**
+2. Add your secret name and value.
+3. Save the secret.
+
+#### 🆔 Enable Managed Identity
+
+1. Go to your **Container App → Security → Identity**
+2. Turn **System-assigned managed identity** to `On` and save.
+
+#### 🛡️ Assign Key Vault Permissions
+
+1. Go back to **Key Vault → Access Control (IAM)**
+2. **Add Role Assignment**
+
+   * Role: `Key Vault Secrets User`
+   * Assign access to: `Managed identity`
+   * Select the identity of your **Container App**
+
+#### 🔗 Link Secrets to Container App
+
+1. Go to **Container App → Security → Secrets → + Add**
+2. Set:
+
+   * **Name**: Internal reference key (e.g. `db-password`)
+   * **Type**: `Key Vault reference`
+   * **Key Vault Secret URI**: From your secret’s **Current Version**
+   * **Identity**: `System-assigned`
+3. Add the secret.
+
+#### 🌱 Use Secrets in Environment Variables
+
+1. Go to **Application → Containers**
+2. Scroll to **Environment Variables → + Add**
 3. Set:
 
-   * **Name** → a secret key name (used for referencing; not your final env var name).
-   * **Type** → Key Vault reference.
-   * **Key Vault Secret URI** → found in the Key Vault under your secret, click it, then copy the **Secret Identifier** (Current Version).
-   * **Identity** → select **System-assigned**.
-4. Click **Add**.
+   * **Name**: Final env var (e.g. `DB_PASSWORD`)
+   * **Value Source**: `Secret`
+   * **Value**: Select the secret key (e.g. `db-password`)
 
 ---
 
-### 5. Set Environment Variable for Container
+### 7. 📄 Summary Table
 
-1. Go to **Application → Containers** in your Container App.
-
-2. Scroll to **Environment variables**, click **+ Add**.
-
-3. Set:
-
-   * **Name** → the actual environment variable name your container app will use.
-   * **Value Source** → **Secret**.
-   * **Value** → select the secret key name you defined in step 4.
-
-4. Save the configuration.
+| Component          | Description                                                             |
+| ------------------ | ----------------------------------------------------------------------- |
+| Identity Provider  | Auth0 (`client_credentials` + resource owner password)                  |
+| JWT Role Mapping   | Custom claims under `https://green-load-shifting-platform/*` namespace  |
+| Registration Flow  | Only via internal provider; no public access                            |
+| JWT Auth           | All services authenticate using JWT headers                             |
+| Secret Management  | Azure Key Vault + system-assigned managed identity                      |
+| Secrets to Runtime | Secrets referenced in Container App → injected as environment variables |
 
 ---
 
+Let me know if you want this as a downloadable `.md` file or formatted for Swagger/OpenAPI annotations too!
 
 # List of approved packages
 
