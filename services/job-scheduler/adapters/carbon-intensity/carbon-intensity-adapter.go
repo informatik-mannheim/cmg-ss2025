@@ -25,7 +25,8 @@ func (adapter *CarbonIntensityAdapter) GetCarbonIntensities(zones []string) (mod
 	for _, zone := range zones {
 		endpoint := model.GetCarbonEndpoint(adapter.environments.CarbonIntensityProviderUrl, zone)
 
-		data, err := utils.GetRequest[model.CarbonIntensityData](endpoint)
+		// StatusCode is not relevant yet
+		data, _, err := utils.GetRequest[model.CarbonIntensityData](endpoint)
 		if err != nil {
 			return nil, err
 		}
