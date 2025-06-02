@@ -209,9 +209,6 @@ Secrets such as DB credentials, certificates, or external API keys are **never s
 | Secrets to Runtime | Secrets referenced in Container App → injected as environment variables |
 
 ---
-
-Let me know if you want this as a downloadable `.md` file or formatted for Swagger/OpenAPI annotations too!
-
 # List of approved packages
 
 | Package                              | Description                                  |
