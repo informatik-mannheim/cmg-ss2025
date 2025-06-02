@@ -112,7 +112,20 @@ func (c *Command) isMissingArguments(args []string) bool {
 }
 
 func registerCommands() []Command {
-	// Create Job Command
+
+	// Help command –––––––––––––––––––––––––––––––––––––––––
+	helpCommand := Command{
+		Name:        "help",
+		Description: "Show this help",
+		Parameters:  map[string]bool{},
+	}
+	helpCommand.Execute = func(args []string) error {
+		printGeneralHelp()
+		return nil
+	}
+	allCommands = append(allCommands, helpCommand)
+
+	// Create Job Command –––––––––––––––––––––––––––––––––––––––––
 	createJobCommand := Command{
 		Name:        "create-job",
 		Description: "Create a new job",
@@ -153,19 +166,7 @@ func registerCommands() []Command {
 	}
 	allCommands = append(allCommands, createJobCommand)
 
-	// Help command
-	helpCommand := Command{
-		Name:        "help",
-		Description: "Show this help",
-		Parameters:  map[string]bool{},
-	}
-	helpCommand.Execute = func(args []string) error {
-		printGeneralHelp()
-		return nil
-	}
-	allCommands = append(allCommands, helpCommand)
-
-	// Get job by its id
+	// Get job by its ID Command –––––––––––––––––––––––––––––––––––––––––
 	getJobByIdCommand := Command{
 		Name:        "get-job",
 		Description: "Get job by its id",
@@ -185,7 +186,7 @@ func registerCommands() []Command {
 	}
 	allCommands = append(allCommands, getJobByIdCommand)
 
-	// Get the outcome of job
+	// Get the outcome of job Command –––––––––––––––––––––––––––––––––––––––––
 	getJobOutcomeCommand := Command{
 		Name:        "get-job-outcome",
 		Description: "Get job outcome",
@@ -204,6 +205,25 @@ func registerCommands() []Command {
 		return nil
 	}
 	allCommands = append(allCommands, getJobOutcomeCommand)
+
+	loginCommand := Command{
+		Name:        "login",
+		Description: "Log in by providing a secret",
+		Parameters: map[string]bool{
+			"--secret": true,
+		},
+		ParamOrder: []string{"--secret"},
+	}
+	loginCommand.Execute = func(args []string) error {
+		if loginCommand.isMissingArguments(args) {
+			return nil
+		}
+		secret := getValue(args, "--secret")
+		client.Login(secret)
+		return nil
+	}
+
+	allCommands = append(allCommands, loginCommand)
 	return allCommands
 }
 
@@ -230,7 +250,7 @@ func printHelp(arg string) {
 
 }
 
-func main() {
+func buildCLI() {
 	commands := registerCommands()
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
@@ -254,5 +274,9 @@ func main() {
 		}
 		fmt.Print("> ")
 	}
+}
+
+func main() {
+	buildCLI()
 
 }
