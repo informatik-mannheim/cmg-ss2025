@@ -22,7 +22,8 @@ func (adapter *WorkerAdapter) GetWorkers() (model.GetWorkersResponse, error) {
 	// For now its kept simple and return an error as soon as it gets one, changes in Phase 3
 	endpoint := model.GetWorkersEndpoint(adapter.environments.WorkerRegestryUrl)
 
-	data, err := utils.GetRequest[model.GetWorkersResponse](endpoint)
+	// StatusCode is not relevant yet
+	data, _, err := utils.GetRequest[model.GetWorkersResponse](endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,8 @@ func (adapter *WorkerAdapter) AssignWorker(update ports.UpdateWorker) error {
 		WorkerStatus: model.WorkerStatusRunning,
 	}
 
-	_, err := utils.PutRequest[model.UpdateWorkerPayload, model.UpdateWorkerResponse](endpoint, payload)
+	// StatusCode is not relevant yet
+	_, _, err := utils.PutRequest[model.UpdateWorkerPayload, model.UpdateWorkerResponse](endpoint, payload)
 	if err != nil {
 		return err
 	}
