@@ -9,7 +9,7 @@ services:
       - jaeger
 
   jaeger:
-    image: jaegertracing/jaeger:2.6.0
+    image: jaegertracing/all-in-one:latest
     ports:
       - "16686:16686" # Jaeger UI
       - "4318:4318" # OTLP HTTP receiver
