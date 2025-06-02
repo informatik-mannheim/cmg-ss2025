@@ -7,3 +7,8 @@ type Consumer struct {
 	StringProp string
 }
 type JobStatus string
+
+type ContainerImage struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
