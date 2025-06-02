@@ -24,7 +24,8 @@ func (adapter *JobAdapter) GetJobs() (model.GetJobsResponse, error) {
 	// For now its kept simple and return an error as soon as it gets one, changes in Phase 3
 	endpoint := model.GetJobsEndpoint(adapter.environments.JobServiceUrl)
 
-	data, err := utils.GetRequest[model.GetJobsResponse](endpoint)
+	// StatusCode is not relevant yet
+	data, _, err := utils.GetRequest[model.GetJobsResponse](endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get jobs: %w", err)
 	}
@@ -44,7 +45,8 @@ func (adapter *JobAdapter) AssignJob(update ports.UpdateJob) error {
 		Status:          model.JobStatusScheduled, // Hardcoded because nothing else is possible
 	}
 
-	_, err := utils.PatchRequest[model.UpdateJobPayload, model.UpdateJobResponse](endpoint, payload)
+	// StatusCode is not relevant yet
+	_, _, err := utils.PatchRequest[model.UpdateJobPayload, model.UpdateJobResponse](endpoint, payload)
 	if err != nil {
 		return fmt.Errorf("failed to assign job: %w", err)
 	}
