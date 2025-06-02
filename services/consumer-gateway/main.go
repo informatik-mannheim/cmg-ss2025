@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/auth"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +20,10 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-
+	err := auth.InitJWKS("https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json")
+	if err != nil {
+		log.Fatalf("Failed to initialize JWKS: %v", err)
+	}
 
 	// set port manually with "export PORT"
 	job := jobclient.NewJobClient("http://job:" + port)
@@ -33,8 +37,8 @@ func main() {
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
 
-	mux.HandleFunc("/jobs", handler.HandleCreateJobRequest)
-	mux.HandleFunc("jobs/{id}/result", handler.HandleGetJobOutcomeRequest)
+	mux.Handle("/jobs", auth.AuthMiddleware(http.HandlerFunc(handler.HandleCreateJobRequest)))
+	mux.Handle("jobs/{id}/result", auth.AuthMiddleware(http.HandlerFunc(handler.HandleGetJobOutcomeRequest)))
 	mux.HandleFunc("/auth/login", handler.HandleLoginRequest)
 
 	go func() {
@@ -49,10 +53,9 @@ func main() {
 		}
 	}()
 
-
 	log.Print("listening on port " + port + " ...")
 
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		return
 	}
