@@ -10,14 +10,14 @@ var ErrBadRequest = errors.New("bad Request")
 var ErrInvalidInput = errors.New("invalid Input")
 
 type CreateJobRequest struct {
-	ImageID      string            `json:"image_id"`
-	JobName      string            `json:"job_name"`
-	CreationZone string            `json:"creation_zone"`
+	JobName      string            `json:"jobName"`
+	CreationZone string            `json:"creationZone"`
+	ImageID      ContainerImage    `json:"image"`
 	Parameters   map[string]string `json:"parameters"`
 }
 
 type CreateJobResponse struct {
-	ImageID      string            `json:"image_id"`
+	Image        string            `json:"image_id"`
 	JobName      string            `json:"job_name"`
 	CreationZone string            `json:"creation_zone"`
 	Parameters   map[string]string `json:"parameters"`
