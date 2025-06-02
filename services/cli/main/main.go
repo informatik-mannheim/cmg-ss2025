@@ -187,7 +187,7 @@ func registerCommands() []Command {
 
 	// Get the outcome of job
 	getJobOutcomeCommand := Command{
-		Name:        "get-job",
+		Name:        "get-job-outcome",
 		Description: "Get job outcome",
 		Parameters: map[string]bool{
 			"--id": true,
@@ -248,10 +248,7 @@ func main() {
 			for _, command := range commands {
 				if command.Name == args[0] {
 					// execute the function associated with the provided command
-					err := command.Execute(args[1:])
-					if err != nil {
-						return
-					}
+					command.Execute(args[1:])
 				}
 			}
 		}
