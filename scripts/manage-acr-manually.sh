@@ -99,7 +99,7 @@ while true; do
     echo "3 - Push all images (tagged as latest)"
     echo "4 - Delete image"
     echo "5 - Exit"
-    read -p "Choose action (1-4): " CHOICE
+    read -p "Choose action (1-5): " CHOICE
 
     case $CHOICE in
         1) login_to_acr ;;
