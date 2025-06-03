@@ -2,11 +2,24 @@
 
 Cloud-native Microservices mit Go - SoSe 2025
 
-## Azure Container Registry (ACR) Management Script
+## Deploy to Azure Container Apps
 
-A Bash script for managing Docker images in Azure Container Registry with easy push/delete operations.
+The script `/scripts/deploy-to-aca.sh` was created to deploy the newest images to the Azure Container Apps automatically.
 
-## 🛠️ Prerequisites
+## Execution
+1. Navigate from root to `/scripts`
+
+2. Make file executable:
+   ```bash
+   chmod +x deploy-to-aca.sh
+   ``` 
+
+3. Execute file:
+   ```bash
+    ./deploy-to-aca.sh
+   ```
+
+## Prerequisites
 1. **Azure CLI** installed and configured:
    ```bash
    az login
@@ -14,19 +27,40 @@ A Bash script for managing Docker images in Azure Container Registry with easy p
 2. **Docker** installed and Docker Daemon running
 3. **Permissions** to access the ACR (Contributor or Owner Role). To do so you have to be added to the azure resource group by authority.
 
-## 📥 Execution
+## How It Works
+1. Uses `az acr login` to authenticate Docker with your ACR
+2. Builds all images
+3. Pushes images to the Azure Container Registry if they aren't up to date and tags images with version `latest`
+4. Updates all App Containers with the newest image from the Azure Container Registry
 
-1. Make it executable:
+---
+
+## Azure Container Registry (ACR) Management Script
+
+The script `/scripts/manage-acr-manually.sh` was created to manually configure the Azure Container Registry.
+
+## Prerequisites
+1. **Azure CLI** installed and configured:
    ```bash
-   chmod +x acr_manager.sh
+   az login
+   ```
+2. **Docker** installed and Docker Daemon running
+3. **Permissions** to access the ACR (Contributor or Owner Role). To do so you have to be added to the azure resource group by authority.
+
+## Execution
+1. Navigate from root to `/scripts`
+
+2. Make it executable:
+   ```bash
+   chmod +x manage-acr-manually.sh
    ``` 
 
-2. Execute from **project root**:
+3. Execute:
    ```bash
-    ./acr_manager.sh
+    ./acr_manamanage-acr-manuallyger.sh
    ```
 
-## 🚀 Usage
+## Usage
 ```
 1 - Login to ACR          # Authenticates with your registry
 2 - Push specific image   # Tags and uploads a local image
@@ -35,12 +69,12 @@ A Bash script for managing Docker images in Azure Container Registry with easy p
 5 - Exit
 ```
 
-## 🛠️ How It Works
-### 🔐 Authentication
+## How It Works
+### Authentication
 - Uses `az acr login` to authenticate Docker with your ACR
 - Required only once per session
 
-### 📤 Pushing specific Images
+### Pushing specific Images
 - Enter local image name (e.g., `cmg-ss2025-job-service`)
 - Target tag (e.g., `v1`)
 - Actions:
@@ -49,14 +83,14 @@ A Bash script for managing Docker images in Azure Container Registry with easy p
    docker push cmgss2025.azurecr.io/my-app:v1
    ``` 
 
-### 🗑️ Deleting Images
+### Deleting Images
 1. Safe Workflow:
     - First lists all existing tags
     - Chose between:
         - Single tag deletion (`untag`)
         - Full purge (`--purge`) with confirmation
 
-## 📋 Examples
+## Examples
 ### Push an Image:
 ```bash
 $ ./acr_manager.sh
