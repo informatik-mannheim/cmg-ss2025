@@ -21,8 +21,6 @@ func main() {
 	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
 	service := core.NewWorkerRegistryService(repository, notifier, zoneClient)
 
-	CreateDummyWorkers(*service)
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -44,10 +42,4 @@ func main() {
 	log.Print("listening...")
 	srv.ListenAndServe()
 	log.Print("Done")
-}
-
-// Preload fixed workers manually as test(for Assignment II)
-func CreateDummyWorkers(service core.WorkerRegistryService) {
-	service.CreateWorker("DE", context.Background())
-	service.CreateWorker("EN", context.Background())
 }
