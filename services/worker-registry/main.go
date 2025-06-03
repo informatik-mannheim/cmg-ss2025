@@ -8,18 +8,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
-	validator "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/zone-validator"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
 )
 
 func main() {
 	repository := repo.NewRepo()
 	notifier := notifier.NewNotifier()
-	zoneValidator := validator.NewZoneValidator()
-	service := core.NewWorkerRegistryService(repository, notifier, zoneValidator)
+	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
+	service := core.NewWorkerRegistryService(repository, notifier, zoneClient)
 
 	CreateDummyWorkers(*service)
 
