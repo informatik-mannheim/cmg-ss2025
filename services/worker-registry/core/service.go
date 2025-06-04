@@ -8,16 +8,16 @@ import (
 )
 
 type WorkerRegistryService struct {
-	repo          ports.Repo
-	notifier      ports.Notifier
-	zoneValidator ports.ZoneValidator
+	repo       ports.Repo
+	notifier   ports.Notifier
+	zoneClient ports.ZoneClient
 }
 
-func NewWorkerRegistryService(repo ports.Repo, notifier ports.Notifier, validator ports.ZoneValidator) *WorkerRegistryService {
+func NewWorkerRegistryService(repo ports.Repo, notifier ports.Notifier, zoneClient ports.ZoneClient) *WorkerRegistryService {
 	return &WorkerRegistryService{
-		repo:          repo,
-		notifier:      notifier,
-		zoneValidator: validator,
+		repo:       repo,
+		notifier:   notifier,
+		zoneClient: zoneClient,
 	}
 }
 
@@ -32,7 +32,7 @@ func (s *WorkerRegistryService) GetWorkerById(id string, ctx context.Context) (p
 }
 
 func (s *WorkerRegistryService) CreateWorker(zone string, ctx context.Context) (ports.Worker, error) {
-	if !s.zoneValidator.IsValidZone(zone, ctx) {
+	if !s.zoneClient.IsValidZone(zone, ctx) {
 		return ports.Worker{}, ports.NewErrCreatingWorkerFailedInvalidZone(zone)
 	}
 

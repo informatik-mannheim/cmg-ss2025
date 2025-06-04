@@ -8,20 +8,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
-	validator "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/zone-validator"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
 )
 
 func main() {
 	repository := repo.NewRepo()
 	notifier := notifier.NewNotifier()
-	zoneValidator := validator.NewZoneValidator()
-	service := core.NewWorkerRegistryService(repository, notifier, zoneValidator)
-
-	CreateDummyWorkers(*service)
+	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
+	service := core.NewWorkerRegistryService(repository, notifier, zoneClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -44,10 +42,4 @@ func main() {
 	log.Print("listening...")
 	srv.ListenAndServe()
 	log.Print("Done")
-}
-
-// Preload fixed workers manually as test(for Assignment II)
-func CreateDummyWorkers(service core.WorkerRegistryService) {
-	service.CreateWorker("DE", context.Background())
-	service.CreateWorker("EN", context.Background())
 }
