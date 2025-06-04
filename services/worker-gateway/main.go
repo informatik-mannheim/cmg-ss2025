@@ -11,33 +11,7 @@ import (
 	client_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
 )
-
-type testNotifier struct{}
-
-func (t *testNotifier) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
-	log.Printf("[MOCK] UpdateWorkerStatus: %s -> %s", req.WorkerID, req.Status)
-	return nil
-}
-
-func (t *testNotifier) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error) {
-	log.Println("[MOCK] FetchScheduledJobs called")
-	return []ports.Job{
-		{ID: "job1", Status: "SCHEDULED"},
-		{ID: "job2", Status: "SCHEDULED"},
-	}, nil
-}
-
-func (t *testNotifier) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
-	log.Printf("[MOCK] UpdateJob: %s -> %s (%s)", req.JobID, req.Status, req.Result)
-	return nil
-}
-
-func (t *testNotifier) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
-	log.Printf("[MOCK] RegisterWorker: (%s, %s)", req.Key, req.Zone)
-	return nil
-}
 
 func main() {
 
