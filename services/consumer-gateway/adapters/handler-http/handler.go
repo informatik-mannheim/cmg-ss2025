@@ -1,6 +1,7 @@
 package handler_http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -45,12 +46,13 @@ func (h *Handler) HandleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp, err := h.job.CreateJob(r.Context(), req)
+	ctx := context.WithValue(r.Context(), "Authorization", r.Header.Get("Authorization"))
+
+	resp, err := h.job.CreateJob(ctx, req)
 	if err != nil {
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
@@ -64,7 +66,9 @@ func (h *Handler) HandleGetJobOutcomeRequest(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	jobID := vars["job-id"] // "jobID" : "123-abc"
 
-	status, err := h.job.GetJobOutcome(r.Context(), jobID)
+	ctx := context.WithValue(r.Context(), "Authorization", r.Header.Get("Authorization"))
+
+	status, err := h.job.GetJobOutcome(ctx, jobID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -31,7 +31,12 @@ func (c *JobClient) CreateJob(ctx context.Context, req ports.CreateJobRequest) (
 	if err != nil {
 		return ports.CreateJobResponse{}, err
 	}
+
 	httpReq.Header.Set("Content-Type", "application/json")
+
+	if auth, ok := ctx.Value("Authorization").(string); ok && auth != "" {
+		httpReq.Header.Set("Authorization", auth)
+	}
 
 	resp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
@@ -62,6 +67,10 @@ func (c *JobClient) GetJobOutcome(ctx context.Context, jobID string) (ports.JobO
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return ports.JobOutcomeResponse{}, err
+	}
+
+	if auth, ok := ctx.Value("Authorization").(string); ok && auth != "" {
+		httpReq.Header.Set("Authorization", auth)
 	}
 
 	resp, err := http.DefaultClient.Do(httpReq)
