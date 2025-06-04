@@ -89,6 +89,14 @@ services:
       - private_network
     restart: unless-stopped
 
+  jaeger:
+    image: jaegertracing/jaeger:latest
+    networks:
+      - private_network
+    expose:
+      - 4318 # OTLP HTTP receiver
+    ports:
+      - "16686:16686" # Jaeger UI
+
 networks:
   private_network:
-    
