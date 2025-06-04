@@ -13,10 +13,22 @@ This service has no API.
 
 - `adapter/`: Handles HTTP Requests and contains the repository implementation for the in-memory-database.
 - `core/`: Implements the logic for the `JobScheduler`
-- `model/`: Contains all the data structures needed for `JobScheduler`
-- `ports/`: Defines the `JobScheduler` interface as well as the `Adapter` interfaces
+- `ports/`: Defines the `JobScheduler` interface as well as the `Adapter` interfaces and all required models.
 - `utils/`: Contains some utility functions to make life easier
 - `main.go`: Wires everything and starts the server
+
+---
+
+# Environment Variables
+
+This services uses the following environmentvariables:
+
+| NAME                      | Required | Type   |
+| ------------------------- | -------- | ------ |
+| JOB_SCHEDULER_INTERVAL    | false    | Number |
+| WORKER_REGISTRY           | true     | URL    |
+| JOB_SERVICE               | true     | URL    |
+| CARBON_INTENSITY_PROVIDER | true     | URL    |
 
 ---
 
