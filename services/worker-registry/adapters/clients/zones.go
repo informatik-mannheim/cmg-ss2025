@@ -34,6 +34,15 @@ func NewZoneClient(baseURL string) *ZoneClient {
 	go func() {
 		ctx := context.Background()
 		sleepStr := os.Getenv("CARBON_INTENSITY_PROVIDER_INTERVAL")
+		sleepSec := 60
+
+		if sleepStr != "" {
+			if parsed, err := strconv.Atoi(sleepStr); err == nil {
+				sleepSec = parsed
+			} else {
+				fmt.Println("Invalid sleep interval, using default 60s:", err)
+			}
+		}
 
 		for {
 			resp, err := client.GetZones(ctx)
@@ -43,16 +52,6 @@ func NewZoneClient(baseURL string) *ZoneClient {
 				return
 			}
 			fmt.Println("Fetching zones failed...", err)
-			sleepSec := 60
-
-			if sleepStr != "" {
-				if parsed, err := strconv.Atoi(sleepStr); err == nil {
-					sleepSec = parsed
-				} else {
-					fmt.Println("Invalid sleep interval, using default 60s:", err)
-				}
-			}
-
 			time.Sleep(time.Duration(sleepSec) * time.Second)
 		}
 	}()
