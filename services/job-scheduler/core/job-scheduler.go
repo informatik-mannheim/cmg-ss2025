@@ -13,7 +13,6 @@ type JobSchedulerService struct {
 	JobAdapter             ports.JobAdapter
 	WorkerAdapter          ports.WorkerAdapter
 	CarbonIntensityAdapter ports.CarbonIntensityAdapter
-	Notifier               ports.Notifier
 }
 
 var _ ports.JobScheduler = (*JobSchedulerService)(nil)
@@ -22,13 +21,11 @@ func NewJobSchedulerService(
 	jobAdapter ports.JobAdapter,
 	workerAdapter ports.WorkerAdapter,
 	carbonIntensityAdapter ports.CarbonIntensityAdapter,
-	notifier ports.Notifier,
 ) *JobSchedulerService {
 	return &JobSchedulerService{
 		JobAdapter:             jobAdapter,
 		WorkerAdapter:          workerAdapter,
 		CarbonIntensityAdapter: carbonIntensityAdapter,
-		Notifier:               notifier,
 	}
 }
 
@@ -121,15 +118,6 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 		err = js.WorkerAdapter.AssignWorker(workerUpdate)
 		if err != nil {
 			log.Printf("Error updating worker: %v\n", err)
-			if err2 := js.Notifier.NotifyWorkerAssignmentFailed(job.ID, job.WorkerID); err2 != nil {
-				log.Printf("Error notifying worker assignment failed: %v\n", err)
-				return err2
-			}
-			return err
-		}
-		err = js.Notifier.NotifyAssignment(job.ID, job.WorkerID)
-		if err != nil {
-			log.Printf("Error notifying assignment: %v\n", err)
 			return err
 		}
 	}
@@ -152,10 +140,6 @@ func (js *JobSchedulerService) reassignWorkers(jobs []model.Job) ([]model.Job, e
 			continue
 		}
 
-		if err := js.Notifier.NotifyAssignmentCorrection(job.ID, uuid); err != nil {
-			log.Printf("Error notifying assignment correction: %v\n", err)
-			return nil, err
-		}
 	}
 
 	return unassignedJobs, nil
