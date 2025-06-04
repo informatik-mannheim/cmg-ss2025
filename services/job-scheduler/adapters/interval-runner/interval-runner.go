@@ -42,7 +42,13 @@ func (ir *IntervalRunner) RunScheduleJob() {
 			} else {
 				resp.Body.Close()
 			}
-			time.Sleep(duration)
+			select {
+			case <-ir.ctx.Done():
+				log.Println("Scheduler stopped.")
+				return
+			case <-time.After(duration):
+				// continue to next iteration
+			}
 		}
 	}
 }
