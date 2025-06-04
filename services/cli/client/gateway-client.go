@@ -22,7 +22,6 @@ type GatewayClient struct {
 
 func NewGatewayClient(baseURL string) *GatewayClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	fmt.Println("Creating gateway client with url: " + baseURL)
 	return &GatewayClient{baseURL: baseURL, httpClient: &http.Client{}}
 }
 
