@@ -1,7 +1,13 @@
 package ports
 
-import "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
+type CarbonIntensityData struct {
+	Zone            string  `json:"zone"`
+	CarbonIntensity float64 `json:"carbonIntensity"`
+}
+
+// CarbonIntensityResponse is the response from the carbon intensity provider
+type CarbonIntensityResponse []CarbonIntensityData
 
 type CarbonIntensityAdapter interface {
-	GetCarbonIntensities(zones []string) (model.CarbonIntensityResponse, error)
+	GetCarbonIntensities(zones []string) (CarbonIntensityResponse, error)
 }

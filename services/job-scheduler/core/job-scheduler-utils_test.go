@@ -7,7 +7,6 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/job"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/worker"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
 )
@@ -21,14 +20,14 @@ func TestGetAlreadyAssigned(t *testing.T) {
 	if len(result) != 0 {
 		t.Errorf("Expected 0 already assigned workers, got %d", len(result))
 	}
-	result = core.GetAlreadyAssigned([]model.Job{}, []model.Worker{})
+	result = core.GetAlreadyAssigned([]ports.Job{}, []ports.Worker{})
 	if len(result) != 0 {
 		t.Errorf("Expected 0 already assigned workers, got %d", len(result))
 	}
 
 	alreadyAssigned := core.GetAlreadyAssigned(mockJobs, mockWorkers)
 
-	expectedAssigned := []model.Job{
+	expectedAssigned := []ports.Job{
 		mockJobs[4],
 	}
 
@@ -56,7 +55,7 @@ func TestGetAllUnassigned(t *testing.T) {
 		t.Errorf("Expected 0 unassigned workers, got %d", len(resultWorkers))
 	}
 
-	resultJobs, resultWorkers = core.GetAllUnassigned([]model.Job{}, []model.Job{}, []model.Worker{})
+	resultJobs, resultWorkers = core.GetAllUnassigned([]ports.Job{}, []ports.Job{}, []ports.Worker{})
 	if len(resultJobs) != 0 {
 		t.Errorf("Expected 0 unassigned jobs, got %d", len(resultJobs))
 	}
@@ -64,7 +63,7 @@ func TestGetAllUnassigned(t *testing.T) {
 		t.Errorf("Expected 0 unassigned workers, got %d", len(resultWorkers))
 	}
 
-	notAssigned := []model.Job{
+	notAssigned := []ports.Job{
 		mockJobs[0],
 	}
 	unassignedJobs, unassignedWorkers := core.GetAllUnassigned(mockJobs, notAssigned, mockWorkers)
@@ -76,13 +75,13 @@ func TestGetAllUnassigned(t *testing.T) {
 		t.Errorf("Expected 4 unassigned workers, got %d", len(unassignedWorkers))
 	}
 
-	expectedUnassignedJobs := []model.Job{
+	expectedUnassignedJobs := []ports.Job{
 		mockJobs[0],
 		mockJobs[1],
 		mockJobs[2],
 		mockJobs[3],
 	}
-	expectedUnassignedWorkers := []model.Worker{
+	expectedUnassignedWorkers := []ports.Worker{
 		mockWorkers[0],
 		mockWorkers[2],
 		mockWorkers[3],
@@ -110,7 +109,7 @@ func TestGetCarbonZones(t *testing.T) {
 	if len(result) != 0 {
 		t.Errorf("Expected 0 carbon zones, got %d", len(result))
 	}
-	result = core.GetCarbonZones([]model.Job{}, []model.Worker{})
+	result = core.GetCarbonZones([]ports.Job{}, []ports.Worker{})
 	if len(result) != 0 {
 		t.Errorf("Expected 0 carbon zones, got %d", len(result))
 	}
@@ -143,14 +142,14 @@ func TestSortCarbonData(t *testing.T) {
 	if len(result) != 0 {
 		t.Errorf("Expected 0 carbon data, got %d", len(result))
 	}
-	result = core.SortCabonData([]model.CarbonIntensityData{})
+	result = core.SortCabonData([]ports.CarbonIntensityData{})
 	if len(result) != 0 {
 		t.Errorf("Expected 0 carbon data, got %d", len(result))
 	}
 
 	result = core.SortCabonData(mockZones)
 
-	expectedZones := []model.CarbonIntensityData{
+	expectedZones := []ports.CarbonIntensityData{
 		mockZones[4],
 		mockZones[1],
 		mockZones[3],
@@ -188,7 +187,7 @@ func TestPrepareDistributionData(t *testing.T) {
 		t.Errorf("Expected 0 carbons, got %d", len(resultCarbons))
 	}
 
-	resultJobs, resultWorkers, resultCarbons = core.PrepareDistributionData([]model.Job{}, []model.Worker{}, []model.CarbonIntensityData{})
+	resultJobs, resultWorkers, resultCarbons = core.PrepareDistributionData([]ports.Job{}, []ports.Worker{}, []ports.CarbonIntensityData{})
 	if len(resultJobs) != 0 {
 		t.Errorf("Expected 0 jobs, got %d", len(resultJobs))
 	}
@@ -213,14 +212,14 @@ func TestPrepareDistributionData(t *testing.T) {
 		t.Errorf("Expected 5 carbons, got %d", len(resultCarbons))
 	}
 
-	expectedJobs := []model.Job{
+	expectedJobs := []ports.Job{
 		mockJobs[1],
 		mockJobs[4],
 		mockJobs[2],
 		mockJobs[0],
 		mockJobs[3],
 	}
-	expectedWorkers := []model.Worker{
+	expectedWorkers := []ports.Worker{
 		mockWorkers[1],
 		mockWorkers[4],
 		mockWorkers[2],
@@ -265,12 +264,12 @@ func TestDistributeJobs(t *testing.T) {
 	if len(result) != 0 {
 		t.Errorf("Expected 0 job updates, got %d", len(result))
 	}
-	result = core.DistributeJobs([]model.Job{}, []model.Worker{}, []model.CarbonIntensityData{})
+	result = core.DistributeJobs([]ports.Job{}, []ports.Worker{}, []ports.CarbonIntensityData{})
 	if len(result) != 0 {
 		t.Errorf("Expected 0 job updates, got %d", len(result))
 	}
 
-	unassignedJob := []model.Job{mockJobs[0]}
+	unassignedJob := []ports.Job{mockJobs[0]}
 	unassignedJobs, unassignedWorkers := core.GetAllUnassigned(mockJobs, unassignedJob, mockWorkers)
 
 	result = core.DistributeJobs(unassignedJobs, unassignedWorkers, mockCarbons)

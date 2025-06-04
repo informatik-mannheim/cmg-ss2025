@@ -1,29 +1,46 @@
 package worker
 
 import (
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
+	"fmt"
+	"net/url"
+
+	"github.com/google/uuid"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
 )
 
+func PutWorkerStatusEndpoint(base string, id uuid.UUID) string {
+	return fmt.Sprintf("%s/workers/%s/status", base, id)
+}
+
+func GetWorkersEndpoint(base string) string {
+	baseUrl := fmt.Sprintf("%s/workers", base)
+
+	params := url.Values{}
+	params.Add("status", string(ports.WorkerStatusAvailable))
+
+	fullUrl := baseUrl + "?" + params.Encode()
+	return fullUrl
+}
+
 type WorkerAdapter struct {
-	environments model.Environments
+	baseUrl string
 }
 
 var _ ports.WorkerAdapter = (*WorkerAdapter)(nil)
 
-func NewWorkerAdapter(environments model.Environments) *WorkerAdapter {
+func NewWorkerAdapter(baseUrl string) *WorkerAdapter {
 	return &WorkerAdapter{
-		environments: environments,
+		baseUrl: baseUrl,
 	}
 }
 
-func (adapter *WorkerAdapter) GetWorkers() (model.GetWorkersResponse, error) {
+func (adapter *WorkerAdapter) GetWorkers() (ports.GetWorkersResponse, error) {
 	// For now its kept simple and return an error as soon as it gets one, changes in Phase 3
-	endpoint := model.GetWorkersEndpoint(adapter.environments.WorkerRegestryUrl)
+	endpoint := GetWorkersEndpoint(adapter.baseUrl)
 
 	// StatusCode is not relevant yet
-	data, _, err := utils.GetRequest[model.GetWorkersResponse](endpoint)
+	data, _, err := utils.GetRequest[ports.GetWorkersResponse](endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -33,14 +50,14 @@ func (adapter *WorkerAdapter) GetWorkers() (model.GetWorkersResponse, error) {
 
 func (adapter *WorkerAdapter) AssignWorker(update ports.UpdateWorker) error {
 	// For now its kept simple and return an error as soon as it gets one, changes in Phase 3
-	endpoint := model.PutWorkerStatusEndpoint(adapter.environments.WorkerRegestryUrl, update.ID)
+	endpoint := PutWorkerStatusEndpoint(adapter.baseUrl, update.ID)
 
-	payload := model.UpdateWorkerPayload{
-		WorkerStatus: model.WorkerStatusRunning,
+	payload := ports.UpdateWorkerPayload{
+		WorkerStatus: ports.WorkerStatusRunning,
 	}
 
 	// StatusCode is not relevant yet
-	_, _, err := utils.PutRequest[model.UpdateWorkerPayload, model.UpdateWorkerResponse](endpoint, payload)
+	_, _, err := utils.PutRequest[ports.UpdateWorkerPayload, ports.UpdateWorkerResponse](endpoint, payload)
 	if err != nil {
 		return err
 	}

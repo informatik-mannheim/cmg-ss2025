@@ -3,7 +3,6 @@ package worker
 import (
 	"fmt"
 
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 )
 
@@ -23,12 +22,12 @@ func NewWorkerAdapterMock(shouldGetWorkersFail, shouldGetWorkersEmpty, shouldAss
 	}
 }
 
-func (adapter *WorkerAdapterMock) GetWorkers() (model.GetWorkersResponse, error) {
+func (adapter *WorkerAdapterMock) GetWorkers() (ports.GetWorkersResponse, error) {
 	if adapter.shouldGetWorkersFail {
 		return nil, fmt.Errorf("some worker get error")
 	}
 	if adapter.shouldGetWorkersEmpty {
-		return model.GetWorkersResponse{}, nil
+		return ports.GetWorkersResponse{}, nil
 	}
 	return MockWorkers, nil
 }
