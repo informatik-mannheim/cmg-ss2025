@@ -9,18 +9,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var port string
 var AuthToken string
 
-type JobClient struct {
+type GatewayClient struct {
 	baseURL    string
 	httpClient *http.Client
 }
 
-func NewJobClient(baseURL string) *JobClient {
-	return &JobClient{baseURL: baseURL, httpClient: &http.Client{}}
+func NewGatewayClient(baseURL string) *GatewayClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	fmt.Println("Creating gateway client with url: " + baseURL)
+	return &GatewayClient{baseURL: baseURL, httpClient: &http.Client{}}
 }
 
 func init() {
@@ -30,7 +33,7 @@ func init() {
 	}
 }
 
-func (c *JobClient) CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, parameters map[string]string) {
+func (c *GatewayClient) CreateJob(jobName string, creationZone string, imageId cli.ContainerImage, parameters map[string]string) {
 	request := cli.CreateJobRequest{
 		JobName:      jobName,
 		CreationZone: creationZone,
@@ -42,7 +45,7 @@ func (c *JobClient) CreateJob(jobName string, creationZone string, imageId cli.C
 		log.Fatal("Error creating job", err)
 	}
 
-	url := port + "/jobs"
+	url := c.baseURL + ":" + port + "/jobs"
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonRequest))
 	if err != nil {
@@ -69,7 +72,7 @@ func (c *JobClient) CreateJob(jobName string, creationZone string, imageId cli.C
 
 }
 
-func (c *JobClient) GetJobById(id string) {
+func (c *GatewayClient) GetJobById(id string) {
 	url := fmt.Sprintf("%s/jobs/%s", c.baseURL, id)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -91,8 +94,8 @@ func (c *JobClient) GetJobById(id string) {
 	fmt.Println("Response:", string(body))
 }
 
-func (c *JobClient) GetJobOutcome(id string) {
-	url := fmt.Sprintf("http://localhost:%s/jobs/%s/outcome", c.baseURL, id)
+func (c *GatewayClient) GetJobOutcome(id string) {
+	url := fmt.Sprintf("%s/jobs/%s/outcome", c.baseURL, id)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -114,8 +117,8 @@ func (c *JobClient) GetJobOutcome(id string) {
 
 }
 
-func (c *JobClient) Login(secret string) {
-	url := fmt.Sprintf("%s/auth/login", c.baseURL)
+func (c *GatewayClient) Login(secret string) {
+	url := fmt.Sprintf("%s:%s/auth/login", c.baseURL, port)
 
 	payload := map[string]string{
 		"secret": secret,

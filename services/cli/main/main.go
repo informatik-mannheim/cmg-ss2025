@@ -111,7 +111,7 @@ func (c *Command) isMissingArguments(args []string) bool {
 	return false
 }
 
-func registerCommands() []Command {
+func registerCommands(gatewayClient *client.GatewayClient) []Command {
 
 	// Help command –––––––––––––––––––––––––––––––––––––––––
 	helpCommand := Command{
@@ -161,7 +161,7 @@ func registerCommands() []Command {
 		}
 
 		// create the job once all checks have passed
-		client.CreateJob(jobName, creationZone, containerImage, parameters)
+		gatewayClient.CreateJob(jobName, creationZone, containerImage, parameters)
 		return nil
 	}
 	allCommands = append(allCommands, createJobCommand)
@@ -180,7 +180,7 @@ func registerCommands() []Command {
 			return nil
 		}
 		Id := getValue(args, "--id")
-		client.GetJobById(Id)
+		gatewayClient.GetJobById(Id)
 		fmt.Printf("Getting job by id %s\n", getValue(args, "--id"))
 		return nil
 	}
@@ -200,7 +200,7 @@ func registerCommands() []Command {
 			return nil
 		}
 		Id := getValue(args, "--id")
-		client.GetJobOutcome(Id)
+		gatewayClient.GetJobOutcome(Id)
 		fmt.Printf("Getting job outcome for job  %s\n", getValue(args, "--id"))
 		return nil
 	}
@@ -219,7 +219,7 @@ func registerCommands() []Command {
 			return nil
 		}
 		secret := getValue(args, "--secret")
-		client.Login(secret)
+		gatewayClient.Login(secret)
 		return nil
 	}
 
@@ -250,8 +250,8 @@ func printHelp(arg string) {
 
 }
 
-func buildCLI() {
-	commands := registerCommands()
+func buildCLI(gatewayClient *client.GatewayClient) {
+	commands := registerCommands(gatewayClient)
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 	for scanner.Scan() {
@@ -277,6 +277,8 @@ func buildCLI() {
 }
 
 func main() {
-	buildCLI()
+	gatewayUrl := os.Getenv("GATEWAY_URL")
+	gateway := client.NewGatewayClient(gatewayUrl)
 
+	buildCLI(gateway)
 }
