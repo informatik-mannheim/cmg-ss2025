@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 )
 
@@ -67,7 +66,7 @@ func (js *JobSchedulerService) ScheduleJob() error {
 	return nil
 }
 
-func (js *JobSchedulerService) getJobsAndWorkers() ([]model.Job, []model.Worker, error) {
+func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker, error) {
 	jobs, err := js.JobAdapter.GetJobs()
 	if err != nil {
 		log.Printf("Error getting jobs: %v\n", err)
@@ -91,7 +90,7 @@ func (js *JobSchedulerService) getJobsAndWorkers() ([]model.Job, []model.Worker,
 	return jobs, workers, nil
 }
 
-func (js *JobSchedulerService) getCarbonIntensities(zones []string) (model.CarbonIntensityResponse, error) {
+func (js *JobSchedulerService) getCarbonIntensities(zones []string) (ports.CarbonIntensityResponse, error) {
 	carbons, err := js.CarbonIntensityAdapter.GetCarbonIntensities(zones)
 	if err != nil {
 		log.Printf("Error getting carbon intensity data: %v\n", err)
@@ -126,8 +125,8 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 
 // returns all jobs that could not be assigned to a worker for whatever reason, those are then considered
 // "not assigned" and go back into the pool
-func (js *JobSchedulerService) reassignWorkers(jobs []model.Job) ([]model.Job, error) {
-	var unassignedJobs []model.Job
+func (js *JobSchedulerService) reassignWorkers(jobs []ports.Job) ([]ports.Job, error) {
+	var unassignedJobs []ports.Job
 
 	for _, job := range jobs {
 		// error ignored on purpose, since here can only be jobs that have an workerId

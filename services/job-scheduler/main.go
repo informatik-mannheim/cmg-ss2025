@@ -9,10 +9,18 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/job"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/worker"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
 )
+
+// This struct is used to define the environment variables for the job-scheduler
+type Environments struct {
+	Interval                   int
+	WorkerRegestryUrl          string
+	JobServiceUrl              string
+	CarbonIntensityProviderUrl string
+	// TODO: Add address for UserManagement; Not relevant for now, comes with phase 3
+}
 
 func main() {
 	envs, err := loadEnvVariables()
@@ -24,9 +32,9 @@ func main() {
 
 	log.Printf("Job Scheduler starting with a %d second interval...\n", envs.Interval)
 
-	var jobAdapter ports.JobAdapter = job.NewJobAdapter(envs)
-	var workerAdapter ports.WorkerAdapter = worker.NewWorkerAdapter(envs)
-	var carbonIntensityAdapter ports.CarbonIntensityAdapter = carbonintensity.NewCarbonIntensityAdapter(envs)
+	var jobAdapter ports.JobAdapter = job.NewJobAdapter(envs.JobServiceUrl)
+	var workerAdapter ports.WorkerAdapter = worker.NewWorkerAdapter(envs.WorkerRegestryUrl)
+	var carbonIntensityAdapter ports.CarbonIntensityAdapter = carbonintensity.NewCarbonIntensityAdapter(envs.CarbonIntensityProviderUrl)
 	var service ports.JobScheduler = core.NewJobSchedulerService(
 		jobAdapter,
 		workerAdapter,
@@ -42,8 +50,8 @@ func main() {
 	}
 }
 
-func loadEnvVariables() (model.Environments, error) {
-	var envs model.Environments = model.Environments{}
+func loadEnvVariables() (Environments, error) {
+	var envs Environments = Environments{}
 
 	interval := utils.LoadEnvOrDefault("JOB_SCHEDULER_INTERVAL", "5") // Default to 5 seconds
 	intervalInt, err := strconv.Atoi(interval)
