@@ -1,5 +1,5 @@
-BINARY_NAME=job-binary
-DOCKER_IMAGE=job
+BINARY_NAME=worker-gateway-binary
+DOCKER_IMAGE=worker-gateway
 
 .PHONY: all build test containerize
 
