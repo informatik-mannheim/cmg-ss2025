@@ -3,13 +3,13 @@ DOCKER_IMAGE=job-service
 
 .PHONY: all build test containerize
 
-all: build test clean
+all: build test 
 
 build:
 	go build -o $(BINARY_NAME) .
 
 test:
-	go test ./... -cover
+	go test ./...
 
 containerize:
 	docker build -t $(DOCKER_IMAGE) .
