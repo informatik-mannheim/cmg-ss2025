@@ -1,5 +1,5 @@
-BINARY_NAME=job-binary
-DOCKER_IMAGE=job
+BINARY_NAME=consumer-gateway-binary
+DOCKER_IMAGE=consumer-gateway
 
 .PHONY: all build test containerize
 
@@ -14,4 +14,3 @@ test:
 
 containerize:
 	docker build -t $(DOCKER_IMAGE) .
-
