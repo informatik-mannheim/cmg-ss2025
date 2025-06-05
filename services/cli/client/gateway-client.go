@@ -44,7 +44,7 @@ func (c *GatewayClient) CreateJob(jobName string, creationZone string, imageId c
 		log.Fatal("Error creating job", err)
 	}
 
-	url := c.baseURL + ":" + port + "/jobs"
+	url := c.baseURL + "/jobs"
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonRequest))
 	if err != nil {
@@ -117,7 +117,7 @@ func (c *GatewayClient) GetJobOutcome(id string) {
 }
 
 func (c *GatewayClient) Login(secret string) {
-	url := fmt.Sprintf("%s:%s/auth/login", c.baseURL, port)
+	url := fmt.Sprintf("%s/auth/login", c.baseURL)
 
 	payload := map[string]string{
 		"secret": secret,
