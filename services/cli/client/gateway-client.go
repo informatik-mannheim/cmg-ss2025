@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/informatik-mannheim/cmg-ss2025.git"
+	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"io"
 	"log"
 	"net/http"
@@ -44,7 +44,7 @@ func (c *GatewayClient) CreateJob(jobName string, creationZone string, imageId c
 		log.Fatal("Error creating job", err)
 	}
 
-	url := c.baseURL + ":" + port + "/jobs"
+	url := c.baseURL + "/jobs"
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonRequest))
 	if err != nil {
