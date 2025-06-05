@@ -20,11 +20,10 @@ func main() {
 		port = "8080"
 	}
 
-
 	// set port manually with "export PORT"
-	job := jobclient.NewJobClient("http://job:" + port)
-	user := jobclient.NewLoginClient("http://auth/login:" + port)
-	zone := jobclient.NewZoneClient("http://carbon-intensity-provider:" + port)
+	job := jobclient.NewJobClient(os.Getenv("JOB_SERVICE") + port)
+	user := jobclient.NewLoginClient(os.Getenv("USER_MANAGEMENT_SERVICE") + port)
+	zone := jobclient.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER") + port)
 	service := core.NewConsumerService(job, zone, user)
 	handler := handler_http.NewHandler(service, service, service)
 
@@ -48,7 +47,6 @@ func main() {
 			return
 		}
 	}()
-
 
 	log.Print("listening on port " + port + " ...")
 

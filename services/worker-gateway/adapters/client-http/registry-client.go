@@ -60,7 +60,7 @@ func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterR
 func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
 	url := fmt.Sprintf("%s/workers/%s/status", c.BaseURL, req.WorkerID)
 
-	payload := map[string]string{"workerStatus": req.Status}
+	payload := map[string]string{"status": req.Status}
 	body, err := json.Marshal(payload)
 	if err != nil {
 		logging.From(ctx).Error("Failed to marshal worker status payload", "workerID", req.WorkerID, "error", err)
