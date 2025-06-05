@@ -1,10 +1,18 @@
 BINARY_NAME=job-scheduler-binary
 DOCKER_IMAGE=job-scheduler
 
-.PHONY: all build containerize test run docker-up docker-down  
+.PHONY: all build containerize test run docker-up docker-down clean integrationcheck deployment
 
-integrationcheck: build test 
-deployment: build test containerize
+integrationcheck:
+	@$(MAKE) build && \
+	$(MAKE) test ; \
+	$(MAKE) clean
+	
+deployment:
+	@$(MAKE) build && \
+	$(MAKE) test && \
+	$(MAKE) containerize ; \
+	$(MAKE) clean
 
 build:
 	go build -o $(BINARY_NAME) .
@@ -23,6 +31,9 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+clean:
+	rm -f $(BINARY_NAME)
 
 
 
