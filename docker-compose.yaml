@@ -65,6 +65,8 @@ services:
       dockerfile: Dockerfile
     container_name: worker-gateway
     environment:
+      - WORKER_REGISTRY=http://worker-registry:8080
+      - JOB_SERVICE=http://job-service:8080
       - LOG_LEVEL=debug
     expose:
       - 8080

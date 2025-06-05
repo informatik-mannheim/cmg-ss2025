@@ -24,8 +24,8 @@ func main() {
 	}
 
 	// init service and handler
-	registryClient := client_http.NewRegistryClient("http://registry:8080")
-	jobClient := client_http.NewJobClient("http://job:8080")
+	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
+	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
 	service := core.NewWorkerGatewayService(registryClient, jobClient)
 	handler := handler_http.NewHandler(service)
 
