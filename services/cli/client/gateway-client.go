@@ -117,7 +117,7 @@ func (c *GatewayClient) GetJobOutcome(id string) {
 }
 
 func (c *GatewayClient) Login(secret string) {
-	url := fmt.Sprintf("%s:%s/auth/login", c.baseURL, port)
+	url := fmt.Sprintf("%s/auth/login", c.baseURL)
 
 	payload := map[string]string{
 		"secret": secret,

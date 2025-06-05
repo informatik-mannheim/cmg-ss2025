@@ -1,10 +1,18 @@
 BINARY_NAME=consumer-gateway-binary
 DOCKER_IMAGE=consumer-gateway
 
-.PHONY: all build test containerize
+.PHONY: all build test containerize clean integrationcheck deployment
 
-integrationcheck: build test 
-deployment: build test containerize
+integrationcheck:
+	@$(MAKE) build && \
+	$(MAKE) test ; \
+	$(MAKE) clean
+	
+deployment:
+	@$(MAKE) build && \
+	$(MAKE) test && \
+	$(MAKE) containerize ; \
+	$(MAKE) clean
 
 build:
 	go build -o $(BINARY_NAME) .
@@ -14,3 +22,6 @@ test:
 
 containerize:
 	docker build -t $(DOCKER_IMAGE) .
+
+clean:
+	rm -f $(BINARY_NAME)

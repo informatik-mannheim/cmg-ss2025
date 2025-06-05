@@ -80,6 +80,9 @@ services:
       dockerfile: ./services/consumer-gateway/Dockerfile
     container_name: consumer-gateway
     environment:
+      - JOB_SERVICE=http://job-service:8080
+      - USER_MANAGEMENT=http://user-management:8080
+      - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - LOG_LEVEL=debug
     expose:
       - 8080
