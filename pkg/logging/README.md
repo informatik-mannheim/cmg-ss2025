@@ -17,8 +17,7 @@ This document describes the structured logging concept for Go-based microservice
 
 | Level | Description                         | Example                            |
 | ----- | ----------------------------------- | ---------------------------------- |
-| debug | Developer details, only in dev mode | Payload content, other variables   |
-| info  | Normal operation                    | "Service started"                  |
+| debug | Developer details, for debugging    | Payload content, other variables   |
 | warn  | Unexpected behavior, no crash       | "Invalid secret provided"          |
 | error | Failed operations                   | "Connection failed"                |
 
@@ -29,7 +28,7 @@ This document describes the structured logging concept for Go-based microservice
 ### Fields:
 
 * `time`: Timestamp
-* `level`: Log level ("DEBUG", "INFO", "WARN", "ERROR")
+* `level`: Log level ("DEBUG", "WARN", "ERROR")
 * `msg`: Main log message
 * `service`: Service name
 * `jobID`, `workerID`, ... : Context fields (optional)
@@ -41,7 +40,7 @@ Each log entry is output as JSON with the following structure:
 ```json
 {
   "time":"2025-06-04T23:27:03.135205854Z",
-  "level":"INFO",
+  "level":"DEBUG",
   "msg":"Heartbeat received",
   "service":"worker-gateway",
   "workerID":"worker123",
@@ -68,7 +67,6 @@ func main() {
 ### Basic Usage:
 
 ```go
-logging.Info("Listening on ", "port", port)
 logging.Debug("Response received", "status", 200)
 logging.Warn("Result not sent", "jodID", id)
 logging.Error("Server error", "error", err)
@@ -82,7 +80,7 @@ In a Core function:
 
 ```go
 func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.HeartbeatRequest) ([]ports.Job, error) {
-	logging.From(ctx).Info("Heartbeat received", "workerID", req.WorkerID, "status", req.Status)
+	logging.From(ctx).Debug("Heartbeat received", "workerID", req.WorkerID, "status", req.Status)
 }
 ```
 
