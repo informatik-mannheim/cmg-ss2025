@@ -76,8 +76,8 @@ services:
 
   consumer-gateway:
     build:
-      context: ./services/consumer-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/consumer-gateway/Dockerfile
     container_name: consumer-gateway
     environment:
       - LOG_LEVEL=debug
