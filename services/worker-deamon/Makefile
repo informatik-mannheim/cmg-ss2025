@@ -1,14 +1,19 @@
 BINARY_NAME=worker-deamon-binary
 DOCKER_IMAGE=worker-deamon
 
-.PHONY: all build test 
+.PHONY: all build test integrationcheck clean
 
-integrationcheck: build test 
+integrationcheck:
+	@$(MAKE) build && \
+	$(MAKE) test ; \
+	$(MAKE) clean
 
 build:
-	go build -o $(BINARY_NAME) .
+	go build -o $(BINARY_NAME) ./cmd/worker-deamon
 
 test:
 	go test ./...
 
+clean:
+	rm -f $(BINARY_NAME)
 

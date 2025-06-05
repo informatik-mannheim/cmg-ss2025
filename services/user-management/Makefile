@@ -1,10 +1,18 @@
 BINARY_NAME=user-management-binary
 DOCKER_IMAGE=user-management
 
-.PHONY: all build test containerize run fmt docker-down clean
+.PHONY: all build test containerize run fmt docker-down clean integrationcheck deployment
 
-integrationcheck: build test 
-deployment: build test containerize
+integrationcheck:
+	@$(MAKE) build && \
+	$(MAKE) test ; \
+	$(MAKE) clean
+	
+deployment:
+	@$(MAKE) build && \
+	$(MAKE) test && \
+	$(MAKE) containerize ; \
+	$(MAKE) clean
 
 build:
 	go build -o $(BINARY_NAME) .
@@ -25,4 +33,4 @@ docker-down:
 	docker compose down
 
 clean:
-	rm -f user-management
+	rm -f $(BINARY_NAME)
