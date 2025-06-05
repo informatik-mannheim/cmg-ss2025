@@ -47,7 +47,6 @@ func From(ctx context.Context) *slog.Logger {
 }
 
 // Shorthand logging methods
-
 func Debug(msg string, keyvals ...any) {
 	logger.Debug(msg, keyvals...)
 }
@@ -59,6 +58,7 @@ func Warn(msg string, keyvals ...any) {
 func Error(msg string, keyvals ...any) {
 	logger.Error(msg, keyvals...)
 }
+
 
 // Helper to parse log level from environment
 func parseLogLevel(lvl string) slog.Level {
