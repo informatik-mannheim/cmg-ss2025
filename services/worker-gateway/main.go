@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 
 	client_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/handler-http"
@@ -14,6 +15,8 @@ import (
 )
 
 func main() {
+	logging.Init("worker-gateway")
+	logging.Info("Service started")
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -43,14 +46,14 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Println("The service is shutting down...")
+		logging.Info("The service is shutting down...")
 		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Fatalf("Shutdown failed: %v", err)
+			logging.Error("Shutdown failed", "err", err)
 		}
 	}()
 
-	log.Printf("Worker Gateway listening on port %s", port)
+	logging.Info("Worker Gateway listening", "port", port)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server error: %v", err)
+		logging.Error("Server error", "err", err)
 	}
 }

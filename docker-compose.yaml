@@ -10,6 +10,7 @@ services:
       - JOB_SERVICE=http://job-service:8080
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - JOB_SCHEDULER_INTERVAL=5
+      - LOG_LEVEL=info
     expose:
       - 8080
     networks:
@@ -24,6 +25,7 @@ services:
     environment:
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - CARBON_INTENSITY_PROVIDER_INTERVAL=60
+      - LOG_LEVEL=info
     expose:
       - 8080
     networks:
@@ -35,6 +37,8 @@ services:
       context: ./services/job
       dockerfile: Dockerfile
     container_name: job-service
+    environment:
+      - LOG_LEVEL=info
     expose:
       - 8080
     networks:
@@ -48,6 +52,7 @@ services:
     container_name: carbon-intensity-provider
     environment:
       - USE_LIVE=false
+      - LOG_LEVEL=info
     expose:
       - 8080
     networks:
@@ -59,6 +64,8 @@ services:
       context: ./services/worker-gateway
       dockerfile: Dockerfile
     container_name: worker-gateway
+    environment:
+      - LOG_LEVEL=info
     expose:
       - 8080
     networks:
@@ -70,6 +77,8 @@ services:
       context: ./services/consumer-gateway
       dockerfile: Dockerfile
     container_name: consumer-gateway
+    environment:
+      - LOG_LEVEL=info
     expose:
       - 8080
     networks:
@@ -86,6 +95,7 @@ services:
       AUTH0_TOKEN_URL: "https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/oauth/token"
       JWT_AUDIENCE: "https://green-load-shifting-platform/"
       ADMIN_SECRET_HASH: "da359894a57a42c65efa8b98c8c86f3f974ff2c8dd7fc428fd87ce6ecdc40bd7"
+      LOG_LEVEL: info
     expose:
       - 8080
     networks:
