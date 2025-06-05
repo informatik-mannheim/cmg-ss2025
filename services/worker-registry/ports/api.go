@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+type ZoneResponse struct {
+	Zones []Zone `json:"zones"`
+}
+
 func NewErrWorkerNotFound(id string) error {
 	return fmt.Errorf("Worker with ID %v not found", id)
 }

@@ -1,5 +1,5 @@
-BINARY_NAME=job-binary
-DOCKER_IMAGE=job
+BINARY_NAME=carbon-intensity-provider-binary
+DOCKER_IMAGE=carbon-intensity-provider
 
 .PHONY: all build test containerize
 
@@ -14,4 +14,3 @@ test:
 
 containerize:
 	docker build -t $(DOCKER_IMAGE) .
-

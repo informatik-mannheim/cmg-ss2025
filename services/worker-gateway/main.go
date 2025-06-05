@@ -2,44 +2,21 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+
 	client_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
 )
 
-type testNotifier struct{}
-
-func (t *testNotifier) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
-	log.Printf("[MOCK] UpdateWorkerStatus: %s -> %s", req.WorkerID, req.Status)
-	return nil
-}
-
-func (t *testNotifier) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error) {
-	log.Println("[MOCK] FetchScheduledJobs called")
-	return []ports.Job{
-		{ID: "job1", Status: "SCHEDULED"},
-		{ID: "job2", Status: "SCHEDULED"},
-	}, nil
-}
-
-func (t *testNotifier) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
-	log.Printf("[MOCK] UpdateJob: %s -> %s (%s)", req.JobID, req.Status, req.Result)
-	return nil
-}
-
-func (t *testNotifier) RegisterWorker(ctx context.Context, req ports.RegisterRequest) error {
-	log.Printf("[MOCK] RegisterWorker: (%s, %s)", req.Key, req.Zone)
-	return nil
-}
-
 func main() {
+	logging.Init("worker-gateway")
+	logging.Debug("Service started")
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -47,8 +24,8 @@ func main() {
 	}
 
 	// init service and handler
-	registryClient := client_http.NewRegistryClient("http://registry:8080")
-	jobClient := client_http.NewJobClient("http://job:8080")
+	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
+	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
 	service := core.NewWorkerGatewayService(registryClient, jobClient)
 	handler := handler_http.NewHandler(service)
 
@@ -69,14 +46,14 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Println("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Fatalf("Shutdown failed: %v", err)
+			logging.Error("Shutdown failed", "err", err)
 		}
 	}()
 
-	log.Printf("Worker Gateway listening on port %s", port)
+	logging.Debug("Worker Gateway listening", "port", port)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server error: %v", err)
+		logging.Error("Server error", "err", err)
 	}
 }

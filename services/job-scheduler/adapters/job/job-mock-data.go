@@ -1,11 +1,11 @@
 package job
 
 import (
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
 )
 
-var MockJobs = []model.Job{
+var MockJobs = []ports.Job{
 	{
 		ID:              utils.Uuid1,
 		CreationZone:    "DE",
@@ -13,7 +13,7 @@ var MockJobs = []model.Job{
 		ComputeZone:     "",
 		CarbonIntensity: -1,
 		CarbonSaving:    -1,
-		Status:          model.JobStatusScheduled,
+		Status:          ports.JobStatusScheduled,
 	},
 	{
 		ID:              utils.Uuid2,
@@ -22,7 +22,7 @@ var MockJobs = []model.Job{
 		ComputeZone:     "",
 		CarbonIntensity: -1,
 		CarbonSaving:    -1,
-		Status:          model.JobStatusQueued,
+		Status:          ports.JobStatusQueued,
 	},
 	{
 		ID:              utils.Uuid3,
@@ -31,7 +31,7 @@ var MockJobs = []model.Job{
 		ComputeZone:     "",
 		CarbonIntensity: -1,
 		CarbonSaving:    -1,
-		Status:          model.JobStatusQueued,
+		Status:          ports.JobStatusQueued,
 	},
 	{
 		ID:              utils.Uuid4,
@@ -40,7 +40,7 @@ var MockJobs = []model.Job{
 		ComputeZone:     "", // Does not matter as of now
 		CarbonIntensity: -1,
 		CarbonSaving:    -1,
-		Status:          model.JobStatusQueued,
+		Status:          ports.JobStatusQueued,
 	},
 	{
 		ID:              utils.Uuid5,
@@ -49,6 +49,6 @@ var MockJobs = []model.Job{
 		ComputeZone:     "", // Does not matter as of now
 		CarbonIntensity: -1,
 		CarbonSaving:    -1,
-		Status:          model.JobStatusScheduled,
+		Status:          ports.JobStatusScheduled,
 	},
 }
