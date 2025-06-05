@@ -57,7 +57,7 @@ func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest) erro
 		return fmt.Errorf("update job failed: %s", respBody)
 	}
 
-	logging.From(ctx).Info("Job updated successfully", "jobID", req.JobID, "status", req.Status)
+	logging.From(ctx).Debug("Job updated successfully", "jobID", req.JobID, "status", req.Status)
 	return nil
 }
 
@@ -81,7 +81,7 @@ func (c *JobClient) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error)
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNoContent {
-		logging.From(ctx).Info("No scheduled jobs available")
+		logging.From(ctx).Debug("No scheduled jobs available")
 		return []ports.Job{}, nil
 	}
 
@@ -97,6 +97,6 @@ func (c *JobClient) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error)
 		return nil, err
 	}
 
-	logging.From(ctx).Info("Scheduled jobs fetched", "count", len(jobs))
+	logging.From(ctx).Debug("Scheduled jobs fetched", "count", len(jobs))
 	return jobs, nil
 }

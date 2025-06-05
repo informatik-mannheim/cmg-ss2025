@@ -17,7 +17,7 @@ func NewWorkerGatewayService(registry ports.RegistryService, job ports.JobServic
 }
 
 func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.HeartbeatRequest) ([]ports.Job, error) {
-	logging.From(ctx).Info("Heartbeat received", "workerID", req.WorkerID, "status", req.Status)
+	logging.From(ctx).Debug("Heartbeat received", "workerID", req.WorkerID, "status", req.Status)
 
 	if err := s.registry.UpdateWorkerStatus(ctx, req); err != nil {
 		logging.From(ctx).Error("UpdateWorkerStatus failed", "error", err)
@@ -48,12 +48,12 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 }
 
 func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRequest) error {
-	logging.From(ctx).Info("Result received", "jobID", result.JobID)
+	logging.From(ctx).Debug("Result received", "jobID", result.JobID)
 	return s.job.UpdateJob(ctx, result)
 }
 
 func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
-	logging.From(ctx).Info("Registering worker", "zone", req.Zone)
+	logging.From(ctx).Debug("Registering worker", "zone", req.Zone)
 
 	regResp, err := s.registry.RegisterWorker(ctx, req)
 	if err != nil {
@@ -61,6 +61,6 @@ func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterR
 		return nil, err
 	}
 
-	logging.From(ctx).Info("Worker registered", "workerID", regResp.ID, "zone", regResp.Zone)
+	logging.From(ctx).Debug("Worker registered", "workerID", regResp.ID, "zone", regResp.Zone)
 	return regResp, nil
 }

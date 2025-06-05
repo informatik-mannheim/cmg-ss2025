@@ -46,13 +46,13 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		logging.Info("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		if err := srv.Shutdown(context.Background()); err != nil {
 			logging.Error("Shutdown failed", "err", err)
 		}
 	}()
 
-	logging.Info("Worker Gateway listening", "port", port)
+	logging.Debug("Worker Gateway listening", "port", port)
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logging.Error("Server error", "err", err)
 	}

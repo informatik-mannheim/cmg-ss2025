@@ -53,7 +53,7 @@ func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterR
 		return nil, err
 	}
 
-	logging.From(ctx).Info("Worker registered", "workerID", regResp.ID, "zone", regResp.Zone, "status", regResp.Status)
+	logging.From(ctx).Debug("Worker registered", "workerID", regResp.ID, "zone", regResp.Zone, "status", regResp.Status)
 	return &regResp, nil
 }
 
@@ -89,6 +89,6 @@ func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.Heart
 		return fmt.Errorf("update worker status failed: %s", respBody)
 	}
 
-	logging.From(ctx).Info("Worker status updated", "workerID", req.WorkerID, "status", req.Status)
+	logging.From(ctx).Debug("Worker status updated", "workerID", req.WorkerID, "status", req.Status)
 	return nil
 }
