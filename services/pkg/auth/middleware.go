@@ -18,7 +18,8 @@ func InitJWKS(jwksURL string) error {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenStr := r.Header.Get("AuthToken")
+
+		tokenStr := r.Header.Get("Authorization")
 		if !strings.HasPrefix(tokenStr, "Bearer ") {
 			http.Error(w, "Missing Bearer token", http.StatusUnauthorized)
 			return
