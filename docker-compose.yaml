@@ -61,7 +61,7 @@ services:
 
   worker-gateway:
     build:
-      context: ./services/worker-gateway
+      context: .
       dockerfile: ./services/worker-gateway/Dockerfile
     container_name: worker-gateway
     environment:
