@@ -61,8 +61,8 @@ services:
 
   worker-gateway:
     build:
-      context: ./services/worker-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/worker-gateway/Dockerfile
     container_name: worker-gateway
     environment:
       - WORKER_REGISTRY=http://worker-registry:8080
