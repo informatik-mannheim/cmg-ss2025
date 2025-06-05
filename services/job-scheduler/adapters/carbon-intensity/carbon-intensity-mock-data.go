@@ -1,8 +1,8 @@
 package carbonintensity
 
-import "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
+import "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 
-var MockCarbons = []model.CarbonIntensityData{
+var MockCarbons = []ports.CarbonIntensityData{
 	{
 		Zone:            "DE",
 		CarbonIntensity: 100,

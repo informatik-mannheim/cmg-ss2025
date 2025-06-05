@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 )
 
@@ -13,7 +12,6 @@ type JobSchedulerService struct {
 	JobAdapter             ports.JobAdapter
 	WorkerAdapter          ports.WorkerAdapter
 	CarbonIntensityAdapter ports.CarbonIntensityAdapter
-	Notifier               ports.Notifier
 }
 
 var _ ports.JobScheduler = (*JobSchedulerService)(nil)
@@ -22,13 +20,11 @@ func NewJobSchedulerService(
 	jobAdapter ports.JobAdapter,
 	workerAdapter ports.WorkerAdapter,
 	carbonIntensityAdapter ports.CarbonIntensityAdapter,
-	notifier ports.Notifier,
 ) *JobSchedulerService {
 	return &JobSchedulerService{
 		JobAdapter:             jobAdapter,
 		WorkerAdapter:          workerAdapter,
 		CarbonIntensityAdapter: carbonIntensityAdapter,
-		Notifier:               notifier,
 	}
 }
 
@@ -70,7 +66,7 @@ func (js *JobSchedulerService) ScheduleJob() error {
 	return nil
 }
 
-func (js *JobSchedulerService) getJobsAndWorkers() ([]model.Job, []model.Worker, error) {
+func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker, error) {
 	jobs, err := js.JobAdapter.GetJobs()
 	if err != nil {
 		log.Printf("Error getting jobs: %v\n", err)
@@ -94,7 +90,7 @@ func (js *JobSchedulerService) getJobsAndWorkers() ([]model.Job, []model.Worker,
 	return jobs, workers, nil
 }
 
-func (js *JobSchedulerService) getCarbonIntensities(zones []string) (model.CarbonIntensityResponse, error) {
+func (js *JobSchedulerService) getCarbonIntensities(zones []string) (ports.CarbonIntensityResponse, error) {
 	carbons, err := js.CarbonIntensityAdapter.GetCarbonIntensities(zones)
 	if err != nil {
 		log.Printf("Error getting carbon intensity data: %v\n", err)
@@ -121,15 +117,6 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 		err = js.WorkerAdapter.AssignWorker(workerUpdate)
 		if err != nil {
 			log.Printf("Error updating worker: %v\n", err)
-			if err2 := js.Notifier.NotifyWorkerAssignmentFailed(job.ID, job.WorkerID); err2 != nil {
-				log.Printf("Error notifying worker assignment failed: %v\n", err)
-				return err2
-			}
-			return err
-		}
-		err = js.Notifier.NotifyAssignment(job.ID, job.WorkerID)
-		if err != nil {
-			log.Printf("Error notifying assignment: %v\n", err)
 			return err
 		}
 	}
@@ -138,8 +125,8 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 
 // returns all jobs that could not be assigned to a worker for whatever reason, those are then considered
 // "not assigned" and go back into the pool
-func (js *JobSchedulerService) reassignWorkers(jobs []model.Job) ([]model.Job, error) {
-	var unassignedJobs []model.Job
+func (js *JobSchedulerService) reassignWorkers(jobs []ports.Job) ([]ports.Job, error) {
+	var unassignedJobs []ports.Job
 
 	for _, job := range jobs {
 		// error ignored on purpose, since here can only be jobs that have an workerId
@@ -152,10 +139,6 @@ func (js *JobSchedulerService) reassignWorkers(jobs []model.Job) ([]model.Job, e
 			continue
 		}
 
-		if err := js.Notifier.NotifyAssignmentCorrection(job.ID, uuid); err != nil {
-			log.Printf("Error notifying assignment correction: %v\n", err)
-			return nil, err
-		}
 	}
 
 	return unassignedJobs, nil

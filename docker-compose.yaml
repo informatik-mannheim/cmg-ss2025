@@ -21,6 +21,9 @@ services:
       context: ./services/worker-registry
       dockerfile: Dockerfile
     container_name: worker-registry
+    environment:
+      - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
+      - CARBON_INTENSITY_PROVIDER_INTERVAL=60
     expose:
       - 8080
     networks:

@@ -4,40 +4,39 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/model"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/utils"
 )
 
-func GetAlreadyAssigned(jobs []model.Job, workers []model.Worker) []model.Job {
+func GetAlreadyAssigned(jobs []ports.Job, workers []ports.Worker) []ports.Job {
 	workerMap := make(map[uuid.UUID]struct{})
 	for _, worker := range workers {
 		workerMap[worker.Id] = struct{}{}
 	}
 
-	return utils.Filter(jobs, func(job model.Job) bool {
+	return utils.Filter(jobs, func(job ports.Job) bool {
 		uuid, err := uuid.Parse(job.WorkerID)
 		if err != nil {
 			return false
 		}
 		_, exists := workerMap[uuid]
-		return job.Status == model.JobStatusScheduled && exists
+		return job.Status == ports.JobStatusScheduled && exists
 	})
 }
 
-func GetAllUnassigned(jobs, unassignedJobs []model.Job, workers []model.Worker) ([]model.Job, []model.Worker) {
-	unassignedJobsMap := make(map[model.Job]struct{})
+func GetAllUnassigned(jobs, unassignedJobs []ports.Job, workers []ports.Worker) ([]ports.Job, []ports.Worker) {
+	unassignedJobsMap := make(map[ports.Job]struct{})
 	for _, job := range unassignedJobs {
 		unassignedJobsMap[job] = struct{}{}
 	}
 
 	assignedWorkersMap := make(map[uuid.UUID]struct{})
 
-	jobResult := utils.Filter(jobs, func(job model.Job) bool {
+	jobResult := utils.Filter(jobs, func(job ports.Job) bool {
 		_, exists := unassignedJobsMap[job]
-		isJobUnassigned := job.Status == model.JobStatusQueued || (job.Status == model.JobStatusScheduled && exists)
+		isJobUnassigned := job.Status == ports.JobStatusQueued || (job.Status == ports.JobStatusScheduled && exists)
 
-		if !isJobUnassigned && job.Status == model.JobStatusScheduled {
+		if !isJobUnassigned && job.Status == ports.JobStatusScheduled {
 			uuid, err := uuid.Parse(job.WorkerID)
 			if err == nil {
 				assignedWorkersMap[uuid] = struct{}{}
@@ -47,7 +46,7 @@ func GetAllUnassigned(jobs, unassignedJobs []model.Job, workers []model.Worker) 
 		return isJobUnassigned
 	})
 
-	workerResult := utils.Filter(workers, func(worker model.Worker) bool {
+	workerResult := utils.Filter(workers, func(worker ports.Worker) bool {
 		_, exists := assignedWorkersMap[worker.Id]
 		return !exists
 	})
@@ -55,7 +54,7 @@ func GetAllUnassigned(jobs, unassignedJobs []model.Job, workers []model.Worker) 
 	return jobResult, workerResult
 }
 
-func GetCarbonZones(unassignedJobs []model.Job, unassignedWorkers []model.Worker) []string {
+func GetCarbonZones(unassignedJobs []ports.Job, unassignedWorkers []ports.Worker) []string {
 	zones := make(map[string]struct{})
 	for _, job := range unassignedJobs {
 		zones[job.ComputeZone] = struct{}{}
@@ -76,7 +75,7 @@ func GetCarbonZones(unassignedJobs []model.Job, unassignedWorkers []model.Worker
 }
 
 // meant are: jobs = unassigned jobs, workers = unassigned workers
-func DistributeJobs(jobs []model.Job, workers []model.Worker, carbons []model.CarbonIntensityData) []ports.UpdateJob {
+func DistributeJobs(jobs []ports.Job, workers []ports.Worker, carbons []ports.CarbonIntensityData) []ports.UpdateJob {
 	// small -> big
 	sortedCarbons := SortCabonData(carbons)
 
@@ -114,10 +113,10 @@ func DistributeJobs(jobs []model.Job, workers []model.Worker, carbons []model.Ca
 	return jobUpdates
 }
 
-func SortCabonData(carbons []model.CarbonIntensityData) []model.CarbonIntensityData {
-	copyCarbons := make([]model.CarbonIntensityData, len(carbons))
+func SortCabonData(carbons []ports.CarbonIntensityData) []ports.CarbonIntensityData {
+	copyCarbons := make([]ports.CarbonIntensityData, len(carbons))
 	copy(copyCarbons, carbons)
-	slices.SortFunc(copyCarbons, func(i, j model.CarbonIntensityData) int {
+	slices.SortFunc(copyCarbons, func(i, j ports.CarbonIntensityData) int {
 		if i.CarbonIntensity < j.CarbonIntensity {
 			return -1
 		} else if i.CarbonIntensity > j.CarbonIntensity {
@@ -128,18 +127,18 @@ func SortCabonData(carbons []model.CarbonIntensityData) []model.CarbonIntensityD
 	return copyCarbons
 }
 
-func PrepareDistributionData(jobs []model.Job, workers []model.Worker, sortedCarbons []model.CarbonIntensityData) ([]model.Job, []model.Worker, map[string]float64) {
+func PrepareDistributionData(jobs []ports.Job, workers []ports.Worker, sortedCarbons []ports.CarbonIntensityData) ([]ports.Job, []ports.Worker, map[string]float64) {
 	carbonsMap := make(map[string]float64)
-	sortedJobs := make([]model.Job, 0, len(jobs))
-	sortedWorkers := make([]model.Worker, 0, len(workers))
+	sortedJobs := make([]ports.Job, 0, len(jobs))
+	sortedWorkers := make([]ports.Worker, 0, len(workers))
 
 	for _, carbon := range sortedCarbons {
 		carbonsMap[carbon.Zone] = carbon.CarbonIntensity
-		zoneJobs := utils.Filter(jobs, func(job model.Job) bool {
+		zoneJobs := utils.Filter(jobs, func(job ports.Job) bool {
 			return job.CreationZone == carbon.Zone
 		})
 		sortedJobs = append(sortedJobs, zoneJobs...)
-		zoneWorkers := utils.Filter(workers, func(worker model.Worker) bool {
+		zoneWorkers := utils.Filter(workers, func(worker ports.Worker) bool {
 			return worker.Zone == carbon.Zone
 		})
 		sortedWorkers = append(sortedWorkers, zoneWorkers...)

@@ -111,8 +111,21 @@ func (c *Command) isMissingArguments(args []string) bool {
 	return false
 }
 
-func registerCommands() []Command {
-	// Create Job Command
+func registerCommands(gatewayClient *client.GatewayClient) []Command {
+
+	// Help command –––––––––––––––––––––––––––––––––––––––––
+	helpCommand := Command{
+		Name:        "help",
+		Description: "Show this help",
+		Parameters:  map[string]bool{},
+	}
+	helpCommand.Execute = func(args []string) error {
+		printGeneralHelp()
+		return nil
+	}
+	allCommands = append(allCommands, helpCommand)
+
+	// Create Job Command –––––––––––––––––––––––––––––––––––––––––
 	createJobCommand := Command{
 		Name:        "create-job",
 		Description: "Create a new job",
@@ -148,24 +161,12 @@ func registerCommands() []Command {
 		}
 
 		// create the job once all checks have passed
-		client.CreateJob(jobName, creationZone, containerImage, parameters)
+		gatewayClient.CreateJob(jobName, creationZone, containerImage, parameters)
 		return nil
 	}
 	allCommands = append(allCommands, createJobCommand)
 
-	// Help command
-	helpCommand := Command{
-		Name:        "help",
-		Description: "Show this help",
-		Parameters:  map[string]bool{},
-	}
-	helpCommand.Execute = func(args []string) error {
-		printGeneralHelp()
-		return nil
-	}
-	allCommands = append(allCommands, helpCommand)
-
-	// Get job by its id
+	// Get job by its ID Command –––––––––––––––––––––––––––––––––––––––––
 	getJobByIdCommand := Command{
 		Name:        "get-job",
 		Description: "Get job by its id",
@@ -179,13 +180,13 @@ func registerCommands() []Command {
 			return nil
 		}
 		Id := getValue(args, "--id")
-		client.GetJobById(Id)
+		gatewayClient.GetJobById(Id)
 		fmt.Printf("Getting job by id %s\n", getValue(args, "--id"))
 		return nil
 	}
 	allCommands = append(allCommands, getJobByIdCommand)
 
-	// Get the outcome of job
+	// Get the outcome of job Command –––––––––––––––––––––––––––––––––––––––––
 	getJobOutcomeCommand := Command{
 		Name:        "get-job-outcome",
 		Description: "Get job outcome",
@@ -199,11 +200,30 @@ func registerCommands() []Command {
 			return nil
 		}
 		Id := getValue(args, "--id")
-		client.GetJobOutcome(Id)
+		gatewayClient.GetJobOutcome(Id)
 		fmt.Printf("Getting job outcome for job  %s\n", getValue(args, "--id"))
 		return nil
 	}
 	allCommands = append(allCommands, getJobOutcomeCommand)
+
+	loginCommand := Command{
+		Name:        "login",
+		Description: "Log in by providing a secret",
+		Parameters: map[string]bool{
+			"--secret": true,
+		},
+		ParamOrder: []string{"--secret"},
+	}
+	loginCommand.Execute = func(args []string) error {
+		if loginCommand.isMissingArguments(args) {
+			return nil
+		}
+		secret := getValue(args, "--secret")
+		gatewayClient.Login(secret)
+		return nil
+	}
+
+	allCommands = append(allCommands, loginCommand)
 	return allCommands
 }
 
@@ -230,8 +250,8 @@ func printHelp(arg string) {
 
 }
 
-func main() {
-	commands := registerCommands()
+func buildCLI(gatewayClient *client.GatewayClient) {
+	commands := registerCommands(gatewayClient)
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 	for scanner.Scan() {
@@ -254,5 +274,11 @@ func main() {
 		}
 		fmt.Print("> ")
 	}
+}
 
+func main() {
+	gatewayUrl := os.Getenv("GATEWAY_URL")
+	gateway := client.NewGatewayClient(gatewayUrl)
+
+	buildCLI(gateway)
 }

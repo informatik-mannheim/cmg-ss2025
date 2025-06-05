@@ -31,9 +31,18 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 			log.Printf("error getting jobs: %s", err)
 			return nil, err
 		}
-		log.Printf("provide jobs: %+v", jobs)
+		log.Printf("provided jobs: %+v", jobs)
 
-		return jobs, nil
+		var filteredJobs []ports.Job
+		for _, job := range jobs {
+			if job.WorkerID == req.WorkerID {
+				filteredJobs = append(filteredJobs, job)
+			}
+		}
+
+		log.Printf("filtered jobs: %+v", filteredJobs)
+
+		return filteredJobs, nil
 	}
 
 	// Computing

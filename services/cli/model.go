@@ -10,3 +10,7 @@ type ContainerImage struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 }
+
+type TokenResponse struct {
+	Token string `json:"token"`
+}

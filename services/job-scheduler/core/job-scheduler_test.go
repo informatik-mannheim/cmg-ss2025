@@ -5,7 +5,6 @@ import (
 
 	carbonintensity "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/carbon-intensity"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/job"
-	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/notifier"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/worker"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
@@ -27,7 +26,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            false,
 		},
 		// -------------------------- Jobs --------------------------
@@ -36,7 +34,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(true, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		{
@@ -44,7 +41,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, true, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		{
@@ -52,7 +48,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, true),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		// -------------------------- Workers --------------------------
@@ -61,7 +56,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(true, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		{
@@ -69,7 +63,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, true, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		{
@@ -77,7 +70,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, true),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		// -------------------------- Carbons --------------------------
@@ -86,7 +78,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(true, false),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
 			ShouldError:            true,
 		},
 		{
@@ -94,32 +85,6 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, true),
-			Notifier:               notifier.NewNotifierMock(false, false, false),
-			ShouldError:            true,
-		},
-		// -------------------------- Notifier --------------------------
-		{
-			Description:            "Test with notifier assignment error",
-			JobAdapter:             job.NewJobAdapterMock(false, false, false),
-			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
-			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(true, false, false),
-			ShouldError:            true,
-		},
-		{
-			Description:            "Test with notifier worker assignment error",
-			JobAdapter:             job.NewJobAdapterMock(false, false, false),
-			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, true),
-			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, true, false),
-			ShouldError:            true,
-		},
-		{
-			Description:            "Test with notifier assignment correction error",
-			JobAdapter:             job.NewJobAdapterMock(false, false, false),
-			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
-			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			Notifier:               notifier.NewNotifierMock(false, false, true),
 			ShouldError:            true,
 		},
 	}
@@ -142,6 +107,5 @@ func createJobSchedulerService(row TestJobScheduleTableRow) *core.JobSchedulerSe
 		row.JobAdapter,
 		row.WorkerAdapter,
 		row.CarbonIntensityAdapter,
-		row.Notifier,
 	)
 }
