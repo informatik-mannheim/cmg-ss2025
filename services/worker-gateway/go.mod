@@ -1,3 +1,7 @@
 module github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway
 
-go 1.23.1
+replace github.com/informatik-mannheim/cmg-ss2025/pkg/logging => ../../pkg/logging
+
+go 1.24.1
+
+require github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-00010101000000-000000000000
