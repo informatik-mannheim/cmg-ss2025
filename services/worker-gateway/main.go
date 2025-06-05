@@ -16,7 +16,7 @@ import (
 
 func main() {
 	logging.Init("worker-gateway")
-	logging.Info("Service started")
+	logging.Debug("Service started")
 
 	port := os.Getenv("PORT")
 	if port == "" {
