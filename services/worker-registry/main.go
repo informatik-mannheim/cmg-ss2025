@@ -8,18 +8,39 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
-	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
+	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo"
+	inMemoryRepo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
 )
 
 func main() {
-	repository := repo.NewRepo()
-	notifier := notifier.NewNotifier()
+	logging.Init("worker-registry")
+	logging.Debug("Starting Worker Registry")
 	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
-	service := core.NewWorkerRegistryService(repository, notifier, zoneClient)
+
+	var service *core.WorkerRegistryService
+
+	repo, err := repo.NewRepo(
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		context.Background(),
+	)
+
+	if err != nil {
+		log.Printf("ERROR: Failed to connect to Postgres: %v", err)
+		log.Print("Could not connect to database, using in-memory fallback")
+		inMemoryRepo := inMemoryRepo.NewRepo()
+		service = core.NewWorkerRegistryService(inMemoryRepo, zoneClient)
+	} else {
+		service = core.NewWorkerRegistryService(repo, zoneClient)
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -35,11 +56,11 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Print("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		srv.Shutdown(context.Background())
 	}()
 
-	log.Print("listening...")
+	logging.Debug("Listening...")
 	srv.ListenAndServe()
-	log.Print("Done")
+	logging.Debug("Done")
 }
