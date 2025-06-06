@@ -8,16 +8,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
-	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo"
 	inMemoryRepo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
 )
 
 func main() {
-	notifier := notifier.NewNotifier()
+	logging.Init("worker-registry")
+	logging.Debug("Starting Worker Registry")
 	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
 
 	var service *core.WorkerRegistryService
@@ -35,9 +37,9 @@ func main() {
 		log.Printf("ERROR: Failed to connect to Postgres: %v", err)
 		log.Print("Could not connect to database, using in-memory fallback")
 		inMemoryRepo := inMemoryRepo.NewRepo()
-		service = core.NewWorkerRegistryService(inMemoryRepo, notifier, zoneClient)
+		service = core.NewWorkerRegistryService(inMemoryRepo, zoneClient)
 	} else {
-		service = core.NewWorkerRegistryService(repo, notifier, zoneClient)
+		service = core.NewWorkerRegistryService(repo, zoneClient)
 	}
 
 	port := os.Getenv("PORT")
@@ -54,11 +56,11 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Print("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		srv.Shutdown(context.Background())
 	}()
 
-	log.Print("listening...")
+	logging.Debug("Listening...")
 	srv.ListenAndServe()
-	log.Print("Done")
+	logging.Debug("Done")
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 	_ "github.com/lib/pq"
 )
@@ -22,7 +22,7 @@ func NewRepo(host, port, user, password, dbName string, ctx context.Context) (*R
 		host, port, user, password, dbName,
 	)
 
-	log.Printf("DEBUG: Connecting to DB with host=%s port=%s db=%s user=%s", host, port, dbName, user) // DEBUG
+	logging.Debug("Connecting to DB with Connectionstring:", connectionString)
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
@@ -33,19 +33,20 @@ func NewRepo(host, port, user, password, dbName string, ctx context.Context) (*R
 		return nil, err
 	}
 
-	log.Println("DEBUG: Successfully connected to the PostgreSQL database") // DEBUG
+	logging.Debug("Successfully connected to the PostgreSQL database")
 	return &Repo{db: db}, nil
 }
 
 func (r *Repo) GetWorkers(status ports.WorkerStatus, zone string, ctx context.Context) ([]ports.Worker, error) {
-	log.Printf("DEBUG: GetWorkers called with status=%q zone=%q", status, zone) // DEBUG
+	message := fmt.Sprintf("GetWorkers called with status=%q zone=%q", status, zone)
+	logging.Debug(message)
 
 	query := `SELECT id, status, zone FROM workers WHERE ($1 = '' OR status = $1) AND ($2 = '' OR zone = $2)`
-	log.Printf("DEBUG: Executing SQL: %s", query) // DEBUG
+	logging.Debug("Executing SQL:", query)
 
 	rows, err := r.db.QueryContext(ctx, query, status, zone)
 	if err != nil {
-		log.Printf("ERROR: SQL query failed: %v", err) // DEBUG
+		logging.Warn("SQL query failed:", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -54,15 +55,15 @@ func (r *Repo) GetWorkers(status ports.WorkerStatus, zone string, ctx context.Co
 	for rows.Next() {
 		var w ports.Worker
 		if err := rows.Scan(&w.Id, &w.Status, &w.Zone); err != nil {
-			log.Printf("ERROR: Failed to scan row: %v", err) // DEBUG
+			logging.Warn("Failed to scan row:", err)
 			return nil, err
 		}
-		log.Printf("DEBUG: Fetched worker: %+v", w) // DEBUG
+		logging.Debug("Fetched worker:", w)
 		workers = append(workers, w)
 	}
 
 	if len(workers) == 0 {
-		log.Println("DEBUG: No workers found matching the criteria") // DEBUG
+		logging.Debug("No workers found matching the criteria")
 	}
 	return workers, nil
 }
@@ -70,10 +71,12 @@ func (r *Repo) GetWorkers(status ports.WorkerStatus, zone string, ctx context.Co
 func (r *Repo) GetWorkerById(id string, ctx context.Context) (ports.Worker, error) {
 	var w ports.Worker
 	query := `SELECT id, status, zone FROM workers WHERE id = $1`
+	logging.Debug("Executing SQL:", query)
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&w.Id, &w.Status, &w.Zone)
 	if err == sql.ErrNoRows {
 		return ports.Worker{}, ports.NewErrWorkerNotFound(id)
 	} else if err != nil {
+		logging.Debug("Fetched worker:", w)
 		return ports.Worker{}, err
 	}
 	return w, nil
@@ -84,6 +87,7 @@ func (r *Repo) CreateWorker(worker ports.Worker, ctx context.Context) error {
 		return ports.NewErrCreatingWorkerFailed()
 	}
 	query := `INSERT INTO workers (id, status, zone) VALUES ($1, $2, $3)`
+	logging.Debug("Executing SQL:", query)
 	_, err := r.db.ExecContext(ctx, query, worker.Id, worker.Status, worker.Zone)
 	if err != nil {
 		return ports.NewErrCreatingWorkerFailed()
@@ -96,6 +100,7 @@ func (r *Repo) UpdateWorkerStatus(id string, status ports.WorkerStatus, ctx cont
 		return ports.Worker{}, ports.NewErrUpdatingWorkerFailed(id)
 	}
 	query := `UPDATE workers SET status = $1 WHERE id = $2`
+	logging.Debug("Executing SQL:", query)
 	res, err := r.db.ExecContext(ctx, query, status, id)
 	if err != nil {
 		return ports.Worker{}, ports.NewErrUpdatingWorkerFailed(id)
