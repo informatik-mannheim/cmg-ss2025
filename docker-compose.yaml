@@ -22,10 +22,17 @@ services:
       context: ./services/worker-registry
       dockerfile: Dockerfile
     container_name: worker-registry
+    depends_on:
+      - postgres
     environment:
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - CARBON_INTENSITY_PROVIDER_INTERVAL=60
       - LOG_LEVEL=debug
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=test
+      - DB_PASSWORD=test
+      - DB_NAME=test
     expose:
       - 8080
     networks:
@@ -115,6 +122,28 @@ services:
       - 4318 # OTLP HTTP receiver
     ports:
       - "16686:16686" # Jaeger UI
+  
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+    networks:
+      - private_network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./worker-registry-init.sql:/docker-entrypoint-initdb.d/worker-registry-init.sql
+
 
 networks:
   private_network:
+
+volumes:
+  postgres-data:
