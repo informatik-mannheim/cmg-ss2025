@@ -138,7 +138,7 @@ services:
       - private_network
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./worker-registry-init.sql:/docker-entrypoint-initdb.d/worker-registry-init.sql
+      - ./database:/docker-entrypoint-initdb.d
 
 
 networks:

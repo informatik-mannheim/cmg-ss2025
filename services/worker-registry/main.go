@@ -2,19 +2,20 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo"
-	inMemoryRepo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
+	repo_pg "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo"
+	repo_mem "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 func main() {
@@ -23,24 +24,34 @@ func main() {
 	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
 
 	var service *core.WorkerRegistryService
+	var dbRepo ports.Repo
 
-	repo, err := repo.NewRepo(
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-		context.Background(),
-	)
+	maxRetries := 10
 
-	if err != nil {
-		log.Printf("ERROR: Failed to connect to Postgres: %v", err)
-		log.Print("Could not connect to database, using in-memory fallback")
-		inMemoryRepo := inMemoryRepo.NewRepo()
-		service = core.NewWorkerRegistryService(inMemoryRepo, zoneClient)
-	} else {
-		service = core.NewWorkerRegistryService(repo, zoneClient)
+	for i := 0; i < maxRetries; i++ {
+		r, err := repo_pg.NewRepo(
+			os.Getenv("DB_HOST"),
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_USER"),
+			os.Getenv("DB_PASSWORD"),
+			os.Getenv("DB_NAME"),
+			context.Background(),
+		)
+		if err == nil {
+			dbRepo = r
+			break
+		}
+		logging.Warn("Postgres not ready, retrying...")
+		time.Sleep(2 * time.Second)
 	}
+
+	if dbRepo == nil {
+		logging.Warn("Failed to connect to Postgres")
+		logging.Warn("Falling back to in-memory repository")
+		dbRepo = repo_mem.NewRepo()
+	}
+
+	service = core.NewWorkerRegistryService(dbRepo, zoneClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {
