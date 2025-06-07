@@ -7,7 +7,7 @@ import (
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type Repo struct {
@@ -18,13 +18,13 @@ var _ ports.Repo = (*Repo)(nil)
 
 func NewRepo(host, port, user, password, dbName string, ctx context.Context) (*Repo, error) {
 	connectionString := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbName,
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		user, password, host, port, dbName,
 	)
 
 	logging.Debug("Connecting to DB with Connectionstring:", connectionString)
 
-	db, err := sql.Open("postgres", connectionString)
+	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
 		return nil, err
 	}

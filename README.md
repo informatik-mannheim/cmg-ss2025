@@ -272,7 +272,7 @@ Secrets such as DB credentials, certificates, or external API keys are **never s
 | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | Sends trace data to an OTLP-compatible backend over HTTP                   |
 | `go.opentelemetry.io/otel/sdk`                                    | SDK implementation for OpenTelemetry (tracer provider, processors, etc.)   |
 | `go.opentelemetry.io/otel/trace`                                  | Trace-related types and interfaces (e.g., Tracer, Span) from OpenTelemetry |
-| `github.com/lib/pq`                                               | Postgres driver for databases                                              |
+| `github.com/jackc/pgx/v5`                                         | PostgreSQL Driver and Toolkit                                              |
 | `github.com/cenkalti/backoff/v5`                                  | Transitive dependency                                                      |
 | `github.com/go-logr/logr`                                         | Transitive dependency                                                      |
 | `github.com/go-logr/stdr`                                         | Transitive dependency                                                      |
