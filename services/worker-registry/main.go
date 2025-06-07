@@ -26,17 +26,16 @@ func main() {
 	var service *core.WorkerRegistryService
 	var dbRepo ports.Repo
 
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
 	maxRetries := 10
 
 	for i := 0; i < maxRetries; i++ {
-		r, err := repo_pg.NewRepo(
-			os.Getenv("DB_HOST"),
-			os.Getenv("DB_PORT"),
-			os.Getenv("DB_USER"),
-			os.Getenv("DB_PASSWORD"),
-			os.Getenv("DB_NAME"),
-			context.Background(),
-		)
+		r, err := repo_pg.NewRepo(dbHost, dbPort, dbUser, dbPassword, dbName, context.Background())
 		if err == nil {
 			dbRepo = r
 			break
