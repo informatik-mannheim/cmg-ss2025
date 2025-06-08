@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
@@ -21,6 +22,18 @@ import (
 func main() {
 	logging.Init("worker-registry")
 	logging.Debug("Starting Worker Registry")
+
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("worker-registry", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
 	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
 
 	var service *core.WorkerRegistryService
@@ -59,7 +72,8 @@ func main() {
 	srv := &http.Server{Addr: ":" + port}
 
 	h := handler.NewHandler(service)
-	http.Handle("/", h)
+	tracingHandler := tracing.Middleware(h)
+	http.Handle("/", tracingHandler)
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
