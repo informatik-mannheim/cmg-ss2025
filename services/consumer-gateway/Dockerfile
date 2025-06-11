@@ -7,8 +7,9 @@ RUN go get ./...
 RUN go build -o /consumer-gateway .
 
 #step 2: copy the binary (and nothing else) into the run container
-#FROM alpine:3.21 
-FROM scratch
+FROM alpine:3.21 
+# Add CA certs (for HTTPS)
+RUN apk add --no-cache ca-certificates
 EXPOSE 8080
 COPY --from=builder /consumer-gateway /app/consumer-gateway
 CMD ["/app/consumer-gateway"]
