@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
@@ -25,8 +24,6 @@ var _ ports.LoginClient = &LoginClient{}
 
 func (c *LoginClient) Login(ctx context.Context, req ports.LoginClientRequest) (ports.LoginClientResponse, error) {
 	url := fmt.Sprintf("%s/auth/login", c.baseURL)
-
-	log.Printf("Sending request to %s\n", url)
 
 	body, err := json.Marshal(req)
 	if err != nil {
