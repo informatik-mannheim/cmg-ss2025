@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
@@ -20,23 +21,27 @@ func NewLoginClient(baseURL string) *LoginClient {
 	return &LoginClient{baseURL: baseURL, httpClient: &http.Client{}}
 }
 
-func (c *LoginClient) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
+var _ ports.LoginClient = &LoginClient{}
+
+func (c *LoginClient) Login(ctx context.Context, req ports.LoginClientRequest) (ports.LoginClientResponse, error) {
 	url := fmt.Sprintf("%s/auth/login", c.baseURL)
+
+	log.Printf("Sending request to %s\n", url)
 
 	body, err := json.Marshal(req)
 	if err != nil {
-		return ports.LoginResponse{}, err
+		return ports.LoginClientResponse{}, err
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
-		return ports.LoginResponse{}, err
+		return ports.LoginClientResponse{}, err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
-		return ports.LoginResponse{}, err
+		return ports.LoginClientResponse{}, err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -46,10 +51,10 @@ func (c *LoginClient) Login(ctx context.Context, req ports.ConsumerLoginRequest)
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return ports.LoginResponse{}, fmt.Errorf("user-management login error: %s", resp.Status)
+		return ports.LoginClientResponse{}, fmt.Errorf("user-management login error: %s", resp.Status)
 	}
 
-	var out ports.LoginResponse
+	var out ports.LoginClientResponse
 	err = json.NewDecoder(resp.Body).Decode(&out)
 	return out, err
 }

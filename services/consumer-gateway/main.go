@@ -21,11 +21,11 @@ func main() {
 	}
 
 	// set port manually with "export PORT"
-	job := jobclient.NewJobClient(os.Getenv("JOB_SERVICE") + port)
-	user := jobclient.NewLoginClient(os.Getenv("USER_MANAGEMENT_SERVICE") + port)
-	zone := jobclient.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER") + port)
+	job := jobclient.NewJobClient(os.Getenv("JOB_SERVICE") + ":" + port)
+	user := jobclient.NewLoginClient(os.Getenv("USER_MANAGEMENT_SERVICE") + ":" + port)
+	zone := jobclient.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER") + ":" + port)
 	service := core.NewConsumerService(job, zone, user)
-	handler := handler_http.NewHandler(service, service, service)
+	handler := handler_http.NewHandler(service)
 
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)

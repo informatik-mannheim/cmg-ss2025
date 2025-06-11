@@ -12,6 +12,8 @@ type ConsumerGatewayService struct {
 	login ports.LoginClient
 }
 
+var _ ports.Api = &ConsumerGatewayService{}
+
 func NewConsumerService(jobClient ports.JobClient, zoneClient ports.ZoneClient, loginClient ports.LoginClient) *ConsumerGatewayService {
 	return &ConsumerGatewayService{
 		job:   jobClient,
@@ -45,11 +47,11 @@ func (s *ConsumerGatewayService) GetZone(ctx context.Context, req ports.ZoneRequ
 }
 
 func (s *ConsumerGatewayService) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
-	resp, err := s.login.Login(ctx, req)
+	resp, err := s.login.Login(ctx, ports.LoginClientRequest{Secret: req.Username + "." + req.Password})
 	if err != nil {
 		return ports.LoginResponse{}, err
 	}
-	return resp, nil
+	return ports.LoginResponse{Secret: resp.Token}, nil
 }
 
 var _ ports.JobClient = (*ConsumerGatewayService)(nil)

@@ -80,12 +80,14 @@ services:
       dockerfile: Dockerfile
     container_name: consumer-gateway
     environment:
-      - JOB_SERVICE=http://job-service:8080
-      - USER_MANAGEMENT=http://user-management:8080
-      - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
+      - JOB_SERVICE=http://job-service
+      - USER_MANAGEMENT_SERVICE=http://user-management
+      - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider
       - LOG_LEVEL=debug
     expose:
       - 8080
+    ports:
+      - "8080:8080"
     networks:
       - private_network
     restart: unless-stopped
