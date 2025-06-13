@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -14,10 +15,20 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type customErrorHandler struct{}
+
+func (h customErrorHandler) Handle(err error) {
+	logging.Error(err.Error())
+}
+
+var _ otel.ErrorHandler = customErrorHandler{} // type safety check
+
 var tracer trace.Tracer = otel.Tracer("default-tracer")
 
 // Init sets up tracing with OTLP (Jaeger via OTLP collector endpoint)
 func Init(serviceName, otlpEndpoint string) (func(context.Context) error, error) {
+	logging.Init("tracing")
+
 	ctx := context.Background()
 
 	exp, err := otlptracehttp.New(ctx,
@@ -42,6 +53,7 @@ func Init(serviceName, otlpEndpoint string) (func(context.Context) error, error)
 		sdktrace.WithResource(res),
 	)
 	otel.SetTracerProvider(tp)
+	otel.SetErrorHandler(customErrorHandler{})
 	tracer = tp.Tracer(serviceName)
 
 	return tp.Shutdown, nil
