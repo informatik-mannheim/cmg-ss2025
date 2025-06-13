@@ -2,21 +2,21 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	uuid "github.com/google/uuid"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 type WorkerRegistryService struct {
 	repo       ports.Repo
-	notifier   ports.Notifier
 	zoneClient ports.ZoneClient
 }
 
-func NewWorkerRegistryService(repo ports.Repo, notifier ports.Notifier, zoneClient ports.ZoneClient) *WorkerRegistryService {
+func NewWorkerRegistryService(repo ports.Repo, zoneClient ports.ZoneClient) *WorkerRegistryService {
 	return &WorkerRegistryService{
 		repo:       repo,
-		notifier:   notifier,
 		zoneClient: zoneClient,
 	}
 }
@@ -46,7 +46,8 @@ func (s *WorkerRegistryService) CreateWorker(zone string, ctx context.Context) (
 		return ports.Worker{}, err
 	}
 
-	s.notifier.WorkerCreated(newWorker, ctx)
+	resultMessage := fmt.Sprintf("New worker created: ID=%s, STATUS=%s, ZONE=%s", newWorker.Id, newWorker.Status, newWorker.Zone)
+	logging.Debug(resultMessage)
 	return newWorker, nil
 }
 
@@ -55,6 +56,8 @@ func (s *WorkerRegistryService) UpdateWorkerStatus(id string, status ports.Worke
 	if err != nil {
 		return ports.Worker{}, err
 	}
-	s.notifier.WorkerStatusChanged(newWorker, ctx)
+
+	resultMessage := fmt.Sprintf("[Notifier] Changed status from Worker with ID '%s' to status '%s'.", newWorker.Id, newWorker.Status)
+	logging.Debug(resultMessage)
 	return newWorker, nil
 }
