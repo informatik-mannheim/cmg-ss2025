@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
 	carbonintensity "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/carbon-intensity"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/handler-http"
@@ -26,16 +28,28 @@ type Environments struct {
 	JobServiceUrl              string
 	CarbonIntensityProviderUrl string
 	Port                       string
-	// TODO: Add address for UserManagement; Not relevant for now, comes with phase 3
+	UserManagementUrl          string
+	AuthToken                  string
+	OTLPExporterOtlpEndpoint   string // OpenTelemetry endpoint for tracing
 }
 
 func main() {
+	logging.Init("job-scheduler")
+	logging.Debug("Job Scheduler service is starting...")
+
 	// Read environment variables
 	envs, err := loadEnvVariables()
 	if err != nil {
-		log.Fatalf("Error loading environment variables: %v", err)
+		logging.Error("Failed to load environment variables: %v", err)
 		return
 	}
+
+	shutdown, err := tracing.Init("job-scheduler", envs.OTLPExporterOtlpEndpoint)
+	if err != nil {
+		logging.Error("Failed to initialize tracing: %v", err)
+		return
+	}
+	defer shutdown(context.Background())
 
 	// Initialize adapters and service
 	var jobAdapter ports.JobAdapter = job.NewJobAdapter(envs.JobServiceUrl)
@@ -51,7 +65,8 @@ func main() {
 	srv := &http.Server{Addr: ":" + envs.Port}
 
 	handler := handler_http.NewHandler(service)
-	http.Handle("/", handler)
+	tracingHandler := tracing.Middleware(handler)
+	http.Handle("/", tracingHandler)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -61,7 +76,7 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Print("The service is shutting down...")
+		logging.Debug("Received shutdown signal, shutting down the server...")
 		srv.Shutdown(context.Background())
 		cancel() // cancel the context to stop the scheduler
 	}()
@@ -69,10 +84,10 @@ func main() {
 	// Start the HTTP server
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("HTTP server error: %v", err)
+			logging.Error("HTTP server error: %v", err)
 		}
 	}()
-	log.Printf("Job Scheduler is running on port %s...\n", envs.Port)
+	logging.Debug("Job Scheduler is running on port %s...", envs.Port)
 
 	// Start the job scheduler runner
 	runner := interval_runner.NewIntervalRunner(ctx, envs.Interval, envs.Port)
@@ -114,6 +129,24 @@ func loadEnvVariables() (Environments, error) {
 		return envs, err
 	}
 	envs.Port = port
+
+	userManagementUrl, err := utils.LoadEnvRequired("USER_MANAGEMENT_URL")
+	if err != nil || !utils.IsUrlValid(userManagementUrl) {
+		return envs, err
+	}
+	envs.UserManagementUrl = userManagementUrl
+
+	authToken, err := utils.LoadEnvRequired("AUTH_TOKEN")
+	if err != nil || authToken == "" {
+		return envs, err
+	}
+	envs.AuthToken = authToken
+
+	otlpEndpoint, err := utils.LoadEnvRequired("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if err != nil || !utils.IsUrlValid(otlpEndpoint) {
+		return envs, err
+	}
+	envs.OTLPExporterOtlpEndpoint = otlpEndpoint
 
 	return envs, nil
 }
