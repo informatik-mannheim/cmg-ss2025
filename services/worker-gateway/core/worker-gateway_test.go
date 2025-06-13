@@ -5,9 +5,14 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/ports"
 )
+
+func init() {
+	logging.Init("Worker Registry")
+}
 
 // --- Dummy RegistryService für Tests ---
 type dummyRegistryService struct {
