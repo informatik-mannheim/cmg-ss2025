@@ -24,11 +24,7 @@ func NewZoneClient(baseURL string) *ZoneClient {
 	client := &ZoneClient{
 		baseURL:    baseURL,
 		httpClient: &http.Client{},
-		zones: []ports.Zone{
-			{Code: "DE", Name: "Germany"},
-			{Code: "EN", Name: "England"},
-			{Code: "FR", Name: "France"},
-		},
+		zones:      []ports.Zone{},
 	}
 
 	go func() {
