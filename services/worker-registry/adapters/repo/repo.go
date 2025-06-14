@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
@@ -17,9 +18,10 @@ type Repo struct {
 var _ ports.Repo = (*Repo)(nil)
 
 func NewRepo(host, port, user, password, dbName string, ctx context.Context) (*Repo, error) {
+	escapedPassword := url.QueryEscape(password)
 	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		user, password, host, port, dbName,
+		"postgres://%s:%s@%s:%s/%s?sslmode=require",
+		user, escapedPassword, host, port, dbName,
 	)
 
 	logging.Debug("Connecting to DB with Connectionstring:", connectionString)
