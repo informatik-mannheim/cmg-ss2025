@@ -22,7 +22,7 @@ func (m *mockJobClient) CreateJob(ctx context.Context, req ports.CreateJobReques
 		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
 	return ports.CreateJobResponse{
-		ImageID: req.ImageID,
+		Image:   req.ImageID.Name,
 		JobName: req.JobName,
 	}, nil
 }
@@ -52,11 +52,11 @@ type mockLoginClient struct {
 	fail bool
 }
 
-func (m *mockLoginClient) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
+func (m *mockLoginClient) Login(ctx context.Context, req ports.LoginClientRequest) (ports.LoginClientResponse, error) {
 	if m.fail {
-		return ports.LoginResponse{}, ports.ErrUnauthorized
+		return ports.LoginClientResponse{}, ports.ErrUnauthorized
 	}
-	return ports.LoginResponse{Secret: "token-123"}, nil
+	return ports.LoginClientResponse{Token: "token-123"}, nil
 }
 
 func TestConsumerGatewayService_CreateJob(t *testing.T) {
@@ -64,7 +64,7 @@ func TestConsumerGatewayService_CreateJob(t *testing.T) {
 	service := core.NewConsumerService(jobMock, &mockZoneClient{}, &mockLoginClient{})
 
 	resp, err := service.CreateJob(context.Background(), ports.CreateJobRequest{
-		ImageID:      "img1",
+		ImageID:      ports.ContainerImage{Name: "img1", Version: "1.0"},
 		JobName:      "job-1",
 		CreationZone: "GER",
 	})
@@ -72,8 +72,8 @@ func TestConsumerGatewayService_CreateJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if resp.ImageID != "img1" {
-		t.Errorf("unexpected ImageID: %v", resp.ImageID)
+	if resp.Image != "img1" {
+		t.Errorf("unexpected ImageID: %v", resp.Image)
 	}
 }
 

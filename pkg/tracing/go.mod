@@ -1,6 +1,8 @@
 module github.com/informatik-mannheim/cmg-ss2025/pkg/tracing
 
-go 1.23.1
+go 1.24.1
+
+toolchain go1.24.2
 
 require (
 	go.opentelemetry.io/otel v1.36.0
@@ -15,6 +17,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
+	github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250613141248-f5e344cac901 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.36.0 // indirect
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect

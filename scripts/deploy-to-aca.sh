@@ -1,11 +1,10 @@
 #!/bin/bash
-
+set -e
 # Configuration
 ACR_NAME="cmgregistry"                  # Your ACR name (without .azurecr.io)
 RESOURCE_GROUP="cmg-ss2025"             # Azure Resource Group
 AZURE_CMD="az"                          # Azure CLI command
 DOCKER_CMD="docker"                     # Docker command
-COMPOSE_CMD="docker compose"           # Docker Compose command
 FULL_ACR_NAME="$ACR_NAME.azurecr.io"    # Full registry name
 
 # Images
@@ -34,15 +33,15 @@ APPS_TO_RESTART=(
 echo "Logging in to ACR: $ACR_NAME..."
 $AZURE_CMD acr login --name "$ACR_NAME"
 
-# Step 2: Build and start containers via docker compose
-echo "Building and starting services using Docker Compose..."
+# Step 2: Run deployment via Makefile (build → test → docker build → clean)
+echo "Building and testing services using Makefile..."
 cd "$(dirname "$0")/.." || exit 1  # Navigate to root directory
-$COMPOSE_CMD up --build -d
+make deployment
 
 # Step 3: Push all images with 'latest' tag
 echo "Pushing updated images to ACR..."
 for IMAGE in "${IMAGES[@]}"; do
-    echo "Pushing $IMAGE:latest"
+    echo "Tagging and pushing $IMAGE:latest"
     $DOCKER_CMD tag "$IMAGE" "$FULL_ACR_NAME/$IMAGE:latest"
     $DOCKER_CMD push "$FULL_ACR_NAME/$IMAGE:latest"
 done
@@ -60,4 +59,4 @@ for APP in "${APPS_TO_RESTART[@]}"; do
       --image "$IMAGE_NAME:latest"
 done
 
-echo "Deployment complete!"
+echo "✅ Deployment complete!"

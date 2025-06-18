@@ -20,7 +20,7 @@ func (f *FakeService) Login(ctx context.Context, req ports.ConsumerLoginRequest)
 }
 
 func (f *FakeService) CreateJob(ctx context.Context, req ports.CreateJobRequest) (ports.CreateJobResponse, error) {
-	if req.ImageID == "" || req.CreationZone == "" || req.Parameters == nil {
+	if req.CreationZone == "" || req.Parameters == nil {
 		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
 	return ports.CreateJobResponse{

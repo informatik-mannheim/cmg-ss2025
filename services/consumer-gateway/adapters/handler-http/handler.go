@@ -11,17 +11,15 @@ import (
 )
 
 type Handler struct {
-	job   ports.JobClient
-	login ports.LoginClient
-	zone  ports.ZoneClient
-	rtr   *mux.Router
+	api ports.Api
+	rtr *mux.Router
 }
 
 var _ http.Handler = (*Handler)(nil)
 
-func NewHandler(job ports.JobClient, login ports.LoginClient, zone ports.ZoneClient) *Handler {
+func NewHandler(api ports.Api) *Handler {
 	r := mux.NewRouter()
-	h := &Handler{job: job, login: login, zone: zone, rtr: r}
+	h := &Handler{api: api, rtr: r}
 
 	r.HandleFunc("/jobs", h.HandleCreateJobRequest).Methods("POST")
 	r.HandleFunc("/jobs/{job-id}/outcome", h.HandleGetJobOutcomeRequest).Methods("GET")
@@ -48,7 +46,7 @@ func (h *Handler) HandleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 
 	ctx := context.WithValue(r.Context(), "Authorization", r.Header.Get("Authorization"))
 
-	resp, err := h.job.CreateJob(ctx, req)
+	resp, err := h.api.CreateJob(ctx, req)
 	if err != nil {
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		return
@@ -68,7 +66,7 @@ func (h *Handler) HandleGetJobOutcomeRequest(w http.ResponseWriter, r *http.Requ
 
 	ctx := context.WithValue(r.Context(), "Authorization", r.Header.Get("Authorization"))
 
-	status, err := h.job.GetJobOutcome(ctx, jobID)
+	status, err := h.api.GetJobOutcome(ctx, jobID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -84,7 +82,7 @@ func (h *Handler) HandleLoginRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.login.Login(r.Context(), req)
+	resp, err := h.api.Login(r.Context(), req)
 	if err != nil {
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusBadRequest)
 		return

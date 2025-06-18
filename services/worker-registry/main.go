@@ -2,24 +2,68 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
-	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
-	repo "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
+	repo_pg "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo"
+	repo_mem "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
+	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 func main() {
-	repository := repo.NewRepo()
-	notifier := notifier.NewNotifier()
+	logging.Init("worker-registry")
+	logging.Debug("Starting Worker Registry")
+
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("worker-registry", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
 	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
-	service := core.NewWorkerRegistryService(repository, notifier, zoneClient)
+
+	var service *core.WorkerRegistryService
+	var dbRepo ports.Repo
+
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	maxRetries := 10
+
+	for i := 0; i < maxRetries; i++ {
+		r, err := repo_pg.NewRepo(dbHost, dbPort, dbUser, dbPassword, dbName, context.Background())
+		if err == nil {
+			dbRepo = r
+			break
+		}
+		logging.Warn("Postgres not ready, retrying...")
+		time.Sleep(2 * time.Second)
+	}
+
+	if dbRepo == nil {
+		logging.Warn("Failed to connect to Postgres")
+		logging.Warn("Falling back to in-memory repository")
+		dbRepo = repo_mem.NewRepo()
+	}
+
+	service = core.NewWorkerRegistryService(dbRepo, zoneClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -28,18 +72,19 @@ func main() {
 	srv := &http.Server{Addr: ":" + port}
 
 	h := handler.NewHandler(service)
-	http.Handle("/", h)
+	tracingHandler := tracing.Middleware(h)
+	http.Handle("/", tracingHandler)
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Print("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		srv.Shutdown(context.Background())
 	}()
 
-	log.Print("listening...")
+	logging.Debug("Listening...")
 	srv.ListenAndServe()
-	log.Print("Done")
+	logging.Debug("Done")
 }

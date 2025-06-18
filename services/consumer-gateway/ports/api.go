@@ -1,6 +1,7 @@
 package ports
 
 import (
+	"context"
 	"errors"
 )
 
@@ -53,4 +54,11 @@ type ZoneRequest struct {
 
 type ZoneResponse struct {
 	Zone string `json:"zone"`
+}
+
+type Api interface {
+	CreateJob(ctx context.Context, req CreateJobRequest) (CreateJobResponse, error)
+	GetJobOutcome(ctx context.Context, jobID string) (JobOutcomeResponse, error)
+	GetZone(ctx context.Context, req ZoneRequest) (ZoneResponse, error)
+	Login(ctx context.Context, req ConsumerLoginRequest) (LoginResponse, error)
 }
