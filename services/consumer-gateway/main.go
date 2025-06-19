@@ -14,13 +14,18 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 )
 
+func secure(h http.HandlerFunc) http.Handler {
+	return auth.AuthMiddleware(h)
+}
+
 func main() {
 
+	jwksUrl := os.Getenv("JWKS_URL")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	err := auth.InitJWKS("https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json")
+	err := auth.InitJWKS(jwksUrl)
 	if err != nil {
 		log.Fatalf("Failed to initialize JWKS: %v", err)
 	}
@@ -37,8 +42,8 @@ func main() {
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
 
-	mux.Handle("/jobs", auth.AuthMiddleware(http.HandlerFunc(handler.HandleCreateJobRequest)))
-	mux.Handle("jobs/{id}/result", auth.AuthMiddleware(http.HandlerFunc(handler.HandleGetJobOutcomeRequest)))
+	mux.Handle("/jobs", secure(handler.HandleCreateJobRequest))
+	mux.Handle("jobs/{id}/result", secure(handler.HandleGetJobOutcomeRequest))
 	mux.HandleFunc("/auth/login", handler.HandleLoginRequest)
 
 	go func() {
@@ -52,7 +57,6 @@ func main() {
 			return
 		}
 	}()
-
 
 	log.Print("listening on port " + port + " ...")
 
