@@ -32,9 +32,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
-
+		// TODO: validate expiry date, validate sig, kid
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			ctx := context.WithValue(r.Context(), "user", claims["sub"])
+			ctx := context.WithValue(r.Context(), "user", claims["sub"]) // role as well
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			http.Error(w, "Invalid claims", http.StatusUnauthorized)

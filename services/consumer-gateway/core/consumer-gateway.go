@@ -47,7 +47,7 @@ func (s *ConsumerGatewayService) GetZone(ctx context.Context, req ports.ZoneRequ
 }
 
 func (s *ConsumerGatewayService) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
-	resp, err := s.login.Login(ctx, ports.LoginClientRequest{Secret: req.Username + "." + req.Password})
+	resp, err := s.login.Login(ctx, ports.LoginClientRequest{Secret: req.Secret})
 	if err != nil {
 		return ports.LoginResponse{}, err
 	}
