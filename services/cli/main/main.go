@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/informatik-mannheim/cmg-ss2025.git"
-	"github.com/informatik-mannheim/cmg-ss2025.git/client"
+	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
+	"github.com/informatik-mannheim/cmg-ss2025/services/cli/client"
 	"os"
 	"strings"
 )

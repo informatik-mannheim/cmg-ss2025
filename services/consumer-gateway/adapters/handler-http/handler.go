@@ -76,7 +76,7 @@ func (h *Handler) HandleGetJobOutcomeRequest(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *Handler) HandleLoginRequest(w http.ResponseWriter, r *http.Request) {
-	var req ports.ConsumerLoginRequest // Example: req.Username == "Bob", req.Password == "SuperSecure"
+	var req ports.ConsumerLoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"invalid request"}`, http.StatusUnauthorized)
 		return
@@ -89,5 +89,5 @@ func (h *Handler) HandleLoginRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp) // Token: 123-abc
+	json.NewEncoder(w).Encode(resp)
 }
