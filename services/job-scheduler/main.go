@@ -11,6 +11,7 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
+	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/auth"
 	carbonintensity "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/carbon-intensity"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/handler-http"
 	interval_runner "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/interval-runner"
@@ -52,9 +53,12 @@ func main() {
 	defer shutdown(context.Background())
 
 	// Initialize adapters and service
-	var jobAdapter ports.JobAdapter = job.NewJobAdapter(envs.JobServiceUrl)
-	var workerAdapter ports.WorkerAdapter = worker.NewWorkerAdapter(envs.WorkerRegestryUrl)
-	var carbonIntensityAdapter ports.CarbonIntensityAdapter = carbonintensity.NewCarbonIntensityAdapter(envs.CarbonIntensityProviderUrl)
+	var authAdapter ports.AuthAdapter = auth.NewAuthAdapter(envs.UserManagementUrl, envs.AuthToken)
+	var customClient http.Client = *utils.GetCustomHttpClient(authAdapter)
+
+	var jobAdapter ports.JobAdapter = job.NewJobAdapter(customClient, envs.JobServiceUrl)
+	var workerAdapter ports.WorkerAdapter = worker.NewWorkerAdapter(customClient, envs.WorkerRegestryUrl)
+	var carbonIntensityAdapter ports.CarbonIntensityAdapter = carbonintensity.NewCarbonIntensityAdapter(customClient, envs.CarbonIntensityProviderUrl)
 	var service ports.JobScheduler = core.NewJobSchedulerService(
 		jobAdapter,
 		workerAdapter,
