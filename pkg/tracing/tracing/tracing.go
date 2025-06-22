@@ -3,6 +3,7 @@ package tracing
 import (
 	"context"
 	"net/http"
+	"os"
 	"strconv"
 
 	"go.opentelemetry.io/otel"
@@ -20,10 +21,17 @@ var tracer trace.Tracer = otel.Tracer("default-tracer")
 func Init(serviceName, otlpEndpoint string) (func(context.Context) error, error) {
 	ctx := context.Background()
 
-	exp, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint(otlpEndpoint),
-		otlptracehttp.WithInsecure(), // I would say this is fine because it should be in a local network, so no TLS is needed
-	)
+	// Check if environment variable "TRACING_INSECURE" is set to "true"
+	insecure := os.Getenv("TRACING_INSECURE") == "true"
+
+	var opts []otlptracehttp.Option
+	opts = append(opts, otlptracehttp.WithEndpointURL(otlpEndpoint))
+	opts = append(opts, otlptracehttp.WithTimeout(60*1000*1000*1000))
+	if insecure {
+		opts = append(opts, otlptracehttp.WithInsecure())
+	}
+
+	exp, err := otlptracehttp.New(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
