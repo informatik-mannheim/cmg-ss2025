@@ -103,13 +103,14 @@ services:
     build:
       context: ./services/user-management
       dockerfile: Dockerfile
-    container_name: green-load-shifting-platform
+    container_name: user-management
     environment:
       USE_LIVE: "true"
       AUTH0_TOKEN_URL: "https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/oauth/token"
       JWT_AUDIENCE: "https://green-load-shifting-platform/"
       ADMIN_SECRET_HASH: "da359894a57a42c65efa8b98c8c86f3f974ff2c8dd7fc428fd87ce6ecdc40bd7"
       LOG_LEVEL: debug
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
     expose:
       - 8080
     networks:
