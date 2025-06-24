@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  jobservice:
+    build: .
+    container_name: jobservice
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - JOB_REPO_TYPE=postgres
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_USER=jobuser
+      - PG_PASS=jobpass
+      - PG_DB=jobdb
+    depends_on:
+      - postgres
+    networks:
+      - jobnet
+
+  postgres:
+    image: postgres:latest
+    container_name: job-postgres
+    environment:
+      - POSTGRES_USER=jobuser
+      - POSTGRES_PASSWORD=jobpass
+      - POSTGRES_DB=jobdb
+    volumes:
+      - /home/cyberdefending/Schreibtisch/cmg_test_volumeplace:/var/lib/postgresql/data
+      - ../../database:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - jobnet
+
+networks:
+  jobnet:
+    driver: bridge
