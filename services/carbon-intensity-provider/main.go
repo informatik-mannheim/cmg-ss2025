@@ -104,12 +104,13 @@ func main() {
 		_ = r.StoreZones(offlineZones, rootCtx)
 	}
 
-	httpHandler := handler.NewHandler(s, n)
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: httpHandler,
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	server := &http.Server{Addr: ":" + port}
 
+	httpHandler := handler.NewHandler(s, n)
 	tracingHandler := tracing.Middleware(httpHandler)
 	http.Handle("/", tracingHandler)
 
