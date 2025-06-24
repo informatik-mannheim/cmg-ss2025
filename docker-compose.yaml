@@ -60,6 +60,7 @@ services:
     environment:
       - USE_LIVE=false
       - LOG_LEVEL=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4318
     expose:
       - 8080
     networks:
