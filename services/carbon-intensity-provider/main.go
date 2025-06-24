@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/handler-http"
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/notifier"
 	electricitymaps "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/provider/electricity-maps"
@@ -20,6 +21,18 @@ import (
 func main() {
 	logging.Init("carbon-intensity-provider")
 	logging.Debug("Starting Carbon Intensity Provider")
+
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("carbon-intensity-provider", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -97,13 +110,16 @@ func main() {
 		Handler: httpHandler,
 	}
 
+	tracingHandler := tracing.Middleware(httpHandler)
+	http.Handle("/", tracingHandler)
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		logging.Debug("Carbon Intensity Provider running on :8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logging.Error("Server error: " + err.Error())
+			logging.Error("Server error: ", err.Error())
 		}
 	}()
 
