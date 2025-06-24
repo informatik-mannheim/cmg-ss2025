@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,42 +19,50 @@ import (
 )
 
 func main() {
+	logging.Init("user-management")
+	logging.Debug("Starting User Management Service")
+
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("user-management", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
 	ctx := context.Background()
 	useLive := os.Getenv("USE_LIVE") == "true"
 
-	// Create notifier
 	n := notifier.New()
-
-	// Create Auth0 adapter
 	authAdapter := auth0adapter.New(useLive, n)
-
-	// Wrap adapter in core AuthService
 	authService := core.NewAuthService(authAdapter, n)
 
-	// Admin verification function using core
 	isAdminFn := func(secret string) bool {
 		expected := os.Getenv("ADMIN_SECRET_HASH")
 		return core.IsAdminSecret(secret, expected)
 	}
 
-	// HTTP handler with all dependencies
 	handler := handler.New(authService, useLive, isAdminFn, func() ports.Notifier {
 		return n
 	})
 
-	// Set up routes
-	mux := mux.NewRouter()
-	mux.HandleFunc("/auth/register", handler.RegisterHandler).Methods("POST")
-	mux.HandleFunc("/auth/login", handler.LoginHandler).Methods("POST")
+	muxRouter := mux.NewRouter()
+	muxRouter.HandleFunc("/auth/register", handler.RegisterHandler).Methods("POST")
+	muxRouter.HandleFunc("/auth/login", handler.LoginHandler).Methods("POST")
+
+	// Wrap router with tracing middleware
+	tracingHandler := tracing.Middleware(muxRouter)
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: tracingHandler,
 	}
 
 	n.Event("Listening on :8080", ctx)
 
-	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
