@@ -8,11 +8,14 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       - JOB_REPO_TYPE=postgres
-      - PG_HOST=postgres
-      - PG_PORT=5432
-      - PG_USER=jobuser
-      - PG_PASS=jobpass
-      - PG_DB=jobdb
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=jobuser
+      - DB_PASSWORD=jobpass
+      - DB_NAME=jobdb
+      - SSL_MODE=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/"
+      - LOG_LEVEL=DEBUG
     depends_on:
       - postgres
     networks:

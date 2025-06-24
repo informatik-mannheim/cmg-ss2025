@@ -19,13 +19,20 @@ type JobStorage struct {
 
 var _ ports.JobStorage = (*JobStorage)(nil)
 
-func NewJobStorage(host, port, user, password, dbName string, ctx context.Context) (*JobStorage, error) {
+func NewJobStorage(host, port, user, password, dbName, sslMode string, ctx context.Context) (*JobStorage, error) {
 	escapedPassword := url.QueryEscape(password)
-	connectionString := fmt.Sprintf(
-		// this might be necessary for cloud deployment later on ?sslmode=require"
-		"postgres://%s:%s@%s:%s/%s",
-		user, escapedPassword, host, port, dbName,
-	)
+	connectionString := ""
+	if sslMode == "true" {
+		connectionString = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=require",
+			user, escapedPassword, host, port, dbName,
+		)
+	} else {
+		connectionString = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s",
+			user, escapedPassword, host, port, dbName,
+		)
+	}
 
 	//logging.Debug("Connecting to DB with Connectionstring:", connectionString)
 	fmt.Println("DEBUG: Connecting to DB with Connectionstring:", connectionString)

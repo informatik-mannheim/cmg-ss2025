@@ -18,21 +18,21 @@ import (
 )
 
 func main() {
-
 	// Initialize the job storage based on the environment variable JOB_REPO_TYPE
 	var storage ports.JobStorage
 	repoType := os.Getenv("JOB_REPO_TYPE")
 	if repoType == "postgres" {
-		host := os.Getenv("PG_HOST")
-		port := os.Getenv("PG_PORT")
-		user := os.Getenv("PG_USER")
-		password := os.Getenv("PG_PASS")
-		dbName := os.Getenv("PG_DB")
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		user := os.Getenv("DB_USER")
+		password := os.Getenv("DB_PASSWORD")
+		dbName := os.Getenv("DB_NAME")
+		sslMode := os.Getenv("SSL_MODE")
 		ctx := context.Background()
 
 		maxRetries := 10
 		for i := 0; i < maxRetries; i++ {
-			dbStorage, err := repo_database.NewJobStorage(host, port, user, password, dbName, ctx)
+			dbStorage, err := repo_database.NewJobStorage(host, port, user, password, dbName, sslMode, ctx)
 			if err != nil {
 				//logging.Warn("Postgres not ready, retrying...")
 				log.Println("WARN: Postgres not ready, retrying...")
