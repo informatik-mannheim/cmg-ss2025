@@ -32,7 +32,7 @@ services:
       - DB_USER=test
       - DB_PASSWORD=test
       - DB_NAME=test
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     expose:
       - 8080
     networks:
@@ -60,6 +60,7 @@ services:
     environment:
       - USE_LIVE=false
       - LOG_LEVEL=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     expose:
       - 8080
     networks:
