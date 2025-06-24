@@ -45,9 +45,19 @@ services:
       dockerfile: Dockerfile
     container_name: job-service
     environment:
+      - JOB_REPO_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=test
+      - DB_PASSWORD=test
+      - DB_NAME=test
+      - SSL_MODE=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/"
       - LOG_LEVEL=debug
     expose:
       - 8080
+    depends_on:
+      - postgres
     networks:
       - private_network
     restart: unless-stopped

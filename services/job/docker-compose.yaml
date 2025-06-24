@@ -15,7 +15,7 @@ services:
       - DB_NAME=jobdb
       - SSL_MODE=false
       - OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/"
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=debug
     depends_on:
       - postgres
     networks:
