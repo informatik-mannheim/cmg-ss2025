@@ -1,2 +1,4 @@
 github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
 github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
+github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250622170131-f936d38c088d h1:gZAhG7mNc8XvOLPB1dNMnH6gm1RvWlKGRSeEBaN6T3M=
+github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250622170131-f936d38c088d/go.mod h1:5bqxcIO6gxcHsJjLZ76Fw6GQEwEYqKtljdoqDCvy19o=
