@@ -28,7 +28,7 @@ func GetCustomHttpClient(adapter ports.AuthAdapter) *http.Client {
 
 func (t *AuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req2 := req.Clone(req.Context())
-	req2.AddCookie(&http.Cookie{Name: "token", Value: t.Adapter.GetToken()})
+	req2.Header.Set("Authorization", "Bearer "+t.Adapter.GetToken())
 
 	resp, err := t.base().RoundTrip(req2)
 	if err != nil || resp.StatusCode != http.StatusUnauthorized {
@@ -40,7 +40,7 @@ func (t *AuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	req3 := req.Clone(req.Context())
-	req3.AddCookie(&http.Cookie{Name: "token", Value: t.Adapter.GetToken()})
+	req3.Header.Set("Authorization", "Bearer "+t.Adapter.GetToken())
 	return t.base().RoundTrip(req3)
 }
 
