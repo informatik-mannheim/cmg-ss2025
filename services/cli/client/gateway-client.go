@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/informatik-mannheim/cmg-ss2025.git"
+	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"io"
 	"log"
 	"net/http"
@@ -13,11 +13,11 @@ import (
 )
 
 var port string
-var AuthToken string
 
 type GatewayClient struct {
 	baseURL    string
 	httpClient *http.Client
+	authToken  string
 }
 
 func NewGatewayClient(baseURL string) *GatewayClient {
@@ -52,7 +52,7 @@ func (c *GatewayClient) CreateJob(jobName string, creationZone string, imageId c
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+AuthToken)
+	req.Header.Set("Authorization", "Bearer "+c.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -79,7 +79,7 @@ func (c *GatewayClient) GetJobById(id string) {
 		log.Fatal("Error creating request:", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+AuthToken)
+	req.Header.Set("Authorization", "Bearer "+c.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -101,7 +101,7 @@ func (c *GatewayClient) GetJobOutcome(id string) {
 		log.Fatal("Error creating request:", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+AuthToken)
+	req.Header.Set("Authorization", "Bearer "+c.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -134,9 +134,11 @@ func (c *GatewayClient) Login(secret string) {
 	defer resp.Body.Close()
 
 	var tokenResp cli.TokenResponse
+	body, _ := io.ReadAll(resp.Body)
+	json.Unmarshal(body, &tokenResp)
 
-	AuthToken = tokenResp.Token
-	fmt.Println("Status:", resp.Status)
+	c.authToken = tokenResp.Token
+
 	if resp.StatusCode == 200 {
 		fmt.Println("Login successful.")
 	} else {

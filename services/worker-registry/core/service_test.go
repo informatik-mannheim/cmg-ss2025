@@ -5,17 +5,21 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
-	notifier "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/notifier"
 	repo_in_memory "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
+func init() {
+	logging.Init("Worker Registry")
+}
+
 func TestCreateWorker(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewNotifier()
-	zoneClient := client.NewZoneClient("")
-	service := NewWorkerRegistryService(repo, notifier, zoneClient)
+	zoneClient := client.MockZoneClient{}
+	service := NewWorkerRegistryService(repo, zoneClient)
 
 	t.Run("create worker with valid zone", func(t *testing.T) {
 		worker, err := service.CreateWorker("EN", context.Background())
@@ -47,9 +51,8 @@ func TestCreateWorker(t *testing.T) {
 
 func TestGetWorkers(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewNotifier()
-	zoneClient := client.NewZoneClient("")
-	service := NewWorkerRegistryService(repo, notifier, zoneClient)
+	zoneClient := client.MockZoneClient{}
+	service := NewWorkerRegistryService(repo, zoneClient)
 
 	service.CreateWorker("DE", context.Background())
 	service.CreateWorker("EN", context.Background())
@@ -83,9 +86,8 @@ func TestGetWorkers(t *testing.T) {
 
 func TestGetWorkerById(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewNotifier()
-	zoneClient := client.NewZoneClient("")
-	service := NewWorkerRegistryService(repo, notifier, zoneClient)
+	zoneClient := client.MockZoneClient{}
+	service := NewWorkerRegistryService(repo, zoneClient)
 
 	worker, _ := service.CreateWorker("DE", context.Background())
 
@@ -110,9 +112,8 @@ func TestGetWorkerById(t *testing.T) {
 
 func TestUpdateWorkerStatus(t *testing.T) {
 	repo := repo_in_memory.NewRepo()
-	notifier := notifier.NewNotifier()
-	zoneClient := client.NewZoneClient("")
-	service := NewWorkerRegistryService(repo, notifier, zoneClient)
+	zoneClient := client.MockZoneClient{}
+	service := NewWorkerRegistryService(repo, zoneClient)
 
 	worker, _ := service.CreateWorker("DE", context.Background())
 

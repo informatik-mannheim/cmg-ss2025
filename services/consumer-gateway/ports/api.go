@@ -40,8 +40,7 @@ type JobOutcomeResponse struct {
 }
 
 type ConsumerLoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Secret string `json:"secret"`
 }
 
 type LoginResponse struct {

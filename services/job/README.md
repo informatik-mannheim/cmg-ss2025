@@ -55,23 +55,54 @@ Update worker-related fields of a job.
 
 ## Data Schemas
 
-**openAPI specified api.yaml shows the possible endpoints and the data schemas**
+**The OpenAPI specification (`api.yaml`) shows the possible endpoints and the data schemas for API requests and responses.**
+
+**Database schema:**  
+The SQL schema for the PostgreSQL database (including the `jobs` table and its fields) is located in the [`database`](../../database) directory.  
+You can find the table definitions and initialization scripts in files such as `job-init.sql`.
 
 ---
 
-## Running the Service with Docker
+## Running the Service with Docker Compose
 
-1. **Build the Docker image:**
-   ```sh
-   docker build -t job-service .
-   ```
+You can run the job microservice together with a PostgreSQL database using Docker Compose.
 
-2. **Run the container:**
-   ```sh
-   docker run -p 8080:8080 job-service
-   ```
+### 1. Build and Start the Services
 
-   The service will be available at `http://localhost:8080`.
+From the `/workspaces/cmg-ss2025/services/job` directory, run:
+
+```sh
+docker-compose up --build
+```
+
+This will:
+- Build the jobservice Docker image.
+- Start both the jobservice and a PostgreSQL database.
+- Expose the jobservice on [http://localhost:8080](http://localhost:8080).
+
+### 2. Stopping the Services
+
+To stop the services, press `Ctrl+C` or run:
+
+```sh
+docker-compose down
+```
+
+### 3. Data Persistence
+
+- PostgreSQL data is persisted in `<select_a_path_on_your_local_system>` on the host.
+- The database schema is automatically initialized from the `database` directory via Docker Compose.
+
+### 4. Environment Variables
+
+The following environment variables are set automatically in `docker-compose.yaml`:
+
+- `JOB_REPO_TYPE=postgres`
+- `PG_HOST=postgres`
+- `PG_PORT=5432`
+- `PG_USER=jobuser`
+- `PG_PASS=jobpass`
+- `PG_DB=jobdb`
 
 ---
 
@@ -195,6 +226,23 @@ curl -X PATCH "http://localhost:8080/jobs/{id}/update-workerdaemon" -H "Content-
   "errorMessage": "Some error"
 }'
 ```
+
+---
+
+## Repository Selection
+
+Set the environment variable `JOB_REPO_TYPE` to select the repository:
+
+- `memory` (default): Use in-memory storage (for development/testing)
+- `postgres`: Use PostgreSQL database
+
+If `postgres` is selected, set the following variables:
+
+- `PG_HOST`
+- `PG_PORT`
+- `PG_USER`
+- `PG_PASS`
+- `PG_DB`
 
 ---
 
