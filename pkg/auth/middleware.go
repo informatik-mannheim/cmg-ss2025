@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var JWKS *keyfunc.JWKS
@@ -27,14 +28,22 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
 
-		token, err := jwt.Parse(tokenStr, JWKS.Keyfunc)
+		token, err := jwt.Parse(tokenStr, JWKS.Keyfunc) // main verification happens here
 		if err != nil || !token.Valid {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
-		// TODO: validate expiry date, validate sig, kid
+
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			ctx := context.WithValue(r.Context(), "user", claims["sub"]) // role as well
+			role := claims["role"]                                       // adds role to ctx
+			ctx := context.WithValue(r.Context(), "user", claims["sub"]) // adds user to ctx
+			ctx = context.WithValue(ctx, "role", role)
+
+			exp, ok := claims["exp"].(float64)
+			if !ok || int64(exp) < time.Now().Unix() {
+				http.Error(w, "Token expired", http.StatusUnauthorized)
+				return
+			}
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			http.Error(w, "Invalid claims", http.StatusUnauthorized)
