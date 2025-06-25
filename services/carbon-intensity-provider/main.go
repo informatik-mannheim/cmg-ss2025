@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"log"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/handler-http"
 	notifier "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/notifier"
 	electricitymaps "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/provider/electricity-maps"
@@ -18,6 +19,20 @@ import (
 )
 
 func main() {
+	logging.Init("carbon-intensity-provider")
+	logging.Debug("Starting Carbon Intensity Provider")
+
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("carbon-intensity-provider", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -26,12 +41,13 @@ func main() {
 	s := core.NewCarbonIntensityService(r, n)
 
 	if os.Getenv("USE_LIVE") == "true" {
-		log.Println("[Mode] Live fetch enabled")
+		logging.Debug("[Mode] Live fetch enabled")
 		fetcher := electricitymaps.NewFromEnv(n)
 
 		detailedZones, err := fetcher.AllElectricityMapZones(rootCtx)
 		if err != nil {
-			log.Fatalf("Failed to fetch zone metadata: %v", err)
+			errormessage := "Failed to fetch zone metadata: " + err.Error()
+			logging.Error(errormessage)
 		}
 
 		// Filter to only zones we have a token for
@@ -48,7 +64,7 @@ func main() {
 
 		configuredZones, err := fetcher.GetConfiguredZones(rootCtx)
 		if err != nil {
-			log.Fatalf("Failed to get configured zones: %v", err)
+			logging.Error("Failed to get configured zones: " + err.Error())
 		}
 
 		// Context-aware fetch loop
@@ -75,7 +91,7 @@ func main() {
 		}(rootCtx)
 
 	} else {
-		log.Println("[Mode] Using static offline test data")
+		logging.Debug("[Mode] Using static offline test data")
 		s.AddOrUpdateZone("DE", 140.5, rootCtx)
 		s.AddOrUpdateZone("FR", 135.2, rootCtx)
 		s.AddOrUpdateZone("US-NY-NYIS", 128.9, rootCtx)
@@ -88,19 +104,23 @@ func main() {
 		_ = r.StoreZones(offlineZones, rootCtx)
 	}
 
-	httpHandler := handler.NewHandler(s, n)
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: httpHandler,
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	server := &http.Server{Addr: ":" + port}
+
+	httpHandler := handler.NewHandler(s, n)
+	tracingHandler := tracing.Middleware(httpHandler)
+	http.Handle("/", tracingHandler)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Println("Carbon Intensity Provider running on :8080")
+		logging.Debug("Carbon Intensity Provider running on :8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
+			logging.Error("Server error: ", err.Error())
 		}
 	}()
 
@@ -112,9 +132,9 @@ func main() {
 	defer cancelTimeout()
 
 	if err := server.Shutdown(ctxShutdown); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
+		logging.Error("Server shutdown failed: " + err.Error())
 	}
 
 	n.Event("Server exited gracefully")
-	log.Println("Server exited gracefully")
+	logging.Debug("Server exited gracefully")
 }

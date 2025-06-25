@@ -4,4 +4,4 @@ replace github.com/informatik-mannheim/cmg-ss2025/pkg/logging => ../../pkg/loggi
 
 go 1.24.1
 
-require github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-00010101000000-000000000000
+require github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250622162429-594d99bc7456

@@ -32,7 +32,7 @@ services:
       - DB_USER=test
       - DB_PASSWORD=test
       - DB_NAME=test
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     expose:
       - 8080
     networks:
@@ -45,9 +45,21 @@ services:
       dockerfile: Dockerfile
     container_name: job-service
     environment:
+      - JOB_REPO_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=test
+      - DB_PASSWORD=test
+      - DB_NAME=test
+      - SSL_MODE=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/"
       - LOG_LEVEL=debug
     expose:
       - 8080
+    ports:
+      - "127.0.0.1:8089:8080"
+    depends_on:
+      - postgres
     networks:
       - private_network
     restart: unless-stopped
@@ -60,6 +72,7 @@ services:
     environment:
       - USE_LIVE=false
       - LOG_LEVEL=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     expose:
       - 8080
     networks:
@@ -83,8 +96,8 @@ services:
 
   consumer-gateway:
     build:
-      context: ./services/consumer-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/consumer-gateway/Dockerfile
     container_name: consumer-gateway
     environment:
       - JOB_SERVICE=http://job-service:8080
@@ -104,13 +117,14 @@ services:
     build:
       context: ./services/user-management
       dockerfile: Dockerfile
-    container_name: green-load-shifting-platform
+    container_name: user-management
     environment:
       USE_LIVE: "true"
       AUTH0_TOKEN_URL: "https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/oauth/token"
       JWT_AUDIENCE: "https://green-load-shifting-platform/"
       ADMIN_SECRET_HASH: "da359894a57a42c65efa8b98c8c86f3f974ff2c8dd7fc428fd87ce6ecdc40bd7"
       LOG_LEVEL: debug
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
     expose:
       - 8080
     ports:
