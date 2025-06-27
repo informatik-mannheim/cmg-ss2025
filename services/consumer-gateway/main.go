@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/auth"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
+	jobclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/client-http"
+	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/handler-http"
+	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-
-	jobclient "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/client-http"
-	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/adapters/handler-http"
-	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/core"
 )
 
 func secure(h http.HandlerFunc) http.Handler {
@@ -20,15 +23,36 @@ func secure(h http.HandlerFunc) http.Handler {
 
 func main() {
 
+	logging.Init("consumer-gateway")
+
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		log.Fatal("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("test-service", jaeger) // Init tracer
+	if err != nil {
+		log.Fatal("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello from Jaeger-traced service!")
+	})
+
+	log.Println("Listening on :8080...")
+	http.ListenAndServe(":8080", tracing.Middleware(mux)) // apply tracing middleware
+
 	jwksUrl := os.Getenv("JWKS_URL")
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	err := auth.InitJWKS(jwksUrl)
+	err = auth.InitJWKS(jwksUrl)
 	if err != nil {
-		log.Fatalf("Failed to initialize JWKS: %v", err)
+		logging.Error("Failed to initialize JWKS: %v", err)
 	}
 
 	// set port manually with "export PORT"
@@ -38,7 +62,7 @@ func main() {
 	service := core.NewConsumerService(job, zone, user)
 	handler := handler_http.NewHandler(service)
 
-	mux := http.NewServeMux()
+	mux = http.NewServeMux()
 	mux.Handle("/", handler)
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
@@ -52,18 +76,18 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Print("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		err := srv.Shutdown(context.Background())
 		if err != nil {
 			return
 		}
 	}()
 
-	log.Print("listening on port " + port + " ...")
+	logging.Debug("listening on port " + port + " ...")
 
 	err = srv.ListenAndServe()
 	if err != nil {
 		return
 	}
-	log.Print("Done")
+	logging.Debug("Done")
 }
