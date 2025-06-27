@@ -21,6 +21,7 @@ func secure(h http.HandlerFunc) http.Handler {
 func main() {
 
 	jwksUrl := os.Getenv("JWKS_URL")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

@@ -5,3 +5,5 @@ github.com/golang-jwt/jwt/v4 v4.5.2 h1:YtQM7lnr8iZ+j5q71MGKkNw9Mn7AjHM68uc9g5fXe
 github.com/golang-jwt/jwt/v4 v4.5.2/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
 github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
 github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
+github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250620061822-b646843c0b4a h1:IyAttHS5fr/zo2+rr6ekrASCuZuCqnsmmBJg3CzcnJk=
+github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250620061822-b646843c0b4a/go.mod h1:sUYSLvO0x4qg56ssckrfSb3bHTu7bX/co8IknxafHrI=
