@@ -104,6 +104,7 @@ services:
       - USER_MANAGEMENT_SERVICE=http://user-management:8080
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - LOG_LEVEL=debug
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
     ports:
@@ -126,6 +127,8 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
     expose:
       - 8080
+    ports:
+      - "8081:8080"
     networks:
       - private_network
     restart: unless-stopped
