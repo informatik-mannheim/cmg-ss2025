@@ -8,7 +8,6 @@ services:
       - WORKER_REGISTRY=http://localhost:8069
       - JOB_SERVICE=http://localhost:8069
       - CARBON_INTENSITY_PROVIDER=http://localhost:8069
-      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     ports:
       - "8080:8080"
     restart: unless-stopped
