@@ -27,8 +27,7 @@ func isNotStatusCodeSuccess(statusCode int) bool {
 }
 
 // doRequest is a helper to send an HTTP request, check status, and decode the response.
-func doRequest[Resp any](req *http.Request, jsonPayload []byte, method, url string) (Resp, int, error) {
-	client := &http.Client{}
+func doRequest[Resp any](client *http.Client, req *http.Request, jsonPayload []byte, method, url string) (Resp, int, error) {
 	response, err := client.Do(req)
 
 	if err != nil {
@@ -60,20 +59,20 @@ func doRequest[Resp any](req *http.Request, jsonPayload []byte, method, url stri
 // Returns the decoded data, a status code or an error.
 // If the status code -1 is returned, it indicates an error occurred during the request.
 // If the status code is not in the range of 200-299, it returns a RequestError with the status code and message.
-func GetRequest[T any](url string) (T, int, error) {
+func GetRequest[T any](client *http.Client, url string) (T, int, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return *new(T), -1, err
 	}
 
-	return doRequest[T](req, nil, http.MethodGet, url)
+	return doRequest[T](client, req, nil, http.MethodGet, url)
 }
 
 // PatchRequest sends an HTTP PATCH request with a JSON payload of type T to the specified URL.
 // The response is decoded into type R. Returns the decoded response or an error.
 // If the status code -1 is returned, it indicates an error occurred during the request.
 // If the status code is not in the range of 200-299, it returns a RequestError with the status code and message.
-func PatchRequest[T any, R any](url string, payload T) (R, int, error) {
+func PatchRequest[T any, R any](client *http.Client, url string, payload T) (R, int, error) {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return *new(R), -1, err
@@ -87,14 +86,14 @@ func PatchRequest[T any, R any](url string, payload T) (R, int, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Close = true
 
-	return doRequest[R](req, jsonPayload, http.MethodPatch, url)
+	return doRequest[R](client, req, jsonPayload, http.MethodPatch, url)
 }
 
 // PutRequest sends an HTTP PUT request with a JSON payload of type T to the specified URL.
 // The response is decoded into type R. Returns the decoded response or an error.
 // If the status code -1 is returned, it indicates an error occurred during the request.
 // If the status code is not in the range of 200-299, it returns a RequestError with the status code and message.
-func PutRequest[T any, R any](url string, payload T) (R, int, error) {
+func PutRequest[T any, R any](client *http.Client, url string, payload T) (R, int, error) {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return *new(R), -1, err
@@ -108,5 +107,24 @@ func PutRequest[T any, R any](url string, payload T) (R, int, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Close = true
 
-	return doRequest[R](req, jsonPayload, http.MethodPut, url)
+	return doRequest[R](client, req, jsonPayload, http.MethodPut, url)
+}
+
+// PostRequest sends an HTTP POST request with a JSON payload of type T to the specified URL.
+// The response is decoded into type R. Returns the decoded response or an error.
+func PostRequest[T any, R any](client *http.Client, url string, payload T) (R, int, error) {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return *new(R), -1, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return *new(R), -1, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Close = true
+
+	return doRequest[R](client, req, jsonPayload, http.MethodPost, url)
 }

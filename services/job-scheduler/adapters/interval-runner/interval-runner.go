@@ -2,10 +2,10 @@ package interval_runner
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 )
 
@@ -26,25 +26,26 @@ func NewIntervalRunner(ctx context.Context, interval int, port string) *Interval
 }
 
 func (ir *IntervalRunner) RunScheduleJob() {
-	log.Printf("Job Scheduler starting with a %d second interval...\n", ir.interval)
+	logging.Debug("Job Scheduler starting with a %d second interval...", ir.interval)
 
 	var duration = time.Duration(ir.interval) * time.Second
 
 	for {
 		select {
 		case <-ir.ctx.Done():
-			log.Println("Scheduler stopped.")
+			logging.Debug("Received shutdown signal, stopping scheduler...")
 			return
 		default:
 			resp, err := http.Post("http://localhost:"+ir.port+"/schedule", "application/json", nil)
 			if err != nil {
-				log.Printf("Error scheduling job: %v\n", err)
+				// Debug here because error logging already exists in the handler, would be redundant
+				logging.Debug("Error scheduling job: %v", err)
 			} else {
 				resp.Body.Close()
 			}
 			select {
 			case <-ir.ctx.Done():
-				log.Println("Scheduler stopped.")
+				logging.Debug("Scheduler stopped.")
 				return
 			case <-time.After(duration):
 				// continue to next iteration

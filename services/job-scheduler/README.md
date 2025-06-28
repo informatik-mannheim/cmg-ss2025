@@ -23,12 +23,15 @@ This service has no API.
 
 This services uses the following environmentvariables:
 
-| NAME                      | Required | Type   |
-| ------------------------- | -------- | ------ |
-| JOB_SCHEDULER_INTERVAL    | false    | Number |
-| WORKER_REGISTRY           | true     | URL    |
-| JOB_SERVICE               | true     | URL    |
-| CARBON_INTENSITY_PROVIDER | true     | URL    |
+| NAME                        | Required | Type   |
+| --------------------------- | -------- | ------ |
+| JOB_SCHEDULER_INTERVAL      | false    | Number |
+| WORKER_REGISTRY             | true     | URL    |
+| JOB_SERVICE                 | true     | URL    |
+| CARBON_INTENSITY_PROVIDER   | true     | URL    |
+| USER_MANAGEMENT_URL         | true     | URL    |
+| AUTH_TOKEN                  | true     | String |
+| OTEL_EXPORTER_OTLP_ENDPOINT | true     | URL    |
 
 ---
 

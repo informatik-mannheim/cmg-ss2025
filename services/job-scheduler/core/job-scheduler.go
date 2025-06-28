@@ -1,10 +1,8 @@
 package core
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/google/uuid"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
 )
 
@@ -29,7 +27,7 @@ func NewJobSchedulerService(
 }
 
 func (js *JobSchedulerService) ScheduleJob() error {
-	log.Printf("Scheduling job...\n")
+	logging.Debug("Scheduling jobs...")
 
 	// 1. Get Jobs and workers
 	// I do not know what vscode has drunk, but this value of workers is clearly used, im ignoring the warning
@@ -37,13 +35,13 @@ func (js *JobSchedulerService) ScheduleJob() error {
 	if err != nil {
 		return err
 	}
+	if jobs == nil || workers == nil {
+		return nil // Nothing to schedule, just abort
+	}
 
 	// 2. Reassign Workers if any
 	assignedJobs := GetAlreadyAssigned(jobs, workers)
-	unassignedJobs, err := js.reassignWorkers(assignedJobs)
-	if err != nil {
-		return err
-	}
+	unassignedJobs := js.reassignWorkers(assignedJobs)
 	jobs, workers = GetAllUnassigned(jobs, unassignedJobs, workers)
 
 	// 3. Get Carbon Intensity Data
@@ -51,6 +49,9 @@ func (js *JobSchedulerService) ScheduleJob() error {
 	carbons, err := js.getCarbonIntensities(zones)
 	if err != nil {
 		return err
+	}
+	if carbons == nil {
+		return nil // Nothing to schedule, just abort
 	}
 
 	// 4. Distribute Jobs
@@ -62,29 +63,29 @@ func (js *JobSchedulerService) ScheduleJob() error {
 		return err
 	}
 
-	log.Printf("Jobs assigned successfully.\n")
+	logging.Debug("Job scheduling completed successfully.")
 	return nil
 }
 
 func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker, error) {
 	jobs, err := js.JobAdapter.GetJobs()
 	if err != nil {
-		log.Printf("Error getting jobs: %v\n", err)
+		logging.Error("Error getting jobs: %v", err)
 		return nil, nil, err
 	}
 	if len(jobs) == 0 {
-		log.Printf("No jobs available.\n")
-		return nil, nil, fmt.Errorf("no jobs available")
+		logging.Debug("No jobs available, nothing to schedule.")
+		return nil, nil, nil
 	}
 
 	workers, err := js.WorkerAdapter.GetWorkers()
 	if err != nil {
-		log.Printf("Error getting workers: %v\n", err)
+		logging.Error("Error getting workers: %v", err)
 		return nil, nil, err
 	}
 	if len(workers) == 0 {
-		log.Printf("No workers available.\n")
-		return nil, nil, fmt.Errorf("no workers available")
+		logging.Debug("No workers available, cannot schedule jobs.")
+		return nil, nil, nil
 	}
 
 	return jobs, workers, nil
@@ -93,12 +94,12 @@ func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker,
 func (js *JobSchedulerService) getCarbonIntensities(zones []string) (ports.CarbonIntensityResponse, error) {
 	carbons, err := js.CarbonIntensityAdapter.GetCarbonIntensities(zones)
 	if err != nil {
-		log.Printf("Error getting carbon intensity data: %v\n", err)
+		logging.Error("Error getting carbon intensity data: %v", err)
 		return nil, err
 	}
 	if len(carbons) == 0 {
-		log.Printf("No carbon intensity data available.\n")
-		return nil, fmt.Errorf("no carbon intensity data available")
+		logging.Debug("No carbon intensity data available for the specified zones: %v", zones)
+		return nil, nil
 	}
 	return carbons, nil
 }
@@ -107,7 +108,7 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 	for _, job := range jobs {
 		err := js.JobAdapter.AssignJob(job)
 		if err != nil {
-			log.Printf("Error updating job: %v\n", err)
+			logging.Error("Error assigning job %s to worker %s: %v", job.ID, job.WorkerID, err)
 			return err
 		}
 
@@ -116,7 +117,7 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 		}
 		err = js.WorkerAdapter.AssignWorker(workerUpdate)
 		if err != nil {
-			log.Printf("Error updating worker: %v\n", err)
+			logging.Error("Error updating worker %s for job %s: %v", job.WorkerID, job.ID, err)
 			return err
 		}
 	}
@@ -125,7 +126,7 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 
 // returns all jobs that could not be assigned to a worker for whatever reason, those are then considered
 // "not assigned" and go back into the pool
-func (js *JobSchedulerService) reassignWorkers(jobs []ports.Job) ([]ports.Job, error) {
+func (js *JobSchedulerService) reassignWorkers(jobs []ports.Job) []ports.Job {
 	var unassignedJobs []ports.Job
 
 	for _, job := range jobs {
@@ -141,5 +142,5 @@ func (js *JobSchedulerService) reassignWorkers(jobs []ports.Job) ([]ports.Job, e
 
 	}
 
-	return unassignedJobs, nil
+	return unassignedJobs
 }
