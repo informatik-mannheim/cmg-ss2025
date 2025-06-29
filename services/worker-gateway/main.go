@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
 	client_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/handler-http"
@@ -23,6 +24,17 @@ func main() {
 		port = "8080"
 	}
 
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("worker-gateway", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
 	// init service and handler
 	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
 	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
@@ -35,10 +47,13 @@ func main() {
 	mux.HandleFunc("/result", handler.SubmitResultHandler)
 	mux.HandleFunc("/register", handler.RegisterWorkerHandler)
 
+	// Wrap router with tracing middleware
+	tracingHandler := tracing.Middleware(mux)
+
 	// Server-Setup
 	srv := &http.Server{
 		Addr:    ":" + port,
-		Handler: mux,
+		Handler: tracingHandler,
 	}
 
 	go func() {
