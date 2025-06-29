@@ -91,6 +91,7 @@ services:
       - WORKER_REGISTRY=http://worker-registry:8080
       - JOB_SERVICE=http://job-service:8080
       - LOG_LEVEL=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     expose:
       - 8080
     networks:
