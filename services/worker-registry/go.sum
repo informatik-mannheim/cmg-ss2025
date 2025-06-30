@@ -1,3 +1,5 @@
+github.com/MicahParks/keyfunc v1.9.0 h1:lhKd5xrFHLNOWrDc4Tyb/Q1AJ4LCzQ48GVJyVIID3+o=
+github.com/MicahParks/keyfunc v1.9.0/go.mod h1:IdnCilugA0O/99dW+/MkvlyrsX8+L8+x95xuVNtM5jw=
 github.com/cenkalti/backoff/v5 v5.0.2 h1:rIfFVxEf1QsI7E1ZHfp/B4DF/6QBAUhmgkxc0H7Zss8=
 github.com/cenkalti/backoff/v5 v5.0.2/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -10,6 +12,9 @@ github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=
 github.com/go-logr/logr v1.4.3/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
 github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=
 github.com/go-logr/stdr v1.2.2/go.mod h1:mMo/vtBO5dYbehREoey6XUKy/eSumjCCveDpRre4VKE=
+github.com/golang-jwt/jwt/v4 v4.4.2/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
+github.com/golang-jwt/jwt/v4 v4.5.2 h1:YtQM7lnr8iZ+j5q71MGKkNw9Mn7AjHM68uc9g5fXeUI=
+github.com/golang-jwt/jwt/v4 v4.5.2/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
 github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
@@ -22,6 +27,8 @@ github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 h1:5ZPtiqj0JL5oKWmcsq4VMaAW5uk
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3/go.mod h1:ndYquD05frm2vACXE1nsccT4oJzjhw2arTS2cpUD1PI=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.0 h1:+epNPbD5EqgpEMm5wrl4Hqts3jZt8+kYaqUisuuIGTk=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.0/go.mod h1:Zanoh4+gvIgluNqcfMVTJueD4wSS5hT7zTt4Mrutd90=
+github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250628182332-e35f88de24b9 h1:VB5JpAQCOZfJuFcShQzXMfsAFGQ8bRU/cHDgnpsKW0k=
+github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250628182332-e35f88de24b9/go.mod h1:FkwvdwxQQ4IMqnJ9iv+CEqrxV6367lRIh0QxL+zMn9U=
 github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250605183446-f825cbc16886 h1:4a8/jaMYr6RBTlYCQ2yPpDPDEzGsaYm8MoasbmtpWdA=
 github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250605183446-f825cbc16886/go.mod h1:5bqxcIO6gxcHsJjLZ76Fw6GQEwEYqKtljdoqDCvy19o=
 github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250622162429-594d99bc7456 h1:xyDOKPwPXaGwsoYl+5dvVDudH7xwJtv2a64iyP3uIGo=
