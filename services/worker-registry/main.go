@@ -5,23 +5,33 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/auth"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
 	client "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/clients"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/handler-http"
 	repo_pg "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo"
-	repo_mem "github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/core"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 func main() {
+
 	logging.Init("worker-registry")
 	logging.Debug("Starting Worker Registry")
+
+	jwksUrl := os.Getenv("JWKS_URL")
+	err := auth.InitJWKS(jwksUrl)
+
+	if err != nil {
+		logging.Error("Failed to initialize JWKS: " + err.Error())
+		return
+	}
 
 	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if jaeger == "" {
@@ -45,10 +55,17 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
+	sslModeStr := os.Getenv("SSL_MODE")
+	sslMode, err := strconv.ParseBool(sslModeStr)
 	maxRetries := 10
 
+	if err != nil {
+		logging.Warn("Invalid SSL_MODE value, defaulting to false")
+		sslMode = false
+	}
+
 	for i := 0; i < maxRetries; i++ {
-		r, err := repo_pg.NewRepo(dbHost, dbPort, dbUser, dbPassword, dbName, context.Background())
+		r, err := repo_pg.NewRepo(dbHost, dbPort, dbUser, dbPassword, dbName, sslMode, context.Background())
 		if err == nil {
 			dbRepo = r
 			break
@@ -58,9 +75,8 @@ func main() {
 	}
 
 	if dbRepo == nil {
-		logging.Warn("Failed to connect to Postgres")
-		logging.Warn("Falling back to in-memory repository")
-		dbRepo = repo_mem.NewRepo()
+		logging.Error("Failed to connect to Postgres")
+		return
 	}
 
 	service = core.NewWorkerRegistryService(dbRepo, zoneClient)

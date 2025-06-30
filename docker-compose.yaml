@@ -36,6 +36,8 @@ services:
       - DB_PASSWORD=test
       - DB_NAME=test
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
+      - SSL_REQUIRED=false
     expose:
       - 8080
     networks:
