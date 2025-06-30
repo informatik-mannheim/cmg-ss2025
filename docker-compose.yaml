@@ -10,6 +10,9 @@ services:
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - JOB_SCHEDULER_INTERVAL=5
       - LOG_LEVEL=debug
+      - USER_MANAGEMENT_URL=http://user-management:8080
+      - AUTH_TOKEN="something to test, will probably need to be adjusted soon"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     expose:
       - 8080
     networks:
@@ -142,7 +145,7 @@ services:
       - 4318 # OTLP HTTP receiver
     ports:
       - "16686:16686" # Jaeger UI
-  
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -160,7 +163,6 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
-
 
 networks:
   private_network:
