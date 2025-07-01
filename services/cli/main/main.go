@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli/client"
+	"log"
 	"os"
 	"strings"
 )
@@ -278,6 +279,9 @@ func buildCLI(gatewayClient *client.GatewayClient) {
 
 func main() {
 	gatewayUrl := os.Getenv("GATEWAY_URL")
+	if gatewayUrl == "" {
+		log.Fatal("Fehlende Umgebungsvariable GATEWAY_URL")
+	}
 	gateway := client.NewGatewayClient(gatewayUrl)
 
 	buildCLI(gateway)

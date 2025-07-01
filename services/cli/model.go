@@ -12,5 +12,5 @@ type ContainerImage struct {
 }
 
 type TokenResponse struct {
-	Token string `json:"token"`
+	Token string `json:"secret"`
 }
