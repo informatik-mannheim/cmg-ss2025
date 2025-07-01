@@ -32,6 +32,7 @@ This services uses the following environmentvariables:
 | USER_MANAGEMENT_URL         | true     | URL    |
 | AUTH_TOKEN                  | true     | String |
 | OTEL_EXPORTER_OTLP_ENDPOINT | true     | URL    |
+| JOB_SCHEDULER_SECRET        | true     | String |
 
 ---
 

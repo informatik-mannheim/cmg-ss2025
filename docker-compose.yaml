@@ -13,6 +13,7 @@ services:
       - USER_MANAGEMENT_URL=http://user-management:8080
       - AUTH_TOKEN="something to test, will probably need to be adjusted soon"
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - JOB_SCHEDULER_SECRET="Some really secure secret"
     expose:
       - 8080
     networks:
