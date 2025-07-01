@@ -32,6 +32,7 @@ type Environments struct {
 	UserManagementUrl          string
 	AuthToken                  string
 	OTLPExporterOtlpEndpoint   string // OpenTelemetry endpoint for tracing
+	Secret                     string // Secret for job scheduling
 }
 
 func main() {
@@ -68,7 +69,7 @@ func main() {
 	// Start the HTTP server
 	srv := &http.Server{Addr: ":" + envs.Port}
 
-	handler := handler_http.NewHandler(service)
+	handler := handler_http.NewHandler(service, envs.Secret)
 	tracingHandler := tracing.Middleware(handler)
 	http.Handle("/", tracingHandler)
 
@@ -151,6 +152,12 @@ func loadEnvVariables() (Environments, error) {
 		return envs, err
 	}
 	envs.OTLPExporterOtlpEndpoint = otlpEndpoint
+
+	secret, err := utils.LoadEnvRequired("JOB_SCHEDULER_SECRET")
+	if err != nil || secret == "" {
+		return envs, err
+	}
+	envs.Secret = secret
 
 	return envs, nil
 }

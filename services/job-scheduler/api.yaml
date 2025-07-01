@@ -1,0 +1,56 @@
+openapi: 3.0.0
+info:
+  title: Job Scheduler API
+  version: 1.0.0
+paths:
+  /ping:
+    get:
+      summary: Ping the server
+      responses:
+        200:
+          description: Returns a pong response
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+  /schedule:
+    post:
+      summary: Schedule a job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: Secret key for authorization
+              example: "your-secret-key"
+      responses:
+        200:
+          description: Job scheduled successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Job scheduled successfully"
+        400:
+          description: Invalid request body
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Invalid request body"
+        401:
+          description: invalid secret
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Unauthorized: invalid secret"
+        500:
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "An error occurred while scheduling the job"
