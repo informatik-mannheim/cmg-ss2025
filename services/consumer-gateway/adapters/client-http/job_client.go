@@ -34,10 +34,6 @@ func (c *JobClient) CreateJob(ctx context.Context, req ports.CreateJobRequest) (
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	if auth, ok := ctx.Value("Authorization").(string); ok && auth != "" {
-		httpReq.Header.Set("Authorization", auth)
-	}
-
 	resp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
 		return ports.CreateJobResponse{}, err
