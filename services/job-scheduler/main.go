@@ -95,7 +95,7 @@ func main() {
 	logging.Debug("Job Scheduler is running on port %s...", envs.Port)
 
 	// Start the job scheduler runner
-	runner := interval_runner.NewIntervalRunner(ctx, envs.Interval, envs.Port)
+	runner := interval_runner.NewIntervalRunner(ctx, envs.Interval, envs.Port, envs.Secret)
 	runner.RunScheduleJob()
 
 }
