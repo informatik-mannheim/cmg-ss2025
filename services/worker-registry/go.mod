@@ -1,8 +1,8 @@
 module github.com/informatik-mannheim/cmg-ss2025/services/worker-registry
 
-go 1.24.1
+go 1.24.3
 
-toolchain go1.24.2
+toolchain go1.24.4
 
 require github.com/gorilla/mux v1.8.1
 
@@ -14,9 +14,11 @@ require (
 )
 
 require (
+	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.36.0 // indirect
@@ -35,6 +37,7 @@ require (
 )
 
 require (
+	github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250628182332-e35f88de24b9
 	github.com/informatik-mannheim/cmg-ss2025/pkg/tracing v0.0.0-20250622162429-594d99bc7456
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

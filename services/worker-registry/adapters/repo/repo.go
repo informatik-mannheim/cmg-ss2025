@@ -17,14 +17,20 @@ type Repo struct {
 
 var _ ports.Repo = (*Repo)(nil)
 
-func NewRepo(host, port, user, password, dbName string, ctx context.Context) (*Repo, error) {
+func NewRepo(host, port, user, password, dbName string, sslmode bool, ctx context.Context) (*Repo, error) {
 	escapedPassword := url.QueryEscape(password)
+
+	sslModeParam := "disable"
+	if sslmode {
+		sslModeParam = "require"
+	}
+
 	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=require",
-		user, escapedPassword, host, port, dbName,
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		user, escapedPassword, host, port, dbName, sslModeParam,
 	)
 
-	logging.Debug("Connecting to DB with Connectionstring:", connectionString)
+	logging.Debug("Connecting to DB with Connectionstring:", "conn", connectionString)
 
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {

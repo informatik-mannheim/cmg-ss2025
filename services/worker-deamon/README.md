@@ -49,12 +49,3 @@ The daemon is configured using a config.json file:
   "heartbeat_interval_seconds": 10
 }
 ```
-
-## Run Mock Gateway
-The mock gateway simulates the worker gateway for testing purposes.
-
-Start mock gateway:
-
-```bash
-go run ./internal/test/mock-gateway.go
-```

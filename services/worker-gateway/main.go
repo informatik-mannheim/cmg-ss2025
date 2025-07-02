@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/auth"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
@@ -24,7 +25,8 @@ func main() {
 		port = "8080"
 	}
 
-	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+
+  jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if jaeger == "" {
 		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
 	}
@@ -35,6 +37,15 @@ func main() {
 	}
 	defer shutdown(context.Background())
 
+  jwksUrl := os.Getenv("JWKS_URL")
+
+	err := auth.InitJWKS(jwksUrl)
+
+	if err != nil {
+		logging.Error("Failed to initialize JWKS: " + err.Error())
+		return
+
+
 	// init service and handler
 	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
 	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
@@ -43,9 +54,9 @@ func main() {
 
 	// Router (mux)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/worker/heartbeat", handler.HeartbeatHandler)
-	mux.HandleFunc("/result", handler.SubmitResultHandler)
-	mux.HandleFunc("/register", handler.RegisterWorkerHandler)
+	mux.Handle("/worker/heartbeat", auth.AuthMiddleware(http.HandlerFunc(handler.HeartbeatHandler)))
+	mux.Handle("/result", auth.AuthMiddleware(http.HandlerFunc(handler.SubmitResultHandler)))
+	mux.Handle("/register", auth.AuthMiddleware(http.HandlerFunc(handler.RegisterWorkerHandler)))
 
 	// Wrap router with tracing middleware
 	tracingHandler := tracing.Middleware(mux)

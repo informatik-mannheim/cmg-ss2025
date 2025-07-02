@@ -28,7 +28,7 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 		jobs, err := s.job.FetchScheduledJobs(ctx)
 		if err != nil {
 			logging.From(ctx).Error("Error fetching jobs", "error", err)
-			return nil, err
+			return nil, nil
 		}
 		logging.From(ctx).Debug("Provided jobs", "jobs", jobs)
 
