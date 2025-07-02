@@ -27,48 +27,39 @@ func NewZoneClient(baseURL string) *ZoneClient {
 		zones:      []ports.Zone{},
 	}
 
-	go func() {
-		ctx := context.Background()
-		sleepStr := os.Getenv("CARBON_INTENSITY_PROVIDER_INTERVAL")
-		sleepSec := 60
-
-		if sleepStr != "" {
-			if parsed, err := strconv.Atoi(sleepStr); err == nil {
-				sleepSec = parsed
-			} else {
-				fmt.Println("Invalid sleep interval, using default 60s:", err)
-			}
-		}
-
-		for {
-			resp, err := client.GetZones(ctx)
-			if err == nil {
-				client.zones = resp.Zones
-				fmt.Println("Zones successfully loaded:", client.zones)
-				return
-			}
-			fmt.Println("Fetching zones failed...", err)
-			time.Sleep(time.Duration(sleepSec) * time.Second)
-		}
-	}()
-
+	go client.refreshZonesLoop()
 	return client
 }
 
 func (c *ZoneClient) GetZones(ctx context.Context) (ports.ZoneResponse, error) {
-	url := fmt.Sprintf("%s/carbon-intensity/zones", c.baseURL)
-	httpReq, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	httpReq.Header.Set("Content-Type", "application/json")
+	if len(c.zones) == 0 {
+		zr, err := c.doGetZones(ctx)
+		if err != nil {
+			return ports.ZoneResponse{}, err
+		}
+		c.zones = zr.Zones
+		return zr, nil
+	}
+	return ports.ZoneResponse{Zones: c.zones}, nil
+}
 
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return ports.ZoneResponse{}, fmt.Errorf("failed to create request: %w", err)
+func (c *ZoneClient) doGetZones(ctx context.Context) (ports.ZoneResponse, error) {
+	url := fmt.Sprintf("%s/carbon-intensity/zones", c.baseURL)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	if auth, ok := ctx.Value("authHeader").(string); ok && auth != "" {
+		req.Header.Set("Authorization", auth)
 	}
 
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return ports.ZoneResponse{}, fmt.Errorf("request failed: %w", err)
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return ports.ZoneResponse{}, fmt.Errorf("worker-registry error: %s", resp.Status)
+		return ports.ZoneResponse{}, fmt.Errorf("zone-service error: %s", resp.Status)
 	}
 
 	var out ports.ZoneResponse
@@ -76,8 +67,24 @@ func (c *ZoneClient) GetZones(ctx context.Context) (ports.ZoneResponse, error) {
 	return out, err
 }
 
-func (z *ZoneClient) IsValidZone(code string, ctx context.Context) bool {
-	for _, zone := range z.zones {
+func (c *ZoneClient) refreshZonesLoop() {
+	sleepSec := 60
+	if s := os.Getenv("CARBON_INTENSITY_PROVIDER_INTERVAL"); s != "" {
+		if i, err := strconv.Atoi(s); err == nil {
+			sleepSec = i
+		}
+	}
+	for {
+		if zr, err := c.doGetZones(context.Background()); err == nil {
+			c.zones = zr.Zones
+			return
+		}
+		time.Sleep(time.Duration(sleepSec) * time.Second)
+	}
+}
+
+func (c *ZoneClient) IsValidZone(code string, ctx context.Context) bool {
+	for _, zone := range c.zones {
 		if zone.Code == code {
 			return true
 		}
