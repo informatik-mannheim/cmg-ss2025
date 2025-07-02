@@ -87,8 +87,9 @@ func main() {
 	}
 	srv := &http.Server{Addr: ":" + port}
 
-	h := handler.NewHandler(service)
-	tracingHandler := tracing.Middleware(h)
+	httpHandler := handler.NewHandler(service)
+	protectedHandler := auth.AuthMiddleware(httpHandler)
+	tracingHandler := tracing.Middleware(protectedHandler)
 	http.Handle("/", tracingHandler)
 
 	go func() {
