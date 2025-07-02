@@ -25,8 +25,7 @@ func main() {
 		port = "8080"
 	}
 
-
-  jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if jaeger == "" {
 		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
 	}
@@ -37,14 +36,14 @@ func main() {
 	}
 	defer shutdown(context.Background())
 
-  jwksUrl := os.Getenv("JWKS_URL")
+	jwksUrl := os.Getenv("JWKS_URL")
 
-	err := auth.InitJWKS(jwksUrl)
+	err = auth.InitJWKS(jwksUrl)
 
 	if err != nil {
 		logging.Error("Failed to initialize JWKS: " + err.Error())
 		return
-
+	}
 
 	// init service and handler
 	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))

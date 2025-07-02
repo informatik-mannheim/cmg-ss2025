@@ -4,8 +4,6 @@ replace github.com/informatik-mannheim/cmg-ss2025/pkg/logging => ../../pkg/loggi
 
 go 1.24.3
 
-toolchain go1.24.4
-
 toolchain go1.24.2
 
 require github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250622162429-594d99bc7456
