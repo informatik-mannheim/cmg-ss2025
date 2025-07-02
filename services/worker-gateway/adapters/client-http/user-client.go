@@ -52,7 +52,7 @@ func (c *UserClient) GetToken(ctx context.Context, req ports.GetTokenRequest) (p
 		return ports.GetTokenResponse{}, err
 	}
 
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		logging.From(ctx).Warn("Unexpected response status from user service", "status", resp.StatusCode, "response", string(respBody))
 		return ports.GetTokenResponse{}, fmt.Errorf("user registration failed: %s", string(respBody))
 	}

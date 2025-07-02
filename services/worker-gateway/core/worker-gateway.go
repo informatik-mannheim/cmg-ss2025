@@ -17,16 +17,17 @@ func NewWorkerGatewayService(registry ports.RegistryService, job ports.JobServic
 	return &WorkerGatewayService{registry: registry, job: job, user: user}
 }
 
-func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.HeartbeatRequest) ([]ports.Job, error) {
+func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.HeartbeatRequest, token string) ([]ports.Job, error) {
+
 	logging.From(ctx).Debug("Heartbeat received", "workerID", req.WorkerID, "status", req.Status)
 
-	if err := s.registry.UpdateWorkerStatus(ctx, req); err != nil {
+	if err := s.registry.UpdateWorkerStatus(ctx, req, token); err != nil {
 		logging.From(ctx).Error("UpdateWorkerStatus failed", "error", err)
 		return nil, err
 	}
 
 	if req.Status == "AVAILABLE" {
-		jobs, err := s.job.FetchScheduledJobs(ctx)
+		jobs, err := s.job.FetchScheduledJobs(ctx, token)
 		if err != nil {
 			logging.From(ctx).Error("Error fetching jobs", "error", err)
 			return nil, nil
@@ -48,9 +49,10 @@ func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.Heartbea
 	return nil, nil
 }
 
-func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRequest) error {
+func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRequest, token string) error {
+
 	logging.From(ctx).Debug("Result received", "jobID", result.JobID)
-	return s.job.UpdateJob(ctx, result)
+	return s.job.UpdateJob(ctx, result, token)
 }
 
 func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
@@ -66,7 +68,7 @@ func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterR
 		return nil, err
 	}
 
-	logging.From(ctx).Debug("Received secret from user service", "secret", tokenResp)
+	logging.From(ctx).Debug("Received secret from user service")
 
 	regResp, err := s.registry.RegisterWorker(ctx, req, tokenResp.Token)
 	if err != nil {

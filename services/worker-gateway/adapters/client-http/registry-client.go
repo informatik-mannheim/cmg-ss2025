@@ -58,7 +58,7 @@ func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterR
 	return &regResp, nil
 }
 
-func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
+func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest, token string) error {
 	url := fmt.Sprintf("%s/workers/%s/status", c.BaseURL, req.WorkerID)
 
 	payload := map[string]string{"status": req.Status}
@@ -74,6 +74,7 @@ func (c *RegistryClient) UpdateWorkerStatus(ctx context.Context, req ports.Heart
 		return err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+token)
 
 	logging.From(ctx).Debug("Updating worker status", "workerID", req.WorkerID, "status", req.Status)
 

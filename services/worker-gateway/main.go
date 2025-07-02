@@ -44,7 +44,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/worker/heartbeat", auth.AuthMiddleware(http.HandlerFunc(handler.HeartbeatHandler)))
 	mux.Handle("/result", auth.AuthMiddleware(http.HandlerFunc(handler.SubmitResultHandler)))
-	mux.Handle("/register", auth.AuthMiddleware(http.HandlerFunc(handler.RegisterWorkerHandler)))
+	mux.Handle("/register", http.HandlerFunc(handler.RegisterWorkerHandler))
 
 	// Server-Setup
 	srv := &http.Server{

@@ -10,11 +10,15 @@ import (
 )
 
 type Client struct {
-	BaseURL string
+	BaseURL    string
+	httpClient *http.Client
 }
 
 func NewClient(baseURL string) *Client {
-	return &Client{BaseURL: baseURL}
+	return &Client{
+		BaseURL:    baseURL,
+		httpClient: &http.Client{},
+	}
 }
 
 func checkStatusOK(resp *http.Response) error {
@@ -52,7 +56,7 @@ func (c *Client) Register(key string, zone string) (*ports.RegisterResponse, err
 	return regResp, err
 }
 
-func (c *Client) SendHeartbeat(workerId string, status string) ([]ports.Job, error) {
+func (c *Client) SendHeartbeat(workerId string, status string, token string) ([]ports.Job, error) {
 	payload := map[string]string{
 		"workerId": workerId,
 		"status":   status,
@@ -63,7 +67,14 @@ func (c *Client) SendHeartbeat(workerId string, status string) ([]ports.Job, err
 		return nil, err
 	}
 
-	resp, err := http.Post(c.BaseURL+"/worker/heartbeat", "application/json", bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", c.BaseURL+"/worker/heartbeat", bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +92,7 @@ func (c *Client) SendHeartbeat(workerId string, status string) ([]ports.Job, err
 	return jobs, nil
 }
 
-func (c *Client) SendResult(j ports.Job) error {
+func (c *Client) SendResult(j ports.Job, token string) error {
 	payload := map[string]string{
 		"jobId":        j.ID,
 		"status":       j.Status,
@@ -94,7 +105,14 @@ func (c *Client) SendResult(j ports.Job) error {
 		return err
 	}
 
-	resp, err := http.Post(c.BaseURL+"/result", "application/json", bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", c.BaseURL+"/result", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
 	}

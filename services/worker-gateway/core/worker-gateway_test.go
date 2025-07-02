@@ -33,7 +33,7 @@ func (d *dummyRegistryService) RegisterWorker(ctx context.Context, req ports.Reg
 	}, nil
 }
 
-func (d *dummyRegistryService) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest) error {
+func (d *dummyRegistryService) UpdateWorkerStatus(ctx context.Context, req ports.HeartbeatRequest, token string) error {
 	d.UpdateWorkerStatusCalled = true
 	if d.ReturnErr {
 		return errors.New("update worker status error")
@@ -48,7 +48,7 @@ type dummyJobService struct {
 	ReturnErr                bool
 }
 
-func (d *dummyJobService) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
+func (d *dummyJobService) UpdateJob(ctx context.Context, req ports.ResultRequest, token string) error {
 	d.UpdateJobCalled = true
 	if d.ReturnErr {
 		return errors.New("update job error")
@@ -56,7 +56,7 @@ func (d *dummyJobService) UpdateJob(ctx context.Context, req ports.ResultRequest
 	return nil
 }
 
-func (d *dummyJobService) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error) {
+func (d *dummyJobService) FetchScheduledJobs(ctx context.Context, token string) ([]ports.Job, error) {
 	d.FetchScheduledJobsCalled = true
 	if d.ReturnErr {
 		return nil, errors.New("fetch jobs error")
@@ -147,7 +147,7 @@ func TestSubmitResult_Success(t *testing.T) {
 		JobID:  "job123",
 		Status: "COMPLETED",
 		Result: "some output",
-	})
+	}, "")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -164,7 +164,7 @@ func TestSubmitResult_Error(t *testing.T) {
 
 	err := svc.Result(context.Background(), ports.ResultRequest{
 		JobID: "job123",
-	})
+	}, "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -181,7 +181,7 @@ func TestHeartbeat_Available_WithJobs(t *testing.T) {
 		Status:   "AVAILABLE",
 	}
 
-	jobs, err := svc.Heartbeat(context.Background(), req)
+	jobs, err := svc.Heartbeat(context.Background(), req, "")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -207,7 +207,7 @@ func TestHeartbeat_Computing(t *testing.T) {
 		Status:   "RUNNING",
 	}
 
-	jobs, err := svc.Heartbeat(context.Background(), req)
+	jobs, err := svc.Heartbeat(context.Background(), req, "")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -233,7 +233,7 @@ func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 		Status:   "AVAILABLE",
 	}
 
-	jobs, err := svc.Heartbeat(context.Background(), req)
+	jobs, err := svc.Heartbeat(context.Background(), req, "")
 	if err != nil {
 		t.Fatalf("expected no fatal error (graceful handling), got %v", err)
 	}

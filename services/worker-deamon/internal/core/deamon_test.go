@@ -38,7 +38,7 @@ func (d *DummyWorkerGateway) Register(key, zone string) (*ports.RegisterResponse
 	}, nil
 }
 
-func (d *DummyWorkerGateway) SendHeartbeat(workerID, status string) ([]ports.Job, error) {
+func (d *DummyWorkerGateway) SendHeartbeat(workerID, status, token string) ([]ports.Job, error) {
 	d.SendHeartbeatCalled = true
 	if d.SendHeartbeatErr != nil {
 		return nil, d.SendHeartbeatErr
@@ -46,7 +46,7 @@ func (d *DummyWorkerGateway) SendHeartbeat(workerID, status string) ([]ports.Job
 	return d.JobsToReturn, nil
 }
 
-func (d *DummyWorkerGateway) SendResult(job ports.Job) error {
+func (d *DummyWorkerGateway) SendResult(job ports.Job, token string) error {
 	d.SendResultCalled = true
 	d.ReceivedJobs = append(d.ReceivedJobs, job)
 	return d.SendResultErr
@@ -57,7 +57,7 @@ func TestDaemon_HeartbeatLoop_RegisterFails(t *testing.T) {
 		RegisterErr: errors.New("register failed"),
 	}
 	cfg := config.Config{
-		Key:                      "key",
+		Secret:                   "key",
 		Zone:                     "zone",
 		HeartbeatIntervalSeconds: 1,
 	}
@@ -91,7 +91,7 @@ func TestDaemon_HeartbeatLoop_ProcessJob(t *testing.T) {
 		},
 	}
 	cfg := config.Config{
-		Key:                      "key",
+		Secret:                   "key",
 		Zone:                     "zone",
 		HeartbeatIntervalSeconds: 1,
 	}
@@ -138,7 +138,7 @@ func TestDaemon_HeartbeatLoop_HeartbeatFails(t *testing.T) {
 		SendResultErr:    nil,
 	}
 	cfg := config.Config{
-		Key:                      "key",
+		Secret:                   "key",
 		Zone:                     "zone",
 		HeartbeatIntervalSeconds: 1,
 	}
