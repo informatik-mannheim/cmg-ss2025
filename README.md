@@ -152,8 +152,8 @@ We use **Auth0** as our centralized identity provider.
 
 #### b. **User Management Provider (Internal)**
 
-- The only service allowed to call the `/login` endpoint.
-- Uses `client_credentials` flow to obtain JWT.
+- The only service allowed to call the `/auth/login` endpoint.
+- Uses `client_id.client_secret` flow to obtain JWT.
 - Role-based access ensures only the provider can manage users.
 
 #### c. **Other Internal Services**
@@ -252,8 +252,8 @@ Secrets such as DB credentials, certificates, or external API keys are **never s
 ### 7. 📄 Summary Table
 
 | Component          | Description                                                             |
-| ------------------ | ----------------------------------------------------------------------- |
-| Identity Provider  | Auth0 (`client_credentials` + resource owner password)                  |
+| ------------------ |-------------------------------------------------------------------------|
+| Identity Provider  | Auth0 (`client_id.client_secret` + resource owner password)             |
 | JWT Role Mapping   | Custom claims under `https://green-load-shifting-platform/*` namespace  |
 | Registration Flow  | Only via internal provider; no public access                            |
 | JWT Auth           | All services authenticate using JWT headers                             |
