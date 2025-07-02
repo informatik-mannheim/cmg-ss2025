@@ -95,6 +95,7 @@ services:
       - WORKER_REGISTRY=http://worker-registry:8080
       - JOB_SERVICE=http://job-service:8080
       - LOG_LEVEL=debug
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
     networks:
