@@ -10,10 +10,11 @@ import (
 type WorkerGatewayService struct {
 	registry ports.RegistryService
 	job      ports.JobService
+	user     ports.UserService
 }
 
-func NewWorkerGatewayService(registry ports.RegistryService, job ports.JobService) *WorkerGatewayService {
-	return &WorkerGatewayService{registry: registry, job: job}
+func NewWorkerGatewayService(registry ports.RegistryService, job ports.JobService, user ports.UserService) *WorkerGatewayService {
+	return &WorkerGatewayService{registry: registry, job: job, user: user}
 }
 
 func (s *WorkerGatewayService) Heartbeat(ctx context.Context, req ports.HeartbeatRequest) ([]ports.Job, error) {
@@ -54,6 +55,16 @@ func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRe
 
 func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
 	logging.From(ctx).Debug("Registering worker", "zone", req.Zone)
+
+	secret, err := s.user.GetToken(ctx)
+	if err != nil {
+		logging.From(ctx).Error("Failed to register provider with user service", "error", err)
+		return nil, err
+	}
+
+	logging.From(ctx).Debug("Received secret from user service", "secret", secret)
+
+	req.Key = secret
 
 	regResp, err := s.registry.RegisterWorker(ctx, req)
 	if err != nil {

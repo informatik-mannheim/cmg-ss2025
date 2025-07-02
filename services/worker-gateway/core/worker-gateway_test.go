@@ -67,42 +67,81 @@ func (d *dummyJobService) FetchScheduledJobs(ctx context.Context) ([]ports.Job, 
 	}, nil
 }
 
+// --- Dummy UserClient für Tests ---
+type dummyUserClient struct {
+	GetTokenCalled bool
+	ReturnErr      bool
+}
+
+func (d *dummyUserClient) GetToken(ctx context.Context) (string, error) {
+	d.GetTokenCalled = true
+	if d.ReturnErr {
+		return "", errors.New("user token error")
+	}
+	return "mocked.secret.token", nil
+}
+
+// --- Helper zum Erstellen des Services ---
+func newTestWorkerGatewayService(reg ports.RegistryService, job ports.JobService, user ports.UserService) *core.WorkerGatewayService {
+	return core.NewWorkerGatewayService(reg, job, user)
+}
+
 // --- Tests ---
 
-func TestRegisterWorker_Success(t *testing.T) {
+func TestRegisterWorker_WithUserClient_Success(t *testing.T) {
 	reg := &dummyRegistryService{}
 	job := &dummyJobService{}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
 	req := ports.RegisterRequest{
-		Key:  "secret",
-		Zone: "DE",
+		Zone: "EU",
 	}
 
 	resp, err := svc.Register(context.Background(), req)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
+	if !user.GetTokenCalled {
+		t.Error("expected RegisterProvider to be called")
+	}
 	if !reg.RegisterWorkerCalled {
-		t.Error("expected RegisterWorker to be called", resp)
+		t.Error("expected RegisterWorker to be called")
+	}
+	if resp == nil || resp.ID != "worker123" {
+		t.Errorf("unexpected register response: %+v", resp)
 	}
 }
 
-func TestRegisterWorker_Error(t *testing.T) {
+func TestRegisterWorker_UserClientFails(t *testing.T) {
+	reg := &dummyRegistryService{}
+	job := &dummyJobService{}
+	user := &dummyUserClient{ReturnErr: true}
+	svc := newTestWorkerGatewayService(reg, job, user)
+
+	_, err := svc.Register(context.Background(), ports.RegisterRequest{Zone: "EU"})
+	if err == nil {
+		t.Fatal("expected error due to user client failure, got nil")
+	}
+}
+
+func TestRegisterWorker_RegistryFails(t *testing.T) {
 	reg := &dummyRegistryService{ReturnErr: true}
 	job := &dummyJobService{}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
-	resp, err := svc.Register(context.Background(), ports.RegisterRequest{})
+	_, err := svc.Register(context.Background(), ports.RegisterRequest{Zone: "EU"})
 	if err == nil {
-		t.Fatal("expected error, got nil", resp)
+		t.Fatal("expected error due to registry failure, got nil")
 	}
 }
 
 func TestSubmitResult_Success(t *testing.T) {
 	reg := &dummyRegistryService{}
 	job := &dummyJobService{}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
 	err := svc.Result(context.Background(), ports.ResultRequest{
 		JobID:  "job123",
@@ -120,7 +159,8 @@ func TestSubmitResult_Success(t *testing.T) {
 func TestSubmitResult_Error(t *testing.T) {
 	reg := &dummyRegistryService{}
 	job := &dummyJobService{ReturnErr: true}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
 	err := svc.Result(context.Background(), ports.ResultRequest{
 		JobID: "job123",
@@ -133,7 +173,8 @@ func TestSubmitResult_Error(t *testing.T) {
 func TestHeartbeat_Available_WithJobs(t *testing.T) {
 	reg := &dummyRegistryService{}
 	job := &dummyJobService{}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
@@ -158,7 +199,8 @@ func TestHeartbeat_Available_WithJobs(t *testing.T) {
 func TestHeartbeat_Computing(t *testing.T) {
 	reg := &dummyRegistryService{}
 	job := &dummyJobService{}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
@@ -183,7 +225,8 @@ func TestHeartbeat_Computing(t *testing.T) {
 func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 	reg := &dummyRegistryService{}
 	job := &dummyJobService{ReturnErr: true}
-	svc := core.NewWorkerGatewayService(reg, job)
+	user := &dummyUserClient{}
+	svc := newTestWorkerGatewayService(reg, job, user)
 
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",

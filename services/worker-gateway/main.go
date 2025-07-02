@@ -36,7 +36,8 @@ func main() {
 	// init service and handler
 	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
 	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
-	service := core.NewWorkerGatewayService(registryClient, jobClient)
+	userClient := client_http.NewUserClient(os.Getenv("USER_MANAGEMENT_SERVICE"))
+	service := core.NewWorkerGatewayService(registryClient, jobClient, userClient)
 	handler := handler_http.NewHandler(service)
 
 	// Router (mux)
