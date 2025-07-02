@@ -269,7 +269,10 @@ func buildCLI(gatewayClient *client.GatewayClient) {
 			for _, command := range commands {
 				if command.Name == args[0] {
 					// execute the function associated with the provided command
-					command.Execute(args[1:])
+					err := command.Execute(args[1:])
+					if err != nil {
+						return
+					}
 				}
 			}
 		}
