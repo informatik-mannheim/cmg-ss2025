@@ -26,7 +26,6 @@ var (
 // Fetcher fetches carbon intensity data using tokens per zone
 type Fetcher struct {
 	TokenByZone map[string]string
-	Notifier    ports.Notifier
 	Client      *http.Client
 }
 
@@ -44,7 +43,6 @@ func NewFromEnv(notifier ports.Notifier) *Fetcher {
 	}
 	return &Fetcher{
 		TokenByZone: tokens,
-		Notifier:    notifier,
 		Client:      http.DefaultClient,
 	}
 }
@@ -53,7 +51,6 @@ func NewFromEnv(notifier ports.Notifier) *Fetcher {
 func NewWithClient(notifier ports.Notifier, client *http.Client) *Fetcher {
 	return &Fetcher{
 		TokenByZone: map[string]string{},
-		Notifier:    notifier,
 		Client:      client,
 	}
 }
@@ -62,27 +59,23 @@ func NewWithClient(notifier ports.Notifier, client *http.Client) *Fetcher {
 func (f *Fetcher) Fetch(zone string, ctx context.Context) (ports.CarbonIntensityData, error) {
 	token, ok := f.TokenByZone[zone]
 	if !ok || token == "" {
-		f.Notifier.Event("No token configured for zone: " + zone)
 		return ports.CarbonIntensityData{}, fmt.Errorf("no token configured for zone %s", zone)
 	}
 
 	url := fmt.Sprintf(FetchURL, zone)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		f.Notifier.Event("Failed to build request for zone: " + zone)
 		return ports.CarbonIntensityData{}, err
 	}
 	req.Header.Set("auth-token", token)
 
 	res, err := f.Client.Do(req)
 	if err != nil {
-		f.Notifier.Event("Request failed for zone: " + zone + " — " + err.Error())
 		return ports.CarbonIntensityData{}, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		f.Notifier.Event(fmt.Sprintf("Zone %s returned status %d", zone, res.StatusCode))
 		return ports.CarbonIntensityData{}, fmt.Errorf("API returned status: %d", res.StatusCode)
 	}
 
@@ -90,11 +83,9 @@ func (f *Fetcher) Fetch(zone string, ctx context.Context) (ports.CarbonIntensity
 		CarbonIntensity float64 `json:"carbonIntensity"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&parsed); err != nil {
-		f.Notifier.Event("Failed to parse response for zone: " + zone)
 		return ports.CarbonIntensityData{}, err
 	}
 
-	f.Notifier.Event(fmt.Sprintf("Fetched %s with %.2f intensity", zone, parsed.CarbonIntensity))
 	return ports.CarbonIntensityData{
 		Zone:            zone,
 		CarbonIntensity: parsed.CarbonIntensity,
@@ -105,19 +96,16 @@ func (f *Fetcher) Fetch(zone string, ctx context.Context) (ports.CarbonIntensity
 func (f *Fetcher) AllElectricityMapZones(ctx context.Context) ([]Zone, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ZoneMetadataURL, nil)
 	if err != nil {
-		f.Notifier.Event("Failed to build zone metadata request")
 		return nil, err
 	}
 
 	res, err := f.Client.Do(req)
 	if err != nil {
-		f.Notifier.Event("Failed to call zone list endpoint")
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		f.Notifier.Event(fmt.Sprintf("Zone list failed: %d", res.StatusCode))
 		return nil, fmt.Errorf("failed to fetch zones: %d", res.StatusCode)
 	}
 
@@ -126,7 +114,6 @@ func (f *Fetcher) AllElectricityMapZones(ctx context.Context) ([]Zone, error) {
 		ZoneName    string `json:"zoneName"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&raw); err != nil {
-		f.Notifier.Event("Failed to decode zone metadata")
 		return nil, err
 	}
 
@@ -138,7 +125,6 @@ func (f *Fetcher) AllElectricityMapZones(ctx context.Context) ([]Zone, error) {
 		}
 		zones = append(zones, Zone{Code: code, Name: name})
 	}
-	f.Notifier.Event(fmt.Sprintf("Fetched %d zones", len(zones)))
 	return zones, nil
 }
 
@@ -148,6 +134,5 @@ func (f *Fetcher) GetConfiguredZones(ctx context.Context) ([]string, error) {
 	for zone := range f.TokenByZone {
 		zones = append(zones, zone)
 	}
-	f.Notifier.Event(fmt.Sprintf("Configured zones: %d", len(zones)))
 	return zones, nil
 }
