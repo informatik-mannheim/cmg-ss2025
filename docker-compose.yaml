@@ -10,6 +10,10 @@ services:
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - JOB_SCHEDULER_INTERVAL=5
       - LOG_LEVEL=debug
+      - USER_MANAGEMENT_URL=http://user-management:8080
+      - AUTH_TOKEN="something to test, will probably need to be adjusted soon"
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - JOB_SCHEDULER_SECRET="Some really secure secret"
     expose:
       - 8080
     networks:
@@ -33,6 +37,8 @@ services:
       - DB_PASSWORD=test
       - DB_NAME=test
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
+      - SSL_REQUIRED=false
     expose:
       - 8080
     networks:
@@ -73,6 +79,7 @@ services:
       - USE_LIVE=false
       - LOG_LEVEL=debug
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
     networks:
@@ -104,6 +111,7 @@ services:
       - USER_MANAGEMENT_SERVICE=http://user-management:8080
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
       - LOG_LEVEL=debug
+      - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
     ports:
@@ -126,6 +134,8 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
     expose:
       - 8080
+    ports:
+      - "8081:8080"
     networks:
       - private_network
     restart: unless-stopped
@@ -138,7 +148,7 @@ services:
       - 4318 # OTLP HTTP receiver
     ports:
       - "16686:16686" # Jaeger UI
-  
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -156,7 +166,6 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./database:/docker-entrypoint-initdb.d
-
 
 networks:
   private_network:

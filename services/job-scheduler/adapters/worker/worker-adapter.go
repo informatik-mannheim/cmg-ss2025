@@ -2,6 +2,7 @@ package worker
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/google/uuid"
@@ -25,13 +26,15 @@ func GetWorkersEndpoint(base string) string {
 
 type WorkerAdapter struct {
 	baseUrl string
+	client  http.Client
 }
 
 var _ ports.WorkerAdapter = (*WorkerAdapter)(nil)
 
-func NewWorkerAdapter(baseUrl string) *WorkerAdapter {
+func NewWorkerAdapter(client http.Client, baseUrl string) *WorkerAdapter {
 	return &WorkerAdapter{
 		baseUrl: baseUrl,
+		client:  client,
 	}
 }
 
@@ -40,7 +43,7 @@ func (adapter *WorkerAdapter) GetWorkers() (ports.GetWorkersResponse, error) {
 	endpoint := GetWorkersEndpoint(adapter.baseUrl)
 
 	// StatusCode is not relevant yet
-	data, _, err := utils.GetRequest[ports.GetWorkersResponse](endpoint)
+	data, _, err := utils.GetRequest[ports.GetWorkersResponse](&adapter.client, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +60,7 @@ func (adapter *WorkerAdapter) AssignWorker(update ports.UpdateWorker) error {
 	}
 
 	// StatusCode is not relevant yet
-	_, _, err := utils.PutRequest[ports.UpdateWorkerPayload, ports.UpdateWorkerResponse](endpoint, payload)
+	_, _, err := utils.PutRequest[ports.UpdateWorkerPayload, ports.UpdateWorkerResponse](&adapter.client, endpoint, payload)
 	if err != nil {
 		return err
 	}

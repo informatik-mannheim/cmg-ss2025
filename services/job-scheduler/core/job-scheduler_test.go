@@ -3,6 +3,7 @@ package core_test
 import (
 	"testing"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	carbonintensity "github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/carbon-intensity"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/job"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/adapters/worker"
@@ -20,6 +21,7 @@ type TestJobScheduleTableRow struct {
 }
 
 func TestScheduleJob(t *testing.T) {
+	// For loggin I changed what is returned in some functions in some cases, thats why booleans changed
 	tests := []TestJobScheduleTableRow{
 		{
 			Description:            "Test with no errors",
@@ -41,7 +43,7 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, true, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			ShouldError:            true,
+			ShouldError:            false,
 		},
 		{
 			Description:            "Test with assign jobs error",
@@ -63,7 +65,7 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, true, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, false),
-			ShouldError:            true,
+			ShouldError:            false,
 		},
 		{
 			Description:            "Test with assign workers error",
@@ -85,9 +87,11 @@ func TestScheduleJob(t *testing.T) {
 			JobAdapter:             job.NewJobAdapterMock(false, false, false),
 			WorkerAdapter:          worker.NewWorkerAdapterMock(false, false, false),
 			CarbonIntensityAdapter: carbonintensity.NewCarbonIntensityAdapterMock(false, true),
-			ShouldError:            true,
+			ShouldError:            false,
 		},
 	}
+
+	logging.Init("job-scheduler")
 
 	for _, row := range tests {
 		t.Run(row.Description, func(t *testing.T) {

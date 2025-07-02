@@ -1,19 +1,20 @@
 module github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider
 
-go 1.24.1
-
-toolchain go1.24.3
+go 1.24.3
 
 require (
 	github.com/gorilla/mux v1.8.1
+	github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250627083642-d9fe45aa3285
 	github.com/informatik-mannheim/cmg-ss2025/pkg/logging v0.0.0-20250622170131-f936d38c088d
 	github.com/informatik-mannheim/cmg-ss2025/pkg/tracing v0.0.0-20250622170131-f936d38c088d
 )
 
 require (
+	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

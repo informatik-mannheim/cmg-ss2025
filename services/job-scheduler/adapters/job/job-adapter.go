@@ -2,6 +2,7 @@ package job
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -28,13 +29,15 @@ func GetJobsEndpoint(base string) string {
 
 type JobAdapter struct {
 	baseUrl string
+	client  http.Client
 }
 
 var _ ports.JobAdapter = (*JobAdapter)(nil)
 
-func NewJobAdapter(baseUrl string) *JobAdapter {
+func NewJobAdapter(client http.Client, baseUrl string) *JobAdapter {
 	return &JobAdapter{
 		baseUrl: baseUrl,
+		client:  client,
 	}
 }
 
@@ -43,7 +46,7 @@ func (adapter *JobAdapter) GetJobs() (ports.GetJobsResponse, error) {
 	endpoint := GetJobsEndpoint(adapter.baseUrl)
 
 	// StatusCode is not relevant yet
-	data, _, err := utils.GetRequest[ports.GetJobsResponse](endpoint)
+	data, _, err := utils.GetRequest[ports.GetJobsResponse](&adapter.client, endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get jobs: %w", err)
 	}
@@ -64,7 +67,7 @@ func (adapter *JobAdapter) AssignJob(update ports.UpdateJob) error {
 	}
 
 	// StatusCode is not relevant yet
-	_, _, err := utils.PatchRequest[ports.UpdateJobPayload, ports.UpdateJobResponse](endpoint, payload)
+	_, _, err := utils.PatchRequest[ports.UpdateJobPayload, ports.UpdateJobResponse](&adapter.client, endpoint, payload)
 	if err != nil {
 		return fmt.Errorf("failed to assign job: %w", err)
 	}
