@@ -30,7 +30,7 @@ type Fetcher struct {
 }
 
 // NewFromEnv creates a Fetcher with tokens from environment
-func NewFromEnv(notifier ports.Notifier) *Fetcher {
+func NewFromEnv() *Fetcher {
 	tokens := map[string]string{}
 	for _, env := range os.Environ() {
 		if strings.HasPrefix(env, "TOKEN_") {
@@ -48,7 +48,7 @@ func NewFromEnv(notifier ports.Notifier) *Fetcher {
 }
 
 // NewWithClient creates a Fetcher with a custom HTTP client (for testing)
-func NewWithClient(notifier ports.Notifier, client *http.Client) *Fetcher {
+func NewWithClient(client *http.Client) *Fetcher {
 	return &Fetcher{
 		TokenByZone: map[string]string{},
 		Client:      client,
