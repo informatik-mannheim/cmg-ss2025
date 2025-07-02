@@ -21,55 +21,52 @@ func NewUserClient(baseURL string) *UserClient {
 	return &UserClient{BaseURL: baseURL, httpClient: &http.Client{}}
 }
 
-func (c *UserClient) GetToken(ctx context.Context) (string, error) {
-	url := fmt.Sprintf("%s/auth/register", c.BaseURL)
-	reqBody := ports.GetTokenRequest{
-		Role: "provider",
-	}
+func (c *UserClient) GetToken(ctx context.Context, req ports.GetTokenRequest) (ports.GetTokenResponse, error) {
+	url := fmt.Sprintf("%s/auth/login", c.BaseURL)
 
-	bodyBytes, err := json.Marshal(reqBody)
+	bodyBytes, err := json.Marshal(req)
 	if err != nil {
 		logging.From(ctx).Error("Failed to marshal request body", "error", err)
-		return "", err
+		return ports.GetTokenResponse{}, err
 	}
 
-	logging.From(ctx).Debug("Registering provider with user service", "url", url)
+	logging.From(ctx).Debug("Login Worker with user service", "url", url)
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
 	if err != nil {
 		logging.From(ctx).Error("Failed to create HTTP request", "error", err)
-		return "", err
+		return ports.GetTokenResponse{}, err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
 		logging.From(ctx).Error("HTTP request failed", "error", err)
-		return "", err
+		return ports.GetTokenResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logging.From(ctx).Error("Failed to read response body", "error", err)
-		return "", err
+		return ports.GetTokenResponse{}, err
 	}
 
 	if resp.StatusCode != http.StatusCreated {
 		logging.From(ctx).Warn("Unexpected response status from user service", "status", resp.StatusCode, "response", string(respBody))
-		return "", fmt.Errorf("user registration failed: %s", string(respBody))
+		return ports.GetTokenResponse{}, fmt.Errorf("user registration failed: %s", string(respBody))
 	}
 
 	var parsed ports.GetTokenResponse
 	if err := json.Unmarshal(respBody, &parsed); err != nil {
 		logging.From(ctx).Error("Failed to unmarshal response", "error", err)
-		return "", err
+		return ports.GetTokenResponse{}, err
 	}
 
-	if parsed.Secret == "" {
-		return "", fmt.Errorf("missing 'secret' in response")
+	if parsed.Token == "" {
+		return ports.GetTokenResponse{}, fmt.Errorf("missing 'token' in response")
 	}
 
-	logging.From(ctx).Info("Provider successfully registered", "secret", parsed.Secret)
-	return parsed.Secret, nil
+	logging.From(ctx).Debug("Provider successfully registered", "token", parsed.Token)
+	return parsed, nil
 }

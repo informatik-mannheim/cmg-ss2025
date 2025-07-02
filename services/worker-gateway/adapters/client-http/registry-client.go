@@ -22,7 +22,7 @@ func NewRegistryClient(baseURL string) *RegistryClient {
 	return &RegistryClient{BaseURL: baseURL, httpClient: &http.Client{}}
 }
 
-func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
+func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterRequest, token string) (*ports.RegisterRespose, error) {
 	url := fmt.Sprintf("%s/workers?zone=%s", c.BaseURL, url.QueryEscape(req.Zone))
 
 	logging.From(ctx).Debug("Sending worker registration", "zone", req.Zone, "url", url)
@@ -33,6 +33,7 @@ func (c *RegistryClient) RegisterWorker(ctx context.Context, req ports.RegisterR
 		return nil, err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {

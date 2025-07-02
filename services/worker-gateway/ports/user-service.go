@@ -5,13 +5,13 @@ import (
 )
 
 type UserService interface {
-	GetToken(ctx context.Context) (string, error)
+	GetToken(ctx context.Context, req GetTokenRequest) (GetTokenResponse, error)
 }
 
 type GetTokenRequest struct {
-	Role string `json:"role"`
+	Secret string `json:"secret"`
 }
 
 type GetTokenResponse struct {
-	Secret string `json:"secret"`
+	Token string `json:"token"`
 }

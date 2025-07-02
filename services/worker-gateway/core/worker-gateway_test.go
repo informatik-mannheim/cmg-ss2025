@@ -21,7 +21,7 @@ type dummyRegistryService struct {
 	ReturnErr                bool
 }
 
-func (d *dummyRegistryService) RegisterWorker(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
+func (d *dummyRegistryService) RegisterWorker(ctx context.Context, req ports.RegisterRequest, token string) (*ports.RegisterRespose, error) {
 	d.RegisterWorkerCalled = true
 	if d.ReturnErr {
 		return nil, errors.New("register worker error")
@@ -73,12 +73,12 @@ type dummyUserClient struct {
 	ReturnErr      bool
 }
 
-func (d *dummyUserClient) GetToken(ctx context.Context) (string, error) {
+func (d *dummyUserClient) GetToken(ctx context.Context, req ports.GetTokenRequest) (ports.GetTokenResponse, error) {
 	d.GetTokenCalled = true
 	if d.ReturnErr {
-		return "", errors.New("user token error")
+		return ports.GetTokenResponse{}, errors.New("user token error")
 	}
-	return "mocked.secret.token", nil
+	return ports.GetTokenResponse{Token: "mocked.secret.token"}, nil
 }
 
 // --- Helper zum Erstellen des Services ---

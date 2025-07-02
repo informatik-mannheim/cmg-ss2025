@@ -56,17 +56,19 @@ func (s *WorkerGatewayService) Result(ctx context.Context, result ports.ResultRe
 func (s *WorkerGatewayService) Register(ctx context.Context, req ports.RegisterRequest) (*ports.RegisterRespose, error) {
 	logging.From(ctx).Debug("Registering worker", "zone", req.Zone)
 
-	secret, err := s.user.GetToken(ctx)
+	tokenReq := ports.GetTokenRequest{
+		Secret: req.Key,
+	}
+
+	tokenResp, err := s.user.GetToken(ctx, tokenReq)
 	if err != nil {
 		logging.From(ctx).Error("Failed to register provider with user service", "error", err)
 		return nil, err
 	}
 
-	logging.From(ctx).Debug("Received secret from user service", "secret", secret)
+	logging.From(ctx).Debug("Received secret from user service", "secret", tokenResp)
 
-	req.Key = secret
-
-	regResp, err := s.registry.RegisterWorker(ctx, req)
+	regResp, err := s.registry.RegisterWorker(ctx, req, tokenResp.Token)
 	if err != nil {
 		logging.From(ctx).Error("Worker registration failed", "error", err)
 		return nil, err
