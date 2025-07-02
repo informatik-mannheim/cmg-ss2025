@@ -62,6 +62,29 @@ The SQL schema for the PostgreSQL database (including the `jobs` table and its f
 You can find the table definitions and initialization scripts in files such as `job-init.sql`.
 
 ---
+## Start Service without Docker Compose
+
+You can also run the job microservice directly from the command line without Docker Compose.  
+This is useful for local development, debugging, or running the service with custom environment variables.
+
+### 1. In-Memory Mode (no database, for development/testing)
+
+```sh
+JOB_REPO_TYPE=inmemory SSL_MODE=false OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/" LOG_LEVEL=debug go run .
+```
+
+- This starts the service using in-memory storage. All data will be lost when the service stops.
+
+### 2. PostgreSQL Mode (connect to a running Postgres instance)
+
+```sh
+JOB_REPO_TYPE=postgres DB_HOST=postgres DB_PORT=5432 DB_USER=jobuser DB_PASSWORD=jobpass DB_NAME=jobdb SSL_MODE=false OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/" LOG_LEVEL=debug go run .
+```
+
+- This starts the service using a PostgreSQL database.  
+- Make sure a compatible Postgres instance is running and accessible with the provided credentials.
+
+---
 
 ## Running the Service with Docker Compose
 
@@ -95,14 +118,17 @@ docker-compose down
 
 ### 4. Environment Variables
 
-The following environment variables are set automatically in `docker-compose.yaml`:
+The following environment variables are set automatically in job explizit `docker-compose.yaml`:
 
 - `JOB_REPO_TYPE=postgres`
-- `PG_HOST=postgres`
-- `PG_PORT=5432`
-- `PG_USER=jobuser`
-- `PG_PASS=jobpass`
-- `PG_DB=jobdb`
+- `DB_HOST=postgres`
+- `DB_PORT=5432`
+- `DB_USER=jobuser`
+- `DB_PASS=jobpass`
+- `DB_DB=jobdb`
+- `SSL_MODE=false`
+- `OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/"`
+- `LOG_LEVEL=debug`
 
 ---
 
@@ -233,16 +259,16 @@ curl -X PATCH "http://localhost:8080/jobs/{id}/update-workerdaemon" -H "Content-
 
 Set the environment variable `JOB_REPO_TYPE` to select the repository:
 
-- `memory` (default): Use in-memory storage (for development/testing)
+- `inmemory` (default): Use in-memory storage (for development/testing)
 - `postgres`: Use PostgreSQL database
 
 If `postgres` is selected, set the following variables:
 
-- `PG_HOST`
-- `PG_PORT`
-- `PG_USER`
-- `PG_PASS`
-- `PG_DB`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASS`
+- `DB_DB`
 
 ---
 
