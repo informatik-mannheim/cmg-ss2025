@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/auth"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"net/http"
 	"os"
@@ -110,8 +111,19 @@ func main() {
 	}
 	server := &http.Server{Addr: ":" + port}
 
+	jwksUrl := os.Getenv("JWKS_URL")
+	if jwksUrl == "" {
+		logging.Error("JWKS_URL variable not set")
+		os.Exit(1)
+	}
+	if err := auth.InitJWKS(jwksUrl); err != nil {
+		logging.Error("Failed to initialize JWKS: ", err)
+		os.Exit(1)
+	}
+
 	httpHandler := handler.NewHandler(s, n)
-	tracingHandler := tracing.Middleware(httpHandler)
+	protectedHandler := auth.AuthMiddleware(httpHandler)
+	tracingHandler := tracing.Middleware(protectedHandler)
 	http.Handle("/", tracingHandler)
 
 	stop := make(chan os.Signal, 1)
