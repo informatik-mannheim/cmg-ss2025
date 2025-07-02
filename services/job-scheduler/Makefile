@@ -7,7 +7,7 @@ integrationcheck:
 	@$(MAKE) build && \
 	$(MAKE) test ; \
 	$(MAKE) clean
-	
+
 deployment:
 	@$(MAKE) build && \
 	$(MAKE) test && \
@@ -24,7 +24,7 @@ containerize:
 	docker build -t $(DOCKER_IMAGE) .
 
 run:
-	WORKER_REGISTRY="http://localhost:8080" JOB_SERVICE="http://localhost:8080" CARBON_INTENSITY_PROVIDER="http://localhost:8080" go run main.go
+	WORKER_REGISTRY="http://localhost:8080" JOB_SERVICE="http://localhost:8080" CARBON_INTENSITY_PROVIDER="http://localhost:8080" USER_MANAGEMENT_URL=http://user-management:8080 AUTH_TOKEN="something to test, will probably need to be adjusted soon" OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318 JOB_SCHEDULER_SECRET="Some really secure secret"  go run main.go
 
 docker-up:
 	docker compose up --build -d
