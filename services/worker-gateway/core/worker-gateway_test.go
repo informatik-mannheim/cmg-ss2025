@@ -182,7 +182,7 @@ func TestHeartbeat_Computing(t *testing.T) {
 
 func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 	reg := &dummyRegistryService{}
-	job := &dummyJobService{ReturnErr: true}
+	job := &dummyJobService{ReturnErr: true} // simuliert Fehler bei FetchScheduledJobs
 	svc := core.NewWorkerGatewayService(reg, job)
 
 	req := ports.HeartbeatRequest{
@@ -191,8 +191,8 @@ func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 	}
 
 	jobs, err := svc.Heartbeat(context.Background(), req)
-	if err != nil {
-		t.Fatalf("expected no fatal error (graceful handling), got %v", err)
+	if err == nil {
+		t.Fatalf("expected error when fetching jobs fails, got nil")
 	}
 	if jobs != nil {
 		t.Errorf("expected nil jobs on fetch error, got %v", jobs)
