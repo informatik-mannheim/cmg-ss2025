@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	// "github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/job/adapters/handler-http"
 	repo_database "github.com/informatik-mannheim/cmg-ss2025/services/job/adapters/repo-database"
 	repo_in_memory "github.com/informatik-mannheim/cmg-ss2025/services/job/adapters/repo-in-memory"
@@ -18,8 +18,25 @@ import (
 )
 
 func main() {
+	// Initialize Logging
+	logging.Init("job-service")
+	logging.Debug("starting job-service")
+
+	// Initialize Tracing
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+	shutdown, err := tracing.Init("job-service", jaeger)
+	if err != nil {
+		errorMessage := "could not initialize tracing: " + err.Error()
+		logging.Error(errorMessage)
+	}
+	defer shutdown(context.Background())
+
 	// Initialize the job storage based on the environment variable JOB_REPO_TYPE
 	var storage ports.JobStorage
+	var dbError error
 	repoType := os.Getenv("JOB_REPO_TYPE")
 	if repoType == "postgres" {
 		host := os.Getenv("DB_HOST")
@@ -32,32 +49,32 @@ func main() {
 
 		maxRetries := 10
 		for i := 0; i < maxRetries; i++ {
-			dbStorage, err := repo_database.NewJobStorage(host, port, user, password, dbName, sslMode, ctx)
-			if err != nil {
-				//logging.Warn("Postgres not ready, retrying...")
-				log.Println("WARN: Postgres not ready, retrying...")
+			var dbStorage ports.JobStorage
+			dbStorage, dbError = repo_database.NewJobStorage(host, port, user, password, dbName, sslMode, ctx)
+			if dbError != nil {
+				logging.Warn("Postgres not ready, retrying...")
 				time.Sleep(3 * time.Second)
 			} else {
-				//logging.Debug("Successfully connected to the PostgreSQL database")
-				log.Println("DEBUG: Successfully connected to the PostgreSQL database")
+				logging.Debug("Successfully connected to the PostgreSQL database")
 				storage = dbStorage
 				break
 			}
 		}
-		if storage == nil {
-			//logging.Error("Failed to connect to Postgres after multiple attempts, falling back to in-memory storage")
-			log.Println("ERROR: Failed to connect to Postgres after multiple attempts, falling back to in-memory storage")
+		if storage == nil && dbError != nil {
+			errorMessage := "could not connect to Postgres after multiple attempts: " + dbError.Error()
+			logging.Error(errorMessage)
+			// Fallback to in-memory storage if Postgres connection fails
+			logging.Warn("Falling back to in-memory job storage")
 			storage = repo_in_memory.NewMockJobStorage()
 		}
 	} else {
-		//logging.Debug("Using in-memory job storage")
-		log.Println("DEBUG: Using in-memory job storage")
-		// Default to in-memory storage if JOB_REPO_TYPE is not set or is not
+		logging.Debug("Using in-memory job storage")
 		storage = repo_in_memory.NewMockJobStorage()
 	}
 	jobService, err := core.NewJobService(storage)
 	if err != nil {
-		log.Fatalf("could not initialize job service: %v", err)
+		errorMessage := "could not initialize job service: " + err.Error()
+		logging.Error(errorMessage)
 	}
 
 	// Set up the HTTP server
@@ -67,26 +84,30 @@ func main() {
 	}
 	handler := handler_http.NewHandler(jobService)
 	if handler == nil {
-		log.Fatal("could not create handler")
+		logging.Warn("could not create handler, service is shutting down")
+		os.Exit(1)
 	}
+	tracingHandler := tracing.Middleware(handler)
 	server := &http.Server{
 		Addr:    ":" + port,
-		Handler: handler,
+		Handler: tracingHandler,
 	}
+
 	// Start the server in a goroutine so that it doesn't block the main thread
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		log.Print("The service is shutting down...")
+		logging.Debug("The service is shutting down...")
 		server.Shutdown(context.Background())
 	}()
 
-	log.Print("listening...")
+	logging.Debug("listening...")
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Fatalf("could not listen on %s: %v\n", server.Addr, err)
+		errorMessage := "could not listen on " + server.Addr + ": " + err.Error()
+		logging.Error(errorMessage)
 	}
-	log.Print("Done")
+	logging.Debug("Done")
 }

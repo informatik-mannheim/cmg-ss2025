@@ -3,6 +3,7 @@ package interval_runner
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
@@ -13,15 +14,17 @@ type IntervalRunner struct {
 	ctx      context.Context
 	interval int
 	port     string
+	secret   string
 }
 
 var _ ports.Runner = (*IntervalRunner)(nil)
 
-func NewIntervalRunner(ctx context.Context, interval int, port string) *IntervalRunner {
+func NewIntervalRunner(ctx context.Context, interval int, port string, secret string) *IntervalRunner {
 	return &IntervalRunner{
 		ctx:      ctx,
 		interval: interval,
 		port:     port,
+		secret:   secret,
 	}
 }
 
@@ -36,7 +39,7 @@ func (ir *IntervalRunner) RunScheduleJob() {
 			logging.Debug("Received shutdown signal, stopping scheduler...")
 			return
 		default:
-			resp, err := http.Post("http://localhost:"+ir.port+"/schedule", "application/json", nil)
+			resp, err := http.Post("http://localhost:"+ir.port+"/schedule", "text/plain", strings.NewReader(ir.secret))
 			if err != nil {
 				// Debug here because error logging already exists in the handler, would be redundant
 				logging.Debug("Error scheduling job: %v", err)
