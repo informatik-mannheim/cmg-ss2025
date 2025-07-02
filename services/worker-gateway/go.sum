@@ -1,0 +1,7 @@
+github.com/MicahParks/keyfunc v1.9.0 h1:lhKd5xrFHLNOWrDc4Tyb/Q1AJ4LCzQ48GVJyVIID3+o=
+github.com/MicahParks/keyfunc v1.9.0/go.mod h1:IdnCilugA0O/99dW+/MkvlyrsX8+L8+x95xuVNtM5jw=
+github.com/golang-jwt/jwt/v4 v4.4.2/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
+github.com/golang-jwt/jwt/v4 v4.5.2 h1:YtQM7lnr8iZ+j5q71MGKkNw9Mn7AjHM68uc9g5fXeUI=
+github.com/golang-jwt/jwt/v4 v4.5.2/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
+github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250628182332-e35f88de24b9 h1:VB5JpAQCOZfJuFcShQzXMfsAFGQ8bRU/cHDgnpsKW0k=
+github.com/informatik-mannheim/cmg-ss2025/pkg/auth v0.0.0-20250628182332-e35f88de24b9/go.mod h1:FkwvdwxQQ4IMqnJ9iv+CEqrxV6367lRIh0QxL+zMn9U=
