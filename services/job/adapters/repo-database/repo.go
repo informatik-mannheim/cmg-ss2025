@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	//"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -34,8 +34,7 @@ func NewJobStorage(host, port, user, password, dbName, sslMode string, ctx conte
 		)
 	}
 
-	//logging.Debug("Connecting to DB with Connectionstring:", connectionString)
-	fmt.Println("DEBUG: Connecting to DB with Connectionstring:", connectionString)
+	logging.Debug("Connecting to DB with Connectionstring:", connectionString)
 
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
@@ -46,8 +45,7 @@ func NewJobStorage(host, port, user, password, dbName, sslMode string, ctx conte
 		return nil, err
 	}
 
-	//logging.Debug("Successfully connected to the PostgreSQL database")
-	fmt.Println("DEBUG: Successfully connected to the PostgreSQL database")
+	logging.Debug("Successfully connected to the PostgreSQL database")
 	return &JobStorage{db: db}, nil
 }
 
