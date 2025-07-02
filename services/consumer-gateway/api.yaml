@@ -43,7 +43,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /jobs/{job-id}/status:
+  /jobs/{job-id}/outcome:
     get: 
       summary: Get the status of a job
       parameters:
@@ -77,7 +77,7 @@ paths:
 
   /auth/login:
     post: 
-      summary: Forwards user login to user management
+      summary: Forwards user secret to user management
       description: User management returns JWT, user-id and role
       requestBody:
         required: true
@@ -86,13 +86,10 @@ paths:
             schema:
               type: object
               properties:
-                username:
-                  type: string
-                password:
+                secret:
                   type: string
               required:
-                - username
-                - password
+                - secret
       responses: 
         "200":
           description: Login successful, JWT issued

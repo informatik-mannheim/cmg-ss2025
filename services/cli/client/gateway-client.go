@@ -123,6 +123,10 @@ func (c *GatewayClient) PingJobScheduler() {
 		logging.Error("Error pinging job-scheduler:", err)
 		return
 	}
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != "pong" {
+		logging.Error("Error pinging job-scheduler, response is: ", string(body))
+	}
 	defer resp.Body.Close()
 }
 
@@ -151,7 +155,7 @@ func (c *GatewayClient) Login(secret string) {
 
 	if resp.StatusCode == 200 {
 		fmt.Println("Login successful.")
-		fmt.Println("Token:", tokenResp.Token)
+		fmt.Println("Das response token ist: ", tokenResp.Token)
 		c.PingJobScheduler()
 	} else {
 		fmt.Println("Unsuccessful Login.")
