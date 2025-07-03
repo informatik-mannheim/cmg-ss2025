@@ -5,82 +5,74 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/worker-registry/ports"
 )
 
 type ZoneClient struct {
-	baseURL    string
-	httpClient *http.Client
-	zones      []ports.Zone
+	baseURL       string
+	httpClient    *http.Client
+	zones         []ports.Zone
+	lastFetched   time.Time
+	cacheDuration time.Duration
 }
 
-var _ ports.ZoneClient = (*ZoneClient)(nil)
-
-func NewZoneClient(baseURL string) *ZoneClient {
-	client := &ZoneClient{
-		baseURL:    baseURL,
-		httpClient: &http.Client{},
-		zones:      []ports.Zone{},
+func NewZoneClient(baseURL string, cacheDuration time.Duration) *ZoneClient {
+	c := &ZoneClient{
+		baseURL:       baseURL,
+		httpClient:    &http.Client{Timeout: 5 * time.Second},
+		cacheDuration: cacheDuration,
 	}
 
-	go client.refreshZonesLoop()
-	return client
+	go func() {
+		if _, err := c.GetZones(context.Background()); err != nil {
+			logging.Warn("Initial zones fetch failed: " + err.Error())
+		}
+
+		ticker := time.NewTicker(c.cacheDuration)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if _, err := c.GetZones(context.Background()); err != nil {
+				logging.Warn("Periodic zones fetch failed: " + err.Error())
+			}
+		}
+	}()
+
+	return c
 }
 
 func (c *ZoneClient) GetZones(ctx context.Context) (ports.ZoneResponse, error) {
-	if len(c.zones) == 0 {
+	if time.Since(c.lastFetched) > c.cacheDuration {
 		zr, err := c.doGetZones(ctx)
 		if err != nil {
+			logging.Warn("Zones could not be fetched due to error" + err.Error())
 			return ports.ZoneResponse{}, err
 		}
 		c.zones = zr.Zones
-		return zr, nil
+		c.lastFetched = time.Now()
 	}
 	return ports.ZoneResponse{Zones: c.zones}, nil
 }
 
 func (c *ZoneClient) doGetZones(ctx context.Context) (ports.ZoneResponse, error) {
-	url := fmt.Sprintf("%s/carbon-intensity/zones", c.baseURL)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/carbon-intensity/zones", nil)
 	req.Header.Set("Content-Type", "application/json")
-
 	if auth, ok := ctx.Value("authHeader").(string); ok && auth != "" {
 		req.Header.Set("Authorization", auth)
 	}
-
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return ports.ZoneResponse{}, fmt.Errorf("request failed: %w", err)
+		return ports.ZoneResponse{}, err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return ports.ZoneResponse{}, fmt.Errorf("zone-service error: %s", resp.Status)
 	}
-
 	var out ports.ZoneResponse
-	err = json.NewDecoder(resp.Body).Decode(&out)
-	return out, err
-}
-
-func (c *ZoneClient) refreshZonesLoop() {
-	sleepSec := 60
-	if s := os.Getenv("CARBON_INTENSITY_PROVIDER_INTERVAL"); s != "" {
-		if i, err := strconv.Atoi(s); err == nil {
-			sleepSec = i
-		}
-	}
-	for {
-		if zr, err := c.doGetZones(context.Background()); err == nil {
-			c.zones = zr.Zones
-			return
-		}
-		time.Sleep(time.Duration(sleepSec) * time.Second)
-	}
+	return out, json.NewDecoder(resp.Body).Decode(&out)
 }
 
 func (c *ZoneClient) IsValidZone(code string, ctx context.Context) bool {
