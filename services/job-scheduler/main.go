@@ -143,7 +143,7 @@ func loadEnvVariables() (Environments, error) {
 	envs.UserManagementUrl = userManagementUrl
 
 	authToken, err := utils.LoadEnvRequired("AUTH_TOKEN")
-	if err != nil || authToken == "" {
+	if err != nil {
 		return envs, err
 	}
 	envs.AuthToken = authToken

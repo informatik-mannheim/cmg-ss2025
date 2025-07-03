@@ -43,7 +43,7 @@ func (h *Handler) handleScheduleJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.ScheduleJob(); err != nil {
-		sendError(w, http.StatusInternalServerError, "Failed to schedule job: "+err.Error())
+		sendError(w, http.StatusInternalServerError, "Failed to schedule job")
 		return
 	}
 
