@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	//"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"io"
 	"log"
@@ -116,19 +116,6 @@ func (c *GatewayClient) GetJobOutcome(id string) {
 	fmt.Println("Response:", string(body))
 
 }
-func (c *GatewayClient) PingJobScheduler() {
-	url := fmt.Sprintf("%s/ping", "http://job-scheduler:8080")
-	resp, err := http.Get(url)
-	if err != nil {
-		logging.Error("Error pinging job-scheduler:", err)
-		return
-	}
-	body, _ := io.ReadAll(resp.Body)
-	if string(body) != "pong" {
-		logging.Error("Error pinging job-scheduler, response is: ", string(body))
-	}
-	defer resp.Body.Close()
-}
 
 func (c *GatewayClient) Login(secret string) {
 	url := fmt.Sprintf("%s/auth/login", c.baseURL)
@@ -155,8 +142,7 @@ func (c *GatewayClient) Login(secret string) {
 
 	if resp.StatusCode == 200 {
 		fmt.Println("Login successful.")
-		fmt.Println("Das response token ist: ", tokenResp.Token)
-		c.PingJobScheduler()
+
 	} else {
 		fmt.Println("Unsuccessful Login.")
 	}
