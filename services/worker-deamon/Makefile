@@ -20,7 +20,7 @@ coverage:
 	gocover-cobertura < coverage.out > coverage.xml
 
 build:
-	go build -o $(BINARY_NAME) ./cmd/worker-deamon
+	go build -o $(BINARY_NAME) .
 
 
 
