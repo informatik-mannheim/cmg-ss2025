@@ -24,10 +24,6 @@ func NewZoneClient(baseURL string) *ZoneClient {
 }
 
 func (c *ZoneClient) GetZones(ctx context.Context) (ports.ZoneResponse, error) {
-	return c.doGetZones(ctx)
-}
-
-func (c *ZoneClient) doGetZones(ctx context.Context) (ports.ZoneResponse, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/carbon-intensity/zones", nil)
 	req.Header.Set("Content-Type", "application/json")
 	if auth, ok := ctx.Value("authHeader").(string); ok && auth != "" {
