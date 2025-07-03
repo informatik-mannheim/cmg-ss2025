@@ -2,8 +2,8 @@ package ports
 
 type WorkerGateway interface {
 	Register(key string, zone string) (*RegisterResponse, error)
-	SendHeartbeat(workerID string, status string) ([]Job, error)
-	SendResult(j Job) error
+	SendHeartbeat(workerID string, status string, token string) ([]Job, error)
+	SendResult(j Job, token string) error
 }
 
 type Job struct {

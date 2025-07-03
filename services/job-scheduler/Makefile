@@ -1,30 +1,36 @@
 BINARY_NAME=job-scheduler-binary
 DOCKER_IMAGE=job-scheduler
 
-.PHONY: all build containerize test run docker-up docker-down clean integrationcheck deployment
+.PHONY: all build containerize test run docker-up docker-down clean integrationcheck deployment junit coverage
 
-integrationcheck:
-	@$(MAKE) build && \
-	$(MAKE) test ; \
-	$(MAKE) clean
+integrationcheck: clean test build
 
-deployment:
-	@$(MAKE) build && \
-	$(MAKE) test && \
-	$(MAKE) containerize ; \
-	$(MAKE) clean
+deployment: clean test build containerize
+
+clean:
+	rm -f $(BINARY_NAME)
+	rm -f report.xml
+	rm -f coverage.out
+	rm -f coverage.xml
+
+test: junit coverage
+
+junit:
+	go test -v ./... | go-junit-report > report.xml
+
+coverage:
+	go test -coverprofile=coverage.out ./...
+	gocover-cobertura < coverage.out > coverage.xml
 
 build:
 	go build -o $(BINARY_NAME) .
 
-test:
-	go test ./...
-
 containerize:
 	docker build -t $(DOCKER_IMAGE) .
 
+
 run:
-	WORKER_REGISTRY="http://localhost:8080" JOB_SERVICE="http://localhost:8080" CARBON_INTENSITY_PROVIDER="http://localhost:8080" USER_MANAGEMENT_URL=http://user-management:8080 AUTH_TOKEN="something to test, will probably need to be adjusted soon" OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318 JOB_SCHEDULER_SECRET="Some really secure secret"  go run main.go
+	WORKER_REGISTRY="http://localhost:8080" JOB_SERVICE="http://localhost:8080" CARBON_INTENSITY_PROVIDER="http://localhost:8080" go run main.go
 
 docker-up:
 	docker compose up --build -d
@@ -32,8 +38,7 @@ docker-up:
 docker-down:
 	docker compose down
 
-clean:
-	rm -f $(BINARY_NAME)
+
 
 
 

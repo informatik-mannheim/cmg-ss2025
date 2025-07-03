@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o worker-daemon ./cmd/worker-deamon
+RUN go build -o worker-daemon
 
 FROM debian:bookworm-slim
 

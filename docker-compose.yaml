@@ -29,7 +29,6 @@ services:
       - postgres
     environment:
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
-      - CARBON_INTENSITY_PROVIDER_INTERVAL=60
       - LOG_LEVEL=debug
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -94,7 +93,9 @@ services:
     environment:
       - WORKER_REGISTRY=http://worker-registry:8080
       - JOB_SERVICE=http://job-service:8080
+      - USER_MANAGEMENT_SERVICE=http://user-management:8080
       - LOG_LEVEL=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
