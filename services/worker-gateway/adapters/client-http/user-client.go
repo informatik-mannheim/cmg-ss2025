@@ -67,6 +67,6 @@ func (c *UserClient) GetToken(ctx context.Context, req ports.GetTokenRequest) (p
 		return ports.GetTokenResponse{}, fmt.Errorf("missing 'token' in response")
 	}
 
-	logging.From(ctx).Debug("Provider successfully registered", "token", parsed.Token)
+	logging.From(ctx).Debug("Provider successfully registered")
 	return parsed, nil
 }
