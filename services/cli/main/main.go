@@ -7,7 +7,6 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli/client"
-	"log"
 	"os"
 	"strings"
 )
@@ -286,7 +285,7 @@ func main() {
 	logging.Init("cli")
 	gatewayUrl := os.Getenv("GATEWAY_URL")
 	if gatewayUrl == "" {
-		log.Fatal("Fehlende Umgebungsvariable GATEWAY_URL")
+		logging.Error("Fehlende Umgebungsvariable GATEWAY_URL")
 	}
 	gateway := client.NewGatewayClient(gatewayUrl)
 
