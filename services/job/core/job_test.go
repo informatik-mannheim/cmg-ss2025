@@ -26,7 +26,7 @@ func TestJobService_CreateJob(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Create a valid job",
+			name: "Create a new valid job",
 			args: ports.JobCreate{
 				JobName:      "Test Job",
 				CreationZone: "DE",
