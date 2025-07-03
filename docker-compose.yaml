@@ -29,7 +29,6 @@ services:
       - postgres
     environment:
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
-      - CARBON_INTENSITY_PROVIDER_INTERVAL=60
       - LOG_LEVEL=debug
       - DB_HOST=postgres
       - DB_PORT=5432
