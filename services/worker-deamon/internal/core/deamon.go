@@ -25,7 +25,7 @@ func NewDaemon(cfg config.Config, api ports.WorkerGateway) *Daemon {
 }
 
 func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
-	w, err := d.api.Register(d.cfg.Key, d.cfg.Zone)
+	w, err := d.api.Register(d.cfg.Secret, d.cfg.Zone)
 	if err != nil {
 		fmt.Println("Registration failed:", err)
 		return
@@ -54,7 +54,7 @@ func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
 				status = "AVAILABLE"
 			}
 
-			jobs, err := d.api.SendHeartbeat(d.workerID, status)
+			jobs, err := d.api.SendHeartbeat(d.workerID, status, d.token)
 			if err != nil {
 				fmt.Println("Heartbeat failed:", err)
 				continue
@@ -68,7 +68,7 @@ func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
 				go func(j ports.Job) {
 					d.currentJobID = j.ID
 					processedJob := computeJob(j)
-					err := d.api.SendResult(processedJob)
+					err := d.api.SendResult(processedJob, d.token)
 					if err != nil {
 						fmt.Println("SendResult failed:", err)
 					} else {
