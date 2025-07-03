@@ -11,7 +11,7 @@ servers:
 paths:
   /auth/register:
     post:
-      summary: Register a new user
+      summary: Register a new user (Authentication Admin only)
       tags:
         - Authentication
       requestBody:

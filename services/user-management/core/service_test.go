@@ -10,30 +10,6 @@ import (
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
 )
 
-// MockNotifier is a mock implementation of the Notifier interface for testing purposes
-type mockNotifier struct {
-	Events []string
-}
-
-// NewMockNotifier creates a new instance of MockNotifier
-func NewMockNotifier() *mockNotifier {
-	return &mockNotifier{
-		Events: []string{},
-	}
-}
-
-func (m *mockNotifier) Event(message string, _ context.Context) {
-	m.Events = append(m.Events, message)
-}
-
-func (m *mockNotifier) UserRegistered(id string, role string, _ context.Context) {
-	m.Events = append(m.Events, "User registered: ID="+id+", Role="+role)
-}
-
-func (m *mockNotifier) UserLoggedIn(id string, _ context.Context) {
-	m.Events = append(m.Events, "User logged in: ID="+id)
-}
-
 type mockTokenProvider struct {
 	Token string
 	Err   error
@@ -48,10 +24,9 @@ func (m *mockTokenProvider) RequestTokenFromClientSecret(_ context.Context, clie
 
 // Test authentication with valid credentials
 func TestAuthenticate_Success(t *testing.T) {
-	notifier := &mockNotifier{}
 	provider := &mockTokenProvider{Token: "dummy.jwt.token"}
 
-	service := core.NewAuthService(provider, notifier)
+	service := core.NewAuthService(provider)
 
 	clientID, token, err := service.Authenticate(context.Background(), "abc.def")
 
@@ -67,10 +42,9 @@ func TestAuthenticate_Success(t *testing.T) {
 }
 
 func TestAuthenticate_InvalidFormat(t *testing.T) {
-	notifier := &mockNotifier{}
 	provider := &mockTokenProvider{}
 
-	service := core.NewAuthService(provider, notifier)
+	service := core.NewAuthService(provider)
 
 	_, _, err := service.Authenticate(context.Background(), "invalidformat")
 	if err == nil {
@@ -79,10 +53,9 @@ func TestAuthenticate_InvalidFormat(t *testing.T) {
 }
 
 func TestAuthenticate_TokenProviderFails(t *testing.T) {
-	notifier := &mockNotifier{}
 	provider := &mockTokenProvider{Err: errors.New("auth0 down")}
 
-	service := core.NewAuthService(provider, notifier)
+	service := core.NewAuthService(provider)
 
 	clientID, token, err := service.Authenticate(context.Background(), "abc.def")
 

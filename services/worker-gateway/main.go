@@ -7,7 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/auth"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 
 	client_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/client-http"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/worker-gateway/adapters/handler-http"
@@ -23,22 +25,46 @@ func main() {
 		port = "8080"
 	}
 
+	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaeger == "" {
+		logging.Error("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+	}
+
+	shutdown, err := tracing.Init("worker-gateway", jaeger)
+	if err != nil {
+		logging.Error("Tracing init failed:", err)
+	}
+	defer shutdown(context.Background())
+
+	jwksUrl := os.Getenv("JWKS_URL")
+
+	err = auth.InitJWKS(jwksUrl)
+
+	if err != nil {
+		logging.Error("Failed to initialize JWKS: " + err.Error())
+		return
+	}
+
 	// init service and handler
 	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
 	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
-	service := core.NewWorkerGatewayService(registryClient, jobClient)
+	userClient := client_http.NewUserClient(os.Getenv("USER_MANAGEMENT_SERVICE"))
+	service := core.NewWorkerGatewayService(registryClient, jobClient, userClient)
 	handler := handler_http.NewHandler(service)
 
 	// Router (mux)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/worker/heartbeat", handler.HeartbeatHandler)
-	mux.HandleFunc("/result", handler.SubmitResultHandler)
-	mux.HandleFunc("/register", handler.RegisterWorkerHandler)
+	mux.Handle("/worker/heartbeat", auth.AuthMiddleware(http.HandlerFunc(handler.HeartbeatHandler)))
+	mux.Handle("/result", auth.AuthMiddleware(http.HandlerFunc(handler.SubmitResultHandler)))
+	mux.Handle("/register", http.HandlerFunc(handler.RegisterWorkerHandler))
+
+	// Wrap router with tracing middleware
+	tracingHandler := tracing.Middleware(mux)
 
 	// Server-Setup
 	srv := &http.Server{
 		Addr:    ":" + port,
-		Handler: mux,
+		Handler: tracingHandler,
 	}
 
 	go func() {

@@ -12,7 +12,6 @@ import (
 
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/tracing/tracing"
 	handler "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/handler-http"
-	notifier "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/notifier"
 	electricitymaps "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/provider/electricity-maps"
 	repo "github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/adapters/repo-in-memory"
 	"github.com/informatik-mannheim/cmg-ss2025/services/carbon-intensity-provider/core"
@@ -37,13 +36,12 @@ func main() {
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	n := notifier.New()
-	r := repo.NewRepo(n)
-	s := core.NewCarbonIntensityService(r, n)
+	r := repo.NewRepo()
+	s := core.NewCarbonIntensityService(r)
 
 	if os.Getenv("USE_LIVE") == "true" {
 		logging.Debug("[Mode] Live fetch enabled")
-		fetcher := electricitymaps.NewFromEnv(n)
+		fetcher := electricitymaps.NewFromEnv()
 
 		detailedZones, err := fetcher.AllElectricityMapZones(rootCtx)
 		if err != nil {
@@ -60,7 +58,7 @@ func main() {
 		}
 
 		if err := r.StoreZones(zones, rootCtx); err != nil {
-			n.Event("Failed to store filtered zone metadata: " + err.Error())
+			logging.Error("Failed to store filtered zone metadata: " + err.Error())
 		}
 
 		configuredZones, err := fetcher.GetConfiguredZones(rootCtx)
@@ -76,13 +74,13 @@ func main() {
 			for {
 				select {
 				case <-ctx.Done():
-					n.Event("Fetcher loop stopped due to context cancellation")
+					logging.Debug("Fetcher loop stopped due to context cancellation")
 					return
 				case <-ticker.C:
 					for _, zone := range configuredZones {
 						data, err := fetcher.Fetch(zone, ctx)
 						if err != nil {
-							n.Event("Error fetching data for zone " + zone + ": " + err.Error())
+							logging.Error("Error fetching data for zone " + zone + ": " + err.Error())
 							continue
 						}
 						s.AddOrUpdateZone(data.Zone, data.CarbonIntensity, ctx)
@@ -121,7 +119,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	httpHandler := handler.NewHandler(s, n)
+	httpHandler := handler.NewHandler(s)
 	protectedHandler := auth.AuthMiddleware(httpHandler)
 	tracingHandler := tracing.Middleware(protectedHandler)
 	http.Handle("/", tracingHandler)
@@ -137,7 +135,6 @@ func main() {
 	}()
 
 	<-stop
-	n.Event("Shutdown signal received")
 	cancel() // cancel root context
 
 	ctxShutdown, cancelTimeout := context.WithTimeout(context.Background(), 5*time.Second)
@@ -147,6 +144,5 @@ func main() {
 		logging.Error("Server shutdown failed: " + err.Error())
 	}
 
-	n.Event("Server exited gracefully")
 	logging.Debug("Server exited gracefully")
 }

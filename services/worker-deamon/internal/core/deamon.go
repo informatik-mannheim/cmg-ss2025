@@ -1,13 +1,14 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os/exec"
 	"sync/atomic"
 	"time"
 
 	"worker-daemon/internal/config"
-
 	"worker-daemon/internal/ports"
 )
 
@@ -24,7 +25,7 @@ func NewDaemon(cfg config.Config, api ports.WorkerGateway) *Daemon {
 }
 
 func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
-	w, err := d.api.Register(d.cfg.Key, d.cfg.Zone)
+	w, err := d.api.Register(d.cfg.Secret, d.cfg.Zone)
 	if err != nil {
 		fmt.Println("Registration failed:", err)
 		return
@@ -53,7 +54,7 @@ func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
 				status = "AVAILABLE"
 			}
 
-			jobs, err := d.api.SendHeartbeat(d.workerID, status)
+			jobs, err := d.api.SendHeartbeat(d.workerID, status, d.token)
 			if err != nil {
 				fmt.Println("Heartbeat failed:", err)
 				continue
@@ -65,9 +66,9 @@ func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
 				job := jobs[0]
 				// Starte die Jobverarbeitung in separater Goroutine
 				go func(j ports.Job) {
-					d.currentJobID = job.ID
+					d.currentJobID = j.ID
 					processedJob := computeJob(j)
-					err := d.api.SendResult(processedJob)
+					err := d.api.SendResult(processedJob, d.token)
 					if err != nil {
 						fmt.Println("SendResult failed:", err)
 					} else {
@@ -87,11 +88,46 @@ func (d *Daemon) StartHeartbeatLoop(ctx context.Context) {
 }
 
 func computeJob(job ports.Job) ports.Job {
-	fmt.Printf("Processing job %s...\n", job.ID)
-	time.Sleep(10 * time.Second)
-	job.Status = "DONE"
-	job.Result = "Result of job " + job.ID
-	job.ErrorMessage = ""
-	fmt.Printf("Job %s done.\n", job.ID)
+	imageRef := job.Image.Name
+	if job.Image.Version != "" {
+		imageRef += ":" + job.Image.Version
+	}
+
+	// Map in []string konvertieren
+	args := []string{}
+	for k, v := range job.AdjustmentParameters {
+		args = append(args, k)
+		if v != "" {
+			args = append(args, v)
+		}
+	}
+
+	output, err := runImage(imageRef, args)
+	if err != nil {
+		job.Status = "ERROR"
+		job.Result = ""
+		job.ErrorMessage = err.Error()
+	} else {
+		job.Status = "DONE"
+		job.Result = output
+		job.ErrorMessage = ""
+	}
+
 	return job
+}
+
+func runImage(image string, args []string) (string, error) {
+	allArgs := append([]string{"run", "--rm", image}, args...)
+	cmd := exec.Command("docker", allArgs...)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("run image failed: %v - %s", err, stderr.String())
+	}
+
+	return stdout.String(), nil
 }

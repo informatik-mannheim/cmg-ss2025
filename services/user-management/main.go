@@ -12,10 +12,8 @@ import (
 
 	"github.com/gorilla/mux"
 	auth0adapter "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/auth"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/notifier"
+	handler "github.com/informatik-mannheim/cmg-ss2025/services/user-management/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/core"
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 func main() {
@@ -36,22 +34,19 @@ func main() {
 	ctx := context.Background()
 	useLive := os.Getenv("USE_LIVE") == "true"
 
-	n := notifier.New()
-	authAdapter := auth0adapter.New(useLive, n)
-	authService := core.NewAuthService(authAdapter, n)
+	authAdapter := auth0adapter.New(useLive)
+	authService := core.NewAuthService(authAdapter)
 
 	isAdminFn := func(secret string) bool {
 		expected := os.Getenv("ADMIN_SECRET_HASH")
 		return core.IsAdminSecret(secret, expected)
 	}
 
-	handler := handler.New(authService, useLive, isAdminFn, func() ports.Notifier {
-		return n
-	})
+	httpHandler := handler.New(authService, useLive, isAdminFn)
 
 	muxRouter := mux.NewRouter()
-	muxRouter.HandleFunc("/auth/register", handler.RegisterHandler).Methods("POST")
-	muxRouter.HandleFunc("/auth/login", handler.LoginHandler).Methods("POST")
+	muxRouter.HandleFunc("/auth/register", httpHandler.RegisterHandler).Methods("POST")
+	muxRouter.HandleFunc("/auth/login", httpHandler.LoginHandler).Methods("POST")
 
 	// Wrap router with tracing middleware
 	tracingHandler := tracing.Middleware(muxRouter)
@@ -61,27 +56,24 @@ func main() {
 		Handler: tracingHandler,
 	}
 
-	n.Event("Listening on :8080", ctx)
-
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			n.Event("Server error: "+err.Error(), ctx)
+			logging.Error("Server error: ", err)
 			os.Exit(1)
 		}
 	}()
 
 	<-stop
-	n.Event("Shutdown signal received", ctx)
 
 	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		n.Event("Shutdown failed: "+err.Error(), ctx)
+		logging.Error("Shutdown failed: ", err)
 	} else {
-		n.Event("Server shut down gracefully", ctx)
+		logging.Debug("Server shut down gracefully")
 	}
 }

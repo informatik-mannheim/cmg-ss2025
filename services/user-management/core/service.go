@@ -13,32 +13,25 @@ import (
 
 type AuthService struct {
 	TokenProvider ports.TokenProvider
-	Notifier      ports.Notifier
 }
 
-func NewAuthService(tokenProvider ports.TokenProvider, notifier ports.Notifier) *AuthService {
+func NewAuthService(tokenProvider ports.TokenProvider) *AuthService {
 	return &AuthService{
 		TokenProvider: tokenProvider,
-		Notifier:      notifier,
 	}
 }
 
 func (s *AuthService) Authenticate(ctx context.Context, credentials string) (string, string, error) {
-	s.Notifier.Event("Starting authentication", ctx)
-
 	clientID, clientSecret, err := splitCredentials(credentials)
 	if err != nil {
-		s.Notifier.Event("Invalid credentials format", ctx)
 		return "", "", err
 	}
 
 	token, err := s.TokenProvider.RequestTokenFromClientSecret(ctx, clientID, clientSecret)
 	if err != nil {
-		s.Notifier.Event("Authentication failed: "+err.Error(), ctx)
 		return clientID, "", err
 	}
 
-	s.Notifier.Event("Authentication successful", ctx)
 	return clientID, token, nil
 }
 

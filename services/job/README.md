@@ -9,7 +9,11 @@ A microservice for managing consumer jobs in a queue system. This service provid
 - **Job Management**: Create, retrieve, and update jobs within the system.
 - **Status Filtering**: Retrieve jobs based on their status.
 - **Scheduler and Worker Integration**: Update specific fields relevant to job schedulers and workers.
-- **Comprehensive Testing**: Detailed unit tests covering a wide range of edge cases.
+- **Distributed Tracing**: OpenTelemetry integration for request tracing across services.
+- **Structured Logging**: Comprehensive logging with configurable log levels.
+- **Database Flexibility**: Support for both PostgreSQL and in-memory storage.
+- **Graceful Shutdown**: Proper signal handling for clean service termination.
+- **Environment-based Configuration**: Full configuration via environment variables.
 
 ---
 
@@ -17,8 +21,12 @@ A microservice for managing consumer jobs in a queue system. This service provid
 
 - **Language:** Go
 - **API:** REST (JSON)
-- **Containerization:** Docker
+- **Database:** PostgreSQL with pgx driver
+- **Containerization:** Docker, Docker Compose
 - **Testing:** Go test framework, in-memory repository for fast tests
+- **Tracing:** OpenTelemetry with Jaeger
+- **Logging:** Structured logging with configurable levels
+- **HTTP Router:** Gorilla Mux
 
 ---
 
@@ -53,6 +61,28 @@ Update worker-related fields of a job.
 
 ---
 
+## Environment Variables
+
+The service supports the following environment variables:
+
+### Core Configuration
+- `PORT`: HTTP server port (default: `8080`)
+- `JOB_REPO_TYPE`: Repository type (`inmemory` or `postgres`, default: `inmemory`)
+
+### Database Configuration (PostgreSQL)
+- `DB_HOST`: PostgreSQL host
+- `DB_PORT`: PostgreSQL port
+- `DB_USER`: PostgreSQL username
+- `DB_PASSWORD`: PostgreSQL password
+- `DB_NAME`: PostgreSQL database name
+- `SSL_MODE`: SSL mode (`true` or `false`)
+
+### Observability
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: OpenTelemetry collector endpoint (e.g., `http://jaeger:4318/`)
+- `LOG_LEVEL`: Logging level (`debug`, `warn`, `error`)
+
+---
+
 ## Data Schemas
 
 **The OpenAPI specification (`api.yaml`) shows the possible endpoints and the data schemas for API requests and responses.**
@@ -60,6 +90,30 @@ Update worker-related fields of a job.
 **Database schema:**  
 The SQL schema for the PostgreSQL database (including the `jobs` table and its fields) is located in the [`database`](../../database) directory.  
 You can find the table definitions and initialization scripts in files such as `job-init.sql`.
+
+---
+
+## Start Service without Docker Compose
+
+You can also run the job microservice directly from the command line without Docker Compose.  
+This is useful for local development, debugging, or running the service with custom environment variables.
+
+### 1. In-Memory Mode (no database, for development/testing)
+
+```sh
+JOB_REPO_TYPE=inmemory SSL_MODE=false OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/" LOG_LEVEL=debug go run .
+```
+
+- This starts the service using in-memory storage. All data will be lost when the service stops.
+
+### 2. PostgreSQL Mode (connect to a running Postgres instance)
+
+```sh
+JOB_REPO_TYPE=postgres DB_HOST=postgres DB_PORT=5432 DB_USER=jobuser DB_PASSWORD=jobpass DB_NAME=jobdb SSL_MODE=false OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/" LOG_LEVEL=debug go run .
+```
+
+- This starts the service using a PostgreSQL database.  
+- Make sure a compatible Postgres instance is running and accessible with the provided credentials.
 
 ---
 
@@ -79,6 +133,7 @@ This will:
 - Build the jobservice Docker image.
 - Start both the jobservice and a PostgreSQL database.
 - Expose the jobservice on [http://localhost:8080](http://localhost:8080).
+- Automatically initialize the database schema from the `database` directory.
 
 ### 2. Stopping the Services
 
@@ -90,7 +145,7 @@ docker-compose down
 
 ### 3. Data Persistence
 
-- PostgreSQL data is persisted in `<select_a_path_on_your_local_system>` on the host.
+- PostgreSQL data is persisted in a configurable host directory.
 - The database schema is automatically initialized from the `database` directory via Docker Compose.
 
 ### 4. Environment Variables
@@ -98,15 +153,46 @@ docker-compose down
 The following environment variables are set automatically in `docker-compose.yaml`:
 
 - `JOB_REPO_TYPE=postgres`
-- `PG_HOST=postgres`
-- `PG_PORT=5432`
-- `PG_USER=jobuser`
-- `PG_PASS=jobpass`
-- `PG_DB=jobdb`
+- `DB_HOST=postgres`
+- `DB_PORT=5432`
+- `DB_USER=jobuser`
+- `DB_PASSWORD=jobpass`
+- `DB_NAME=jobdb`
+- `SSL_MODE=false`
+- `OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318/"`
+- `LOG_LEVEL=debug`
+
+---
+
+## Service Features
+
+### Database Connection Resilience
+- **Automatic Retry**: Up to 10 connection attempts with 3-second delays
+- **Fallback Strategy**: Automatic fallback to in-memory storage if PostgreSQL is unavailable
+- **SSL Support**: Configurable SSL mode for secure database connections
+
+### Observability
+- **Distributed Tracing**: Full OpenTelemetry integration with Jaeger
+- **Structured Logging**: Configurable log levels with context-aware logging
+- **Request Tracing**: All HTTP requests are automatically traced
+- **Error Tracking**: Comprehensive error logging with context
+
+### Graceful Shutdown
+- **Signal Handling**: Responds to SIGINT and SIGTERM signals
+- **Clean Shutdown**: Proper resource cleanup and connection termination
+- **Tracing Cleanup**: Automatic trace data flushing on shutdown
+
+### Validation & Error Handling
+- **UUID Validation**: All job IDs must be valid UUIDs
+- **Status Validation**: Job status must be one of: `queued`, `scheduled`, `running`, `completed`, `failed`, `cancelled`
+- **Input Validation**: Comprehensive validation for all API endpoints
+- **Error Responses**: Structured error responses with appropriate HTTP status codes
 
 ---
 
 ## Example cURL Commands
+
+### `For the Projekt-Docker-Compose(Root) Port 8089 is exposed`
 
 ### 1. GET `/jobs`: Successful retrieval of jobs (including scenarios without filters and with invalid status filters)
 
@@ -233,30 +319,66 @@ curl -X PATCH "http://localhost:8080/jobs/{id}/update-workerdaemon" -H "Content-
 
 Set the environment variable `JOB_REPO_TYPE` to select the repository:
 
-- `memory` (default): Use in-memory storage (for development/testing)
+- `inmemory` (default): Use in-memory storage (for development/testing)
 - `postgres`: Use PostgreSQL database
 
 If `postgres` is selected, set the following variables:
 
-- `PG_HOST`
-- `PG_PORT`
-- `PG_USER`
-- `PG_PASS`
-- `PG_DB`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `SSL_MODE`
 
 ---
 
 ## Development & Testing
 
-- To run tests:
-  ```sh
-  go test ./...
-  ```
+### Running Tests
+```sh
+go test ./...
+```
 
-- To build locally:
-  ```sh
-  go build -o job-service
-  ```
+### Building Locally (binary)
+```sh
+go build -o job-service
+```
+
+### Docker Build
+```sh
+docker build -t job-service .
+```
+
+---
+
+## Architecture
+
+The service follows Clean Architecture principles with:
+
+- **Ports**: Interfaces and data models (`ports/`)
+- **Adapters**: External integrations (`adapters/`)
+  - HTTP handlers (`adapters/handler-http/`)
+  - Database repository (`adapters/repo-database/`)
+  - In-memory repository (`adapters/repo-in-memory/`)
+- **Core**: Business logic (`core/`)
+- **Utils**: Shared utilities (`utils/`)
+
+---
+
+## Monitoring & Observability
+
+### Tracing
+- All HTTP requests are automatically traced
+- Database operations are traced
+- Custom spans can be added for business logic
+- Traces are exported to Jaeger
+
+### Logging
+- Structured logging with JSON format
+- Configurable log levels
+- Request ID correlation
+- Error context preservation
 
 ---
 
@@ -264,6 +386,10 @@ If `postgres` is selected, set the following variables:
 
 - The service expects all IDs to be valid UUIDs.
 - Status values must be one of: `queued`, `scheduled`, `running`, `completed`, `failed`, `cancelled`.
+- Image version validation ensures proper semver or tag format.
+- Failed jobs require an error message when updating status.
+- The service automatically handles database connection failures with in-memory fallback.
+- All timestamps are in UTC format.
 - For more details, see the [api.yaml](api.yaml) and the code in the [core](core/), [adapters/handler-http](adapters/handler-http/), and [ports](ports/) directories.
 
 ---

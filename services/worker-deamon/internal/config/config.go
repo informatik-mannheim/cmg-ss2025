@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	GatewayURL               string `json:"gateway_url"`
-	Key                      string `json:"key"`
+	Secret                   string `json:"secret"`
 	Zone                     string `json:"zone"`
 	HeartbeatIntervalSeconds int    `json:"heartbeat_interval_seconds"`
 }
