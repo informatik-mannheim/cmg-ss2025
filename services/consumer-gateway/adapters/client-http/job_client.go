@@ -49,6 +49,8 @@ func (c *JobClient) CreateJob(ctx context.Context, req ports.CreateJobRequest) (
 		return ports.CreateJobResponse{}, fmt.Errorf("job-service error: %s", resp.Status)
 	}
 
+	PingJobScheduler()
+
 	var out ports.CreateJobResponse
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		return ports.CreateJobResponse{}, err

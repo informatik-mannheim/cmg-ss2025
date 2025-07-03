@@ -16,4 +16,7 @@ FROM alpine:3.21
 RUN apk add --no-cache ca-certificates
 EXPOSE 8080
 COPY --from=builder /consumer-gateway /app/consumer-gateway
+
+ENV JOB_SCHEDULER_URL=https://job-scheduler.internal.proudground-db418b69.germanywestcentral.azurecontainerapps.io/
+
 CMD ["/app/consumer-gateway"]
