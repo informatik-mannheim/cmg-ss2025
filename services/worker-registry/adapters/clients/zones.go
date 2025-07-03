@@ -12,49 +12,19 @@ import (
 )
 
 type ZoneClient struct {
-	baseURL       string
-	httpClient    *http.Client
-	zones         []ports.Zone
-	lastFetched   time.Time
-	cacheDuration time.Duration
+	baseURL    string
+	httpClient *http.Client
 }
 
-func NewZoneClient(baseURL string, cacheDuration time.Duration) *ZoneClient {
-	c := &ZoneClient{
-		baseURL:       baseURL,
-		httpClient:    &http.Client{Timeout: 5 * time.Second},
-		cacheDuration: cacheDuration,
+func NewZoneClient(baseURL string) *ZoneClient {
+	return &ZoneClient{
+		baseURL:    baseURL,
+		httpClient: &http.Client{Timeout: 5 * time.Second},
 	}
-
-	go func() {
-		if _, err := c.GetZones(context.Background()); err != nil {
-			logging.Warn("Initial zones fetch failed: " + err.Error())
-		}
-
-		ticker := time.NewTicker(c.cacheDuration)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			if _, err := c.GetZones(context.Background()); err != nil {
-				logging.Warn("Periodic zones fetch failed: " + err.Error())
-			}
-		}
-	}()
-
-	return c
 }
 
 func (c *ZoneClient) GetZones(ctx context.Context) (ports.ZoneResponse, error) {
-	if time.Since(c.lastFetched) > c.cacheDuration {
-		zr, err := c.doGetZones(ctx)
-		if err != nil {
-			logging.Warn("Zones could not be fetched due to error" + err.Error())
-			return ports.ZoneResponse{}, err
-		}
-		c.zones = zr.Zones
-		c.lastFetched = time.Now()
-	}
-	return ports.ZoneResponse{Zones: c.zones}, nil
+	return c.doGetZones(ctx)
 }
 
 func (c *ZoneClient) doGetZones(ctx context.Context) (ports.ZoneResponse, error) {
@@ -63,20 +33,29 @@ func (c *ZoneClient) doGetZones(ctx context.Context) (ports.ZoneResponse, error)
 	if auth, ok := ctx.Value("authHeader").(string); ok && auth != "" {
 		req.Header.Set("Authorization", auth)
 	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return ports.ZoneResponse{}, err
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return ports.ZoneResponse{}, fmt.Errorf("zone-service error: %s", resp.Status)
 	}
+
 	var out ports.ZoneResponse
-	return out, json.NewDecoder(resp.Body).Decode(&out)
+	err = json.NewDecoder(resp.Body).Decode(&out)
+	return out, err
 }
 
 func (c *ZoneClient) IsValidZone(code string, ctx context.Context) bool {
-	for _, zone := range c.zones {
+	zr, err := c.GetZones(ctx)
+	if err != nil {
+		logging.Warn("Failed to fetch zones for validation: " + err.Error())
+		return false
+	}
+	for _, zone := range zr.Zones {
 		if zone.Code == code {
 			return true
 		}

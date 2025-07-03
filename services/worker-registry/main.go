@@ -38,22 +38,8 @@ func main() {
 	}
 	defer shutdown(context.Background())
 
-	// Zone-Client
-	rawInterval := os.Getenv("CARBON_INTENSITY_PROVIDER_INTERVAL")
-	intervalSeconds := 60
-
-	if rawInterval != "" {
-		if i, err := strconv.Atoi(rawInterval); err == nil {
-			intervalSeconds = i
-		}
-	}
-
-	cacheDuration := time.Duration(intervalSeconds) * time.Second
-
-	zoneClient := client.NewZoneClient(
-		os.Getenv("CARBON_INTENSITY_PROVIDER"),
-		cacheDuration,
-	)
+	// Zone Client
+	zoneClient := client.NewZoneClient(os.Getenv("CARBON_INTENSITY_PROVIDER"))
 
 	// DB-Connection
 	var dbRepo ports.Repo
