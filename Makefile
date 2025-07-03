@@ -63,14 +63,54 @@ integrationcheck:
 	fi
 
 # Target: deployment
-# Purpose: Run full deployment pipeline for all deployment-ready services
-# Usage: Called for production deployments or full system builds
-# Logic: Iterates through all services in DEPLOYMENT_SERVICES list
-# Note: This target processes ALL deployment services, regardless of changes
+# Purpose: Run deployment only for changed and deployable services
+# Usage: Called during production deployment after merge to main
+# Logic:
+#   - Detects changed files using git diff between HEAD and HEAD~1
+#   - Extracts affected services from changed paths
+#   - Filters to services listed in DEPLOYMENT_SERVICES
+#   - Verifies the presence of a Makefile and a 'deployment' target per service
+#   - Executes deployment only for qualified services
 deployment:
-	@echo "Starting deployment for all services..."; \
-	for service in $(DEPLOYMENT_SERVICES); do \
-		echo "Containerizing $$service..."; \
-		$(MAKE) -C $(SERVICE_DIR)/$$service deployment; \
+	@echo "Detecting changed files for deployment..."; \
+	git fetch --all --prune; \
+	if [ "$$BUILD_REASON" = "PullRequest" ]; then \
+		echo "PR build – skipping deployment."; \
+		exit 0; \
+	else \
+		CHANGED_FILES=$$(git diff --name-only HEAD~1 HEAD); \
+	fi; \
+	echo "Changed files: $$CHANGED_FILES"; \
+	CHANGED_SERVICES=""; \
+	for file in $$CHANGED_FILES; do \
+		if echo $$file | grep -q "^$(SERVICE_DIR)/"; then \
+			SERVICE=$$(echo $$file | cut -d'/' -f2); \
+			if [ -n "$$SERVICE" ] && [ -d "$(SERVICE_DIR)/$$SERVICE" ]; then \
+				if ! echo "$$CHANGED_SERVICES" | grep -qw "$$SERVICE"; then \
+					CHANGED_SERVICES="$$CHANGED_SERVICES $$SERVICE"; \
+				fi; \
+			fi; \
+		fi; \
 	done; \
-	echo "Deployment pipeline completed for all services."
+	CHANGED_SERVICES=$$(echo $$CHANGED_SERVICES | xargs); \
+	if [ -z "$$CHANGED_SERVICES" ]; then \
+		echo "No service changes detected. Skipping deployment."; \
+	else \
+		echo "Changed services: $$CHANGED_SERVICES"; \
+		for service in $$CHANGED_SERVICES; do \
+			if echo "$(DEPLOYMENT_SERVICES)" | grep -qw "$$service"; then \
+				echo "Deploying $$service..."; \
+				if [ -f "$(SERVICE_DIR)/$$service/Makefile" ]; then \
+					if grep -q "^deployment:" "$(SERVICE_DIR)/$$service/Makefile"; then \
+						$(MAKE) -C $(SERVICE_DIR)/$$service deployment || exit 1; \
+					else \
+						echo "No 'deployment' target in Makefile for $$service – skipping."; \
+					fi; \
+				else \
+					echo "No Makefile found for $$service – skipping."; \
+				fi; \
+			else \
+				echo "$$service is not in deployable service list – skipping."; \
+			fi; \
+		done; \
+	fi
