@@ -37,7 +37,7 @@ func (d *DummyWorkerGateway) Register(key, zone string) (*ports.RegisterResponse
 	}, nil
 }
 
-func (d *DummyWorkerGateway) SendHeartbeat(workerID, status string) ([]ports.Job, error) {
+func (d *DummyWorkerGateway) SendHeartbeat(workerID, status, token string) ([]ports.Job, error) {
 	d.SendHeartbeatCalled = true
 	if d.SendHeartbeatErr != nil {
 		return nil, d.SendHeartbeatErr
@@ -45,7 +45,7 @@ func (d *DummyWorkerGateway) SendHeartbeat(workerID, status string) ([]ports.Job
 	return d.JobsToReturn, nil
 }
 
-func (d *DummyWorkerGateway) SendResult(job ports.Job) error {
+func (d *DummyWorkerGateway) SendResult(job ports.Job, token string) error {
 	d.SendResultCalled = true
 	d.ReceivedJobs = append(d.ReceivedJobs, job)
 	return d.SendResultErr
@@ -56,7 +56,7 @@ func TestDaemon_HeartbeatLoop_RegisterFails(t *testing.T) {
 		RegisterErr: errors.New("register failed"),
 	}
 	cfg := config.Config{
-		Key:                      "key",
+		Secret:                   "key",
 		Zone:                     "zone",
 		HeartbeatIntervalSeconds: 1,
 	}
@@ -89,46 +89,48 @@ func TestDaemon_HeartbeatLoop_RegisterFails(t *testing.T) {
 					},
 				},
 			},
-		}
-		cfg := config.Config{
-			Key:                      "key",
-			Zone:                     "zone",
-			HeartbeatIntervalSeconds: 1,
-		}
-		d := NewDaemon(cfg, dummyAPI)
-
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		// Starte Heartbeat Loop in goroutine, um nicht zu blockieren
-		go d.StartHeartbeatLoop(ctx)
-
-		// Warte eine Weile, damit Loop mindestens einmal ausgeführt wird
-		time.Sleep(3 * time.Second)
-
-		if !dummyAPI.RegisterCalled {
-			t.Error("expected Register to be called")
-		}
-
-		if !dummyAPI.SendHeartbeatCalled {
-			t.Error("expected SendHeartbeat to be called")
-		}
-
-		// Da Jobs zurückgegeben wurden, sollte auch SendResult mindestens einmal aufgerufen werden
-		if !dummyAPI.SendResultCalled {
-			t.Error("expected SendResult to be called")
-		}
-
-		if len(dummyAPI.ReceivedJobs) == 0 {
-			t.Error("expected at least one job to be sent as result")
-		}
-
-		// Prüfe, ob der Jobstatus auf "DONE" oder "ERROR" gesetzt wurde
-		job := dummyAPI.ReceivedJobs[0]
-		if job.Status != "DONE" && job.Status != "ERROR" {
-			t.Errorf("expected job status DONE or ERROR, got %s", job.Status)
-		}
+		},
 	}
+	cfg := config.Config{
+		Secret:                   "key",
+		Zone:                     "zone",
+		HeartbeatIntervalSeconds: 1,
+	}
+	d := NewDaemon(cfg, dummyAPI)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Starte Heartbeat Loop in goroutine, um nicht zu blockieren
+	go d.StartHeartbeatLoop(ctx)
+
+	// Warte eine Weile, damit Loop mindestens einmal ausgeführt wird
+	time.Sleep(3 * time.Second)
+
+	if !dummyAPI.RegisterCalled {
+		t.Error("expected Register to be called")
+	}
+
+	if !dummyAPI.SendHeartbeatCalled {
+		t.Error("expected SendHeartbeat to be called")
+	}
+
+	// Da Jobs zurückgegeben wurden, sollte auch SendResult mindestens einmal aufgerufen werden
+	if !dummyAPI.SendResultCalled {
+		t.Error("expected SendResult to be called")
+	}
+
+	if len(dummyAPI.ReceivedJobs) == 0 {
+		t.Error("expected at least one job to be sent as result")
+	}
+
+	// Prüfe, ob der Jobstatus auf "DONE" oder "ERROR" gesetzt wurde
+	job := dummyAPI.ReceivedJobs[0]
+	if job.Status != "DONE" && job.Status != "ERROR" {
+		t.Errorf("expected job status DONE or ERROR, got %s", job.Status)
+	}
+
+}
 */
 func TestDaemon_HeartbeatLoop_HeartbeatFails(t *testing.T) {
 	dummyAPI := &DummyWorkerGateway{
@@ -138,7 +140,7 @@ func TestDaemon_HeartbeatLoop_HeartbeatFails(t *testing.T) {
 		SendResultErr:    nil,
 	}
 	cfg := config.Config{
-		Key:                      "key",
+		Secret:                   "key",
 		Zone:                     "zone",
 		HeartbeatIntervalSeconds: 1,
 	}
