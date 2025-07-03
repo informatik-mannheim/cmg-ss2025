@@ -13,7 +13,7 @@ const userContextKey contextKey = "user"
 type FakeService struct{}
 
 func (f *FakeService) Login(ctx context.Context, req ports.ConsumerLoginRequest) (ports.LoginResponse, error) {
-	if req.Username == "Alice Bob" {
+	if req.Secret == "Secret" {
 		return ports.LoginResponse{Secret: "abc-123"}, nil
 	}
 	return ports.LoginResponse{}, ports.ErrUnauthorized
