@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job-scheduler/ports"
@@ -70,7 +72,7 @@ func (js *JobSchedulerService) ScheduleJob() error {
 func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker, error) {
 	jobs, err := js.JobAdapter.GetJobs()
 	if err != nil {
-		logging.Error("Error getting jobs: %v", err)
+		logging.Error(fmt.Sprintf("Error getting jobs: %v", err))
 		return nil, nil, err
 	}
 	if len(jobs) == 0 {
@@ -80,7 +82,7 @@ func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker,
 
 	workers, err := js.WorkerAdapter.GetWorkers()
 	if err != nil {
-		logging.Error("Error getting workers: %v", err)
+		logging.Error(fmt.Sprintf("Error getting workers: %v", err))
 		return nil, nil, err
 	}
 	if len(workers) == 0 {
@@ -94,11 +96,11 @@ func (js *JobSchedulerService) getJobsAndWorkers() ([]ports.Job, []ports.Worker,
 func (js *JobSchedulerService) getCarbonIntensities(zones []string) (ports.CarbonIntensityResponse, error) {
 	carbons, err := js.CarbonIntensityAdapter.GetCarbonIntensities(zones)
 	if err != nil {
-		logging.Error("Error getting carbon intensity data: %v", err)
+		logging.Error(fmt.Sprintf("Error getting carbon intensity data: %v", err))
 		return nil, err
 	}
 	if len(carbons) == 0 {
-		logging.Debug("No carbon intensity data available for the specified zones: %v", zones)
+		logging.Debug(fmt.Sprintf("No carbon intensity data available for the specified zones: %v", zones))
 		return nil, nil
 	}
 	return carbons, nil
@@ -108,7 +110,7 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 	for _, job := range jobs {
 		err := js.JobAdapter.AssignJob(job)
 		if err != nil {
-			logging.Error("Error assigning job %s to worker %s: %v", job.ID, job.WorkerID, err)
+			logging.Error(fmt.Sprintf("Error assigning job %s to worker %s: %v", job.ID, job.WorkerID, err))
 			return err
 		}
 
@@ -117,7 +119,7 @@ func (js *JobSchedulerService) assignJobsToWorkers(jobs []ports.UpdateJob) error
 		}
 		err = js.WorkerAdapter.AssignWorker(workerUpdate)
 		if err != nil {
-			logging.Error("Error updating worker %s for job %s: %v", job.WorkerID, job.ID, err)
+			logging.Error(fmt.Sprintf("Error updating worker %s for job %s: %v", job.WorkerID, job.ID, err))
 			return err
 		}
 	}
