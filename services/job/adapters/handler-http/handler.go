@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
 )
 
@@ -76,6 +77,7 @@ func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
 	var job ports.JobCreate
 	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
 		http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
+		logging.Warn("Failed to decode request body: " + err.Error())
 		return
 	}
 
@@ -127,6 +129,7 @@ func (h *Handler) UpdateJobScheduler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&updateData)
 	if err != nil {
 		http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
+		logging.Warn("Failed to decode request body: " + err.Error())
 		return
 	}
 
@@ -148,6 +151,7 @@ func (h *Handler) UpdateJobWorkerDaemon(w http.ResponseWriter, r *http.Request) 
 	err := json.NewDecoder(r.Body).Decode(&updateData)
 	if err != nil {
 		http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
+		logging.Warn("Failed to decode request body: " + err.Error())
 		return
 	}
 
@@ -166,18 +170,25 @@ func CheckAndSetErr(w http.ResponseWriter, err error) bool {
 		switch err {
 		case ports.ErrNotExistingID:
 			http.Error(w, HTTPErr400MissId, http.StatusBadRequest)
+			logging.Warn(err.Error())
 		case ports.ErrInvalidIDFormat:
 			http.Error(w, HTTPErr400InvalidId, http.StatusBadRequest)
+			logging.Warn(err.Error())
 		case ports.ErrJobNotFound:
 			http.Error(w, HTTPErr400JobNotFound, http.StatusNotFound)
+			logging.Warn(err.Error())
 		case ports.ErrNotExistingJobName, ports.ErrNotExistingImageName:
 			http.Error(w, HTTPErr400FieldEmpty, http.StatusBadRequest)
+			logging.Warn(err.Error())
 		case ports.ErrImageVersionIsInvalid, ports.ErrParamKeyValueEmpty:
 			http.Error(w, HTTPErr400InvalidInputData, http.StatusBadRequest)
+			logging.Warn(err.Error())
 		case ports.ErrNotExistingStatus:
 			http.Error(w, HTTPErr400StatusEmpty, http.StatusBadRequest)
+			logging.Warn(err.Error())
 		default:
 			http.Error(w, HTTPErr500, http.StatusInternalServerError)
+			logging.Error("Internal Server Error: " + err.Error())
 		}
 		return true
 	}
