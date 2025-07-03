@@ -1,0 +1,100 @@
+# Azure DevOps Pipeline for Multi-Service Go Project
+# This pipeline performs integration checks on changed services for pull requests
+# and can also run full deployments when merging to main branch.
+
+# Trigger configuration for automatic builds
+trigger:
+  branches:
+    include:
+      - main
+
+# Pull request trigger configuration
+pr:
+  branches:
+    include:
+      - main
+
+# Use Ubuntu Linux agent for all pipeline steps
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  # Step 1: Install required dependencies for Go development and testing
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y make golang-go
+      go install github.com/jstemmer/go-junit-report@latest
+      go install github.com/t-yuki/gocover-cobertura@latest
+    displayName: 'Install make, Go, and test tools'
+
+  # Step 2: Checkout source code with full git history
+  # Full history is needed for accurate file change detection in PRs
+  - checkout: self
+    fetchDepth: 0  # Fetch full history
+    persistCredentials: true
+
+  # Step 3: Detect which files have changed to determine which services to test
+  # Different logic for PR builds vs direct pushes to main
+  - script: |
+      # Ensure we have the target branch for comparison
+      git fetch origin main:main || echo "Main branch already available"
+      # For PR builds, use Azure DevOps variables to get changed files
+      if [ "$BUILD_REASON" = "PullRequest" ]; then
+        echo "Pull Request build detected"
+        echo "Source branch: $SYSTEM_PULLREQUEST_SOURCEBRANCH"
+        echo "Target branch: $SYSTEM_PULLREQUEST_TARGETBRANCH"
+        # Use Azure DevOps built-in comparison
+        git diff --name-only origin/main...HEAD > changed_files.txt
+        echo "Changed files:"
+        cat changed_files.txt
+      else
+        echo "Non-PR build, comparing with main"
+        git diff --name-only HEAD~1 HEAD > changed_files.txt
+      fi
+    displayName: 'Detect changed files'
+
+  # Step 4: Run integration checks only for services that have changed
+  # This optimizes build time by only testing affected services
+  - script: |
+      export PATH=$PATH:$(go env GOPATH)/bin
+      make integrationcheck
+    displayName: 'Run integrationcheck (incl. tests and coverage)'
+
+  # Step 5: Debug step to verify test report generation
+  # Helps troubleshoot if test results aren't being published correctly
+  - script: |
+      ls -lah services/*/
+      find services/ -name "report.xml" -exec ls -la {} \; || echo "No report.xml files found"
+    displayName: 'Debug test report content'
+    
+  # Step 6: Publish test results to Azure DevOps
+  # Converts Go test output to JUnit format for Azure DevOps dashboard
+  - task: PublishTestResults@2
+    displayName: 'Publish Go Test Results'
+    condition: succeededOrFailed()        # Run even if tests failed
+    inputs:
+      testResultsFiles: '**/report.xml'   # Find all JUnit XML files
+      testRunTitle: 'Go Unit Tests'
+      searchFolder: '$(System.DefaultWorkingDirectory)'
+
+  # Step 7: Publish code coverage results to Azure DevOps
+  # Provides coverage metrics and visualization in Azure DevOps
+  - task: PublishCodeCoverageResults@2
+    displayName: 'Publish Code Coverage'
+    condition: succeededOrFailed()
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: 'services/*/coverage.xml'
+      reportDirectory: '.'
+
+  # Step 8: Deploy to production (only on main branch builds)
+  # This step runs the full deployment pipeline for all services
+  # Only executes when code is merged/pushed directly to main branch
+  - script: |
+      echo "Main branch build detected - starting deployment pipeline"
+      echo "Build reason: $BUILD_REASON"
+      echo "Source branch: $BUILD_SOURCEBRANCH"
+      export PATH=$PATH:$(go env GOPATH)/bin
+      make deployment
+    displayName: 'Deploy to Production'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
