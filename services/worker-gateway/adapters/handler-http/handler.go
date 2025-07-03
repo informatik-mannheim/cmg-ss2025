@@ -23,7 +23,13 @@ func (h *Handler) HeartbeatHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobs, err := h.api.Heartbeat(r.Context(), req)
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		http.Error(w, "missing token", http.StatusUnauthorized)
+		return
+	}
+
+	jobs, err := h.api.Heartbeat(r.Context(), req, token)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
@@ -41,7 +47,13 @@ func (h *Handler) SubmitResultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.api.Result(r.Context(), result); err != nil {
+	token := r.Header.Get("Authorization") // oder z. B. "X-Worker-Token"
+	if token == "" {
+		http.Error(w, "missing token", http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.api.Result(r.Context(), result, token); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}

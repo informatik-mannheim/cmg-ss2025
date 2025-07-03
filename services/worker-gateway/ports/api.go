@@ -5,8 +5,8 @@ import (
 )
 
 type Api interface {
-	Heartbeat(ctx context.Context, req HeartbeatRequest) ([]Job, error)
-	Result(ctx context.Context, result ResultRequest) error
+	Heartbeat(ctx context.Context, req HeartbeatRequest, token string) ([]Job, error)
+	Result(ctx context.Context, result ResultRequest, token string) error
 	Register(ctx context.Context, req RegisterRequest) (*RegisterRespose, error)
 }
 
@@ -34,4 +34,5 @@ type RegisterRespose struct {
 	ID     string `json:"id"`
 	Status string `json:"status"`
 	Zone   string `json:"zone"`
+	Token  string `json:"token"`
 }

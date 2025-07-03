@@ -21,7 +21,7 @@ func NewJobClient(baseURL string) *JobClient {
 	return &JobClient{BaseURL: baseURL, httpClient: &http.Client{}}
 }
 
-func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest) error {
+func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest, token string) error {
 	url := fmt.Sprintf("%s/jobs/%s/update-workerdaemon", c.BaseURL, req.JobID)
 
 	payload := map[string]string{
@@ -41,6 +41,7 @@ func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest) erro
 		return err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+token)
 
 	logging.From(ctx).Debug("Sending job update", "jobID", req.JobID, "status", req.Status)
 
@@ -61,7 +62,7 @@ func (c *JobClient) UpdateJob(ctx context.Context, req ports.ResultRequest) erro
 	return nil
 }
 
-func (c *JobClient) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error) {
+func (c *JobClient) FetchScheduledJobs(ctx context.Context, token string) ([]ports.Job, error) {
 	url := fmt.Sprintf("%s/jobs?status=scheduled", c.BaseURL)
 
 	logging.From(ctx).Debug("Fetching scheduled jobs", "url", url)
@@ -72,6 +73,7 @@ func (c *JobClient) FetchScheduledJobs(ctx context.Context) ([]ports.Job, error)
 		return nil, err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
