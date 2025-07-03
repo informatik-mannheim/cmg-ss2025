@@ -55,20 +55,9 @@ func (m *MockRepo) GetZones(ctx context.Context) []ports.Zone {
 }
 
 // MockNotifier implements ports.Notifier
-type MockNotifier struct {
-	Events []string
-}
-
-func (n *MockNotifier) Event(msg string) {
-	n.Events = append(n.Events, msg)
-}
-func (n *MockNotifier) CarbonIntensityProviderChanged(data ports.CarbonIntensityData, ctx context.Context) {
-}
-
 func TestAddOrUpdateZone_Success(t *testing.T) {
 	repo := &MockRepo{}
-	notifier := &MockNotifier{}
-	service := core.NewCarbonIntensityService(repo, notifier)
+	service := core.NewCarbonIntensityService(repo)
 
 	err := service.AddOrUpdateZone("DE", 100.0, context.Background())
 	if err != nil {
@@ -86,8 +75,7 @@ func TestGetCarbonIntensityByZone_Found(t *testing.T) {
 			"FR": {Zone: "FR", CarbonIntensity: 90.0},
 		},
 	}
-	notifier := &MockNotifier{}
-	service := core.NewCarbonIntensityService(repo, notifier)
+	service := core.NewCarbonIntensityService(repo)
 
 	data, err := service.GetCarbonIntensityByZone("FR", context.Background())
 	if err != nil {
@@ -100,8 +88,7 @@ func TestGetCarbonIntensityByZone_Found(t *testing.T) {
 
 func TestGetCarbonIntensityByZone_NotFound(t *testing.T) {
 	repo := &MockRepo{}
-	notifier := &MockNotifier{}
-	service := core.NewCarbonIntensityService(repo, notifier)
+	service := core.NewCarbonIntensityService(repo)
 
 	_, err := service.GetCarbonIntensityByZone("NOPE", context.Background())
 	if err == nil {
@@ -116,8 +103,7 @@ func TestGetAvailableZones(t *testing.T) {
 			{Code: "FR", Name: "France"},
 		},
 	}
-	notifier := &MockNotifier{}
-	service := core.NewCarbonIntensityService(repo, notifier)
+	service := core.NewCarbonIntensityService(repo)
 
 	zones := service.GetAvailableZones(context.Background())
 	if len(zones) != 2 {
