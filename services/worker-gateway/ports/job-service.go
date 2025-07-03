@@ -5,8 +5,8 @@ import (
 )
 
 type JobService interface {
-	UpdateJob(ctx context.Context, req ResultRequest) error
-	FetchScheduledJobs(ctx context.Context) ([]Job, error)
+	UpdateJob(ctx context.Context, req ResultRequest, token string) error
+	FetchScheduledJobs(ctx context.Context, token string) ([]Job, error)
 }
 
 type Job struct {

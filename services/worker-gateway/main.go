@@ -48,14 +48,15 @@ func main() {
 	// init service and handler
 	registryClient := client_http.NewRegistryClient(os.Getenv("WORKER_REGISTRY"))
 	jobClient := client_http.NewJobClient(os.Getenv("JOB_SERVICE"))
-	service := core.NewWorkerGatewayService(registryClient, jobClient)
+	userClient := client_http.NewUserClient(os.Getenv("USER_MANAGEMENT_SERVICE"))
+	service := core.NewWorkerGatewayService(registryClient, jobClient, userClient)
 	handler := handler_http.NewHandler(service)
 
 	// Router (mux)
 	mux := http.NewServeMux()
 	mux.Handle("/worker/heartbeat", auth.AuthMiddleware(http.HandlerFunc(handler.HeartbeatHandler)))
 	mux.Handle("/result", auth.AuthMiddleware(http.HandlerFunc(handler.SubmitResultHandler)))
-	mux.Handle("/register", auth.AuthMiddleware(http.HandlerFunc(handler.RegisterWorkerHandler)))
+	mux.Handle("/register", http.HandlerFunc(handler.RegisterWorkerHandler))
 
 	// Wrap router with tracing middleware
 	tracingHandler := tracing.Middleware(mux)
