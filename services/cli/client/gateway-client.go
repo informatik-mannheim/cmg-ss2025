@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	//"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"io"
 	"log"
@@ -141,6 +142,7 @@ func (c *GatewayClient) Login(secret string) {
 
 	if resp.StatusCode == 200 {
 		fmt.Println("Login successful.")
+
 	} else {
 		fmt.Println("Unsuccessful Login.")
 	}

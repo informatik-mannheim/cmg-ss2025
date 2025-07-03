@@ -51,6 +51,8 @@ func (c *LoginClient) Login(ctx context.Context, req ports.LoginClientRequest) (
 		return ports.LoginClientResponse{}, fmt.Errorf("user-management login error: %s", resp.Status)
 	}
 
+	PingJobScheduler()
+
 	var out ports.LoginClientResponse
 	err = json.NewDecoder(resp.Body).Decode(&out)
 	return out, err

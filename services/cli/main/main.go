@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli"
 	"github.com/informatik-mannheim/cmg-ss2025/services/cli/client"
+	"log"
 	"os"
 	"strings"
 )
@@ -268,7 +270,10 @@ func buildCLI(gatewayClient *client.GatewayClient) {
 			for _, command := range commands {
 				if command.Name == args[0] {
 					// execute the function associated with the provided command
-					command.Execute(args[1:])
+					err := command.Execute(args[1:])
+					if err != nil {
+						return
+					}
 				}
 			}
 		}
@@ -277,7 +282,12 @@ func buildCLI(gatewayClient *client.GatewayClient) {
 }
 
 func main() {
+
+	logging.Init("cli")
 	gatewayUrl := os.Getenv("GATEWAY_URL")
+	if gatewayUrl == "" {
+		log.Fatal("Fehlende Umgebungsvariable GATEWAY_URL")
+	}
 	gateway := client.NewGatewayClient(gatewayUrl)
 
 	buildCLI(gateway)
