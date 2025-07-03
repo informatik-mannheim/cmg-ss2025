@@ -8,75 +8,81 @@ info:
 servers:
   - url: https://localhost:8080
 
-paths: 
+paths:
   /jobs:
-    post: 
-      summary: Create new Job
-      description: Submits a new Job using image-id
-      security:
-        - bearerAuth: [] 
-      requestBody:
-        required: true
-        content: 
-          application/json:
-            schema:
-              type: object
-              properties:
-                image_id:
-                  type: string
-                location:
-                  type: string
-              required:
-                - image_id
-      responses: 
-        "201":
-          description: Job successfully created
+      post:
+        summary: Create new Job
+        description: Submits a new Job using image-id, version, and parameters
+        security:
+          - bearerAuth: [ ]
+        requestBody:
+          required: true
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - image_id
+                  - image_version
+                  - parameters
                 properties:
-                  job_id:
+                  image_id:
                     type: string
-        "400":
-          description: Bad request 
-        "401":
-          description: Unauthorized
+                  image_version:
+                    type: string
+                  parameters:
+                    type: object
+                    additionalProperties:
+                      type: string
+        responses:
+          "201":
+            description: Job successfully created
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    job_id:
+                      type: string
+          "400":
+            description: Bad request
+          "401":
+            description: Unauthorized
 
-  /jobs/{job-id}/outcome:
-    get: 
+  /jobs/{job_id}/outcome:
+    get:
       summary: Get the status of a job
       parameters:
-        - name: job-id
+        - name: job_id
           in: path
           required: true
           schema:
             type: string
       security:
         - bearerAuth: []
-      responses: 
+      responses:
         "200":
           description: Job status returned
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - job_id
+                  - status
                 properties:
                   job_id:
                     type: string
                   status:
                     type: string
-                    enum: [cancelled, queued, scheduled, running, completed, failed] 
-                    # Queued: Jobs created by user, that are waiting for eval by job scheduler
-                    # Scheduled: Jobs that have been evaluated and waiting for worker-execution
-
+                    enum: [queued, scheduled, running, completed, failed]
         "400":
-          description: Bad request 
+          description: Bad request
         "401":
           description: Unauthorized
 
   /auth/login:
-    post: 
+    post:
       summary: Forwards user secret to user management
       description: User management returns JWT, user-id and role
       requestBody:
@@ -85,23 +91,25 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - secret
               properties:
                 secret:
                   type: string
-              required:
-                - secret
-      responses: 
+      responses:
         "200":
           description: Login successful, JWT issued
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - token
                 properties:
                   token:
                     type: string
         "400":
-          description: Bad request 
+          description: Bad request
         "401":
           description: Unauthorized
 
