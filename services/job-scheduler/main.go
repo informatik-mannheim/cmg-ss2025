@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -42,13 +43,13 @@ func main() {
 	// Read environment variables
 	envs, err := loadEnvVariables()
 	if err != nil {
-		logging.Error("Failed to load environment variables: %v", err)
+		logging.Error(fmt.Sprintf("Failed to load environment variables: %v", err))
 		return
 	}
 
 	shutdown, err := tracing.Init("job-scheduler", envs.OTLPExporterOtlpEndpoint)
 	if err != nil {
-		logging.Error("Failed to initialize tracing: %v", err)
+		logging.Error(fmt.Sprintf("Failed to initialize tracing: %v", err))
 		return
 	}
 	defer shutdown(context.Background())
@@ -89,10 +90,10 @@ func main() {
 	// Start the HTTP server
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logging.Error("HTTP server error: %v", err)
+			logging.Error(fmt.Sprintf("HTTP server error: %v", err))
 		}
 	}()
-	logging.Debug("Job Scheduler is running on port %s...", envs.Port)
+	logging.Debug(fmt.Sprintf("Job Scheduler is running on port %s...", envs.Port))
 
 	// Start the job scheduler runner
 	runner := interval_runner.NewIntervalRunner(ctx, envs.Interval, envs.Port, envs.Secret)
@@ -142,7 +143,7 @@ func loadEnvVariables() (Environments, error) {
 	envs.UserManagementUrl = userManagementUrl
 
 	authToken, err := utils.LoadEnvRequired("AUTH_TOKEN")
-	if err != nil || authToken == "" {
+	if err != nil {
 		return envs, err
 	}
 	envs.AuthToken = authToken
@@ -154,7 +155,7 @@ func loadEnvVariables() (Environments, error) {
 	envs.OTLPExporterOtlpEndpoint = otlpEndpoint
 
 	secret, err := utils.LoadEnvRequired("JOB_SCHEDULER_SECRET")
-	if err != nil || secret == "" {
+	if err != nil {
 		return envs, err
 	}
 	envs.Secret = secret

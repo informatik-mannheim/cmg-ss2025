@@ -10,10 +10,9 @@ paths:
         200:
           description: Returns a pong response
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: pong
+                $ref: "#/components/schemas/ScheduleResponse"
   /schedule:
     post:
       summary: Schedule a job
@@ -22,35 +21,46 @@ paths:
         content:
           application/json:
             schema:
-              type: string
-              description: Secret key for authorization
-              example: "your-secret-key"
+              $ref: "#/components/schemas/ScheduleRequest"
       responses:
         200:
           description: Job scheduled successfully
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: "Job scheduled successfully"
+                $ref: "#/components/schemas/ScheduleResponse"
         400:
           description: Invalid request body
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: "Invalid request body"
+                $ref: "#/components/schemas/ScheduleResponse"
         401:
-          description: invalid secret
+          description: "Unauthorized: invalid secret"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: "Unauthorized: invalid secret"
+                $ref: "#/components/schemas/ScheduleResponse"
         500:
           description: Internal server error
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: "An error occurred while scheduling the job"
+                $ref: "#/components/schemas/ScheduleResponse"
+components:
+  schemas:
+    ScheduleRequest:
+      type: object
+      properties:
+        secret:
+          type: string
+          description: Secret key for authorization
+    ScheduleResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message, if any
+        message:
+          type: string
+          description: Response message
