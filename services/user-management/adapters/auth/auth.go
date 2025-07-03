@@ -8,37 +8,27 @@ import (
 	"io"
 	"net/http"
 	"os"
-
-	"github.com/informatik-mannheim/cmg-ss2025/services/user-management/ports"
 )
 
 type Auth0Adapter struct {
-	UseLive  bool
-	Notifier ports.Notifier
+	UseLive bool
 }
 
-// New creates a new Auth0Adapter with optional live mode and notifier
-func New(useLive bool, notifier ports.Notifier) *Auth0Adapter {
+// New creates a new Auth0Adapter with optional live mode
+func New(useLive bool) *Auth0Adapter {
 	return &Auth0Adapter{
-		UseLive:  useLive,
-		Notifier: notifier,
+		UseLive: useLive,
 	}
 }
 
 // RequestTokenFromClientSecret implements ports.TokenProvider
 func (a *Auth0Adapter) RequestTokenFromClientSecret(ctx context.Context, clientID, clientSecret string) (string, error) {
-	a.Notifier.Event("Auth0Adapter: Requesting token for client "+clientID, ctx)
-
 	if !a.UseLive {
-		a.Notifier.Event("Auth0Adapter: Returning mock token", ctx)
 		return mockToken(), nil
 	}
 
 	url := os.Getenv("AUTH0_TOKEN_URL")
 	audience := os.Getenv("JWT_AUDIENCE")
-
-	a.Notifier.Event(fmt.Sprintf("Auth0Adapter: AUTH0_TOKEN_URL = %s", url), ctx)
-	a.Notifier.Event(fmt.Sprintf("Auth0Adapter: JWT_AUDIENCE = %s", audience), ctx)
 
 	data := map[string]string{
 		"client_id":     clientID,
@@ -49,27 +39,23 @@ func (a *Auth0Adapter) RequestTokenFromClientSecret(ctx context.Context, clientI
 
 	body, err := json.Marshal(data)
 	if err != nil {
-		a.Notifier.Event("Auth0Adapter: Failed to marshal request body: "+err.Error(), ctx)
 		return "", err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		a.Notifier.Event("Auth0Adapter: Failed to create request: "+err.Error(), ctx)
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		a.Notifier.Event("Auth0Adapter: HTTP request failed: "+err.Error(), ctx)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		msg, _ := io.ReadAll(resp.Body)
-		a.Notifier.Event(fmt.Sprintf("Auth0Adapter: Auth0 returned %d — %s", resp.StatusCode, string(msg)), ctx)
 		return "", fmt.Errorf("auth0 error: %s", msg)
 	}
 
@@ -77,11 +63,9 @@ func (a *Auth0Adapter) RequestTokenFromClientSecret(ctx context.Context, clientI
 		AccessToken string `json:"access_token"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		a.Notifier.Event("Auth0Adapter: Failed to decode response: "+err.Error(), ctx)
 		return "", err
 	}
 
-	a.Notifier.Event("Auth0Adapter: Token successfully received", ctx)
 	return parsed.AccessToken, nil
 }
 
