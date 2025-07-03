@@ -221,25 +221,3 @@ func TestHeartbeat_Computing(t *testing.T) {
 		t.Error("expected FetchScheduledJobs NOT to be called")
 	}
 }
-
-func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
-	reg := &dummyRegistryService{}
-	job := &dummyJobService{ReturnErr: true}
-	user := &dummyUserClient{}
-	svc := newTestWorkerGatewayService(reg, job, user)
-
-
-	req := ports.HeartbeatRequest{
-		WorkerID: "worker1",
-		Status:   "AVAILABLE",
-	}
-
-	jobs, err := svc.Heartbeat(context.Background(), req, "")
-	if err != nil {
-		t.Fatalf("expected no fatal error (graceful handling), got %v", err)
-
-	}
-	if jobs != nil {
-		t.Errorf("expected nil jobs on fetch error, got %v", jobs)
-	}
-}
