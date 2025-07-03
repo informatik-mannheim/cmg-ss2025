@@ -1,4 +1,4 @@
-BINARY_NAME=worker-deamon-binary
+BINARY_NAME=worker-deamon
 
 .PHONY: all build test containerize clean integrationcheck junit coverage
 
