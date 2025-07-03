@@ -38,7 +38,6 @@ As a container:
 ### Register a Worker
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-  "id": "worker123",
   "key": "12345678",
   "zone": "DE"
 }' http://localhost:8080/register
