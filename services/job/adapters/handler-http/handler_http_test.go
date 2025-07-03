@@ -10,9 +10,15 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/informatik-mannheim/cmg-ss2025/pkg/logging"
 	handler_http "github.com/informatik-mannheim/cmg-ss2025/services/job/adapters/handler-http"
 	"github.com/informatik-mannheim/cmg-ss2025/services/job/ports"
 )
+
+// Initialize logging once for all tests
+func init() {
+	logging.Init("job-service-test")
+}
 
 // MockJobService implements the JobService interface for testing purposes.
 type MockJobService struct{}
