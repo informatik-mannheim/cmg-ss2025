@@ -8,14 +8,16 @@ services:
       - WORKER_REGISTRY=http://worker-registry:8080
       - JOB_SERVICE=http://job-service:8080
       - CARBON_INTENSITY_PROVIDER=http://carbon-intensity-provider:8080
-      - JOB_SCHEDULER_INTERVAL=5
+      - JOB_SCHEDULER_INTERVAL=99999
       - LOG_LEVEL=debug
       - USER_MANAGEMENT_URL=http://user-management:8080
-      - AUTH_TOKEN="something to test, will probably need to be adjusted soon"
+      - AUTH_TOKEN=SECRET
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - JOB_SCHEDULER_SECRET="Some really secure secret"
     expose:
       - 8080
+    ports:
+      - "8080:8080"
     networks:
       - private_network
     restart: unless-stopped
@@ -41,6 +43,8 @@ services:
       - SSL_REQUIRED=false
     expose:
       - 8080
+    ports:
+      - "8081:8080"
     networks:
       - private_network
     restart: unless-stopped
@@ -63,7 +67,7 @@ services:
     expose:
       - 8080
     ports:
-      - "127.0.0.1:8089:8080"
+      - "8082:8080"
     depends_on:
       - postgres
     networks:
@@ -82,6 +86,8 @@ services:
       - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
+    ports:
+      - "8083:8080"
     networks:
       - private_network
     restart: unless-stopped
@@ -99,6 +105,8 @@ services:
       - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080
+    ports:
+      - "8084:8080"
     networks:
       - private_network
     restart: unless-stopped
@@ -117,7 +125,7 @@ services:
     expose:
       - 8080
     ports:
-      - "8080:8080"
+      - "8085:8080"
     networks:
       - private_network
     restart: unless-stopped
@@ -137,7 +145,7 @@ services:
     expose:
       - 8080
     ports:
-      - "8081:8080"
+      - "8086:8080"
     networks:
       - private_network
     restart: unless-stopped
