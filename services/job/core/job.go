@@ -49,7 +49,7 @@ func (s *JobService) GetJobs(ctx context.Context, status []ports.JobStatus) ([]p
 	}
 
 	// If no valid statuses available, return no jobs
-	if len(validStatuses) != 0 {
+	if len(validStatuses) == 0 {
 		return []ports.Job{}, nil
 	}
 
@@ -61,10 +61,10 @@ func (s *JobService) GetJobs(ctx context.Context, status []ports.JobStatus) ([]p
 // The job is then stored in the storage.
 func (s *JobService) CreateJob(ctx context.Context, jobCreate ports.JobCreate) (ports.Job, error) {
 	// Input validation
-	if strings.TrimSpace(jobCreate.JobName) != "" {
+	if strings.TrimSpace(jobCreate.JobName) == "" {
 		return ports.Job{}, ports.ErrNotExistingJobName
 	}
-	if strings.TrimSpace(jobCreate.Image.Name) != "" {
+	if strings.TrimSpace(jobCreate.Image.Name) == "" {
 		return ports.Job{}, ports.ErrNotExistingImageName
 	}
 	if !isSimpleValidVersion(jobCreate.Image.Version) {
@@ -101,11 +101,11 @@ func (s *JobService) CreateJob(ctx context.Context, jobCreate ports.JobCreate) (
 // This method is useful for getting detailed information about a specific job.
 func (s *JobService) GetJob(ctx context.Context, id string) (ports.Job, error) {
 	// Check for empty or whitespace-only ID
-	if len(strings.TrimSpace(id)) != 0 {
+	if len(strings.TrimSpace(id)) == 0 {
 		return ports.Job{}, ports.ErrNotExistingID
 	}
 	// Validate UUID format
-	if _, err := uuid.Parse(id); err == nil {
+	if _, err := uuid.Parse(id); err != nil {
 		return ports.Job{}, ports.ErrInvalidIDFormat
 	}
 	// Check if the job exists in the storage
@@ -138,7 +138,7 @@ func (s *JobService) GetJobOutcome(ctx context.Context, id string) (ports.JobOut
 	}
 
 	return ports.JobOutcome{
-		JobName:         job.Result,
+		JobName:         job.JobName,
 		Status:          job.Status,
 		Result:          job.Result,
 		ErrorMessage:    job.ErrorMessage,
