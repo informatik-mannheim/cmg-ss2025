@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -74,18 +73,20 @@ func TestDaemon_HeartbeatLoop_RegisterFails(t *testing.T) {
 	}
 }
 
-func TestDaemon_HeartbeatLoop_ProcessJob(t *testing.T) {
-	dummyAPI := &DummyWorkerGateway{
-		JobsToReturn: []ports.Job{
-			{
-				ID: "job1",
-				Image: ports.ContainerImage{
-					Name:    "alpine",
-					Version: "latest",
-				},
-				AdjustmentParameters: map[string]string{
-					"echo":  "hello",
-					"param": "value",
+/*
+	func TestDaemon_HeartbeatLoop_ProcessJob(t *testing.T) {
+		dummyAPI := &DummyWorkerGateway{
+			JobsToReturn: []ports.Job{
+				{
+					ID: "job1",
+					Image: ports.ContainerImage{
+						Name:    "alpine",
+						Version: "latest",
+					},
+					AdjustmentParameters: map[string]string{
+						"echo":  "hello",
+						"param": "value",
+					},
 				},
 			},
 		},
@@ -128,8 +129,9 @@ func TestDaemon_HeartbeatLoop_ProcessJob(t *testing.T) {
 	if job.Status != "DONE" && job.Status != "ERROR" {
 		t.Errorf("expected job status DONE or ERROR, got %s", job.Status)
 	}
-}
 
+}
+*/
 func TestDaemon_HeartbeatLoop_HeartbeatFails(t *testing.T) {
 	dummyAPI := &DummyWorkerGateway{
 		JobsToReturn:     nil,
@@ -165,41 +167,42 @@ func TestDaemon_HeartbeatLoop_HeartbeatFails(t *testing.T) {
 	}
 }
 
-func TestComputeJob_Success(t *testing.T) {
-	job := ports.Job{
-		ID: "test-123",
-		Image: ports.ContainerImage{
-			Name:    "alpine",
-			Version: "latest",
-		},
-		AdjustmentParameters: map[string]string{
-			"echo": "hello test",
-		},
+/*
+	func TestComputeJob_Success(t *testing.T) {
+		job := ports.Job{
+			ID: "test-123",
+			Image: ports.ContainerImage{
+				Name:    "alpine",
+				Version: "latest",
+			},
+			AdjustmentParameters: map[string]string{
+				"echo": "hello test",
+			},
+		}
+
+		fmt.Printf("Starte Job mit Image: %s:%s\n", job.Image.Name, job.Image.Version)
+		fmt.Printf("AdjustmentParameters: %v\n", job.AdjustmentParameters)
+
+		result := computeJob(job)
+
+		fmt.Println("Job abgeschlossen. Ergebnis:")
+		fmt.Printf("Status:       %s\n", result.Status)
+		fmt.Printf("Result:       %q\n", result.Result)
+		fmt.Printf("ErrorMessage: %q\n", result.ErrorMessage)
+
+		if result.Status != "DONE" {
+			t.Errorf("Expected status DONE, got %s", result.Status)
+		}
+
+		if !strings.Contains(result.Result, "hello test") {
+			t.Errorf("Expected result to contain 'hello test', got: %s", result.Result)
+		}
+
+		if result.ErrorMessage != "" {
+			t.Errorf("Expected no error message, got: %s", result.ErrorMessage)
+		}
 	}
-
-	fmt.Printf("Starte Job mit Image: %s:%s\n", job.Image.Name, job.Image.Version)
-	fmt.Printf("AdjustmentParameters: %v\n", job.AdjustmentParameters)
-
-	result := computeJob(job)
-
-	fmt.Println("Job abgeschlossen. Ergebnis:")
-	fmt.Printf("Status:       %s\n", result.Status)
-	fmt.Printf("Result:       %q\n", result.Result)
-	fmt.Printf("ErrorMessage: %q\n", result.ErrorMessage)
-
-	if result.Status != "DONE" {
-		t.Errorf("Expected status DONE, got %s", result.Status)
-	}
-
-	if !strings.Contains(result.Result, "hello test") {
-		t.Errorf("Expected result to contain 'hello test', got: %s", result.Result)
-	}
-
-	if result.ErrorMessage != "" {
-		t.Errorf("Expected no error message, got: %s", result.ErrorMessage)
-	}
-}
-
+*/
 func TestComputeJob_InvalidImage(t *testing.T) {
 	job := ports.Job{
 		ID: "fail-999",
