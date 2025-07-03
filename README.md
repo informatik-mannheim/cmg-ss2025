@@ -262,6 +262,112 @@ Secrets such as DB credentials, certificates, or external API keys are **never s
 
 ---
 
+## 🚀 CI/CD Pipeline & Build System
+
+This project uses **Azure DevOps Pipelines** for automated testing, building, and containerization of all microservices. The pipeline system is designed to work with **Makefiles** that are specifically configured for the CI/CD environment.
+
+### 📋 Pipeline Overview
+
+The [`azure-pipelines.yml`](azure-pipelines.yml) file defines our CI/CD workflow:
+
+1. **Dependency Installation**: Installs Go, make, Docker, and required testing tools (`go-junit-report`, `gocover-cobertura`)
+2. **Change Detection**: Identifies which services have been modified in pull requests
+3. **Integration Testing**: Runs tests, coverage analysis, builds, and containerization for affected services
+4. **Test Reporting**: Publishes JUnit test results and code coverage to Azure DevOps
+5. **Image Building**: Creates Docker images for changed services and pushes them to Azure Container Registry
+
+### 🔧 Makefile Structure
+
+The project uses a two-level Makefile system:
+
+#### Root Makefile
+The root [`Makefile`](Makefile) orchestrates operations across all microservices:
+- Detects which services have been modified
+- Runs integration checks on affected services
+- Coordinates containerization of all services
+
+#### Service-Level Makefiles
+Each microservice has its own Makefile (e.g., [`services/job/Makefile`](services/job/Makefile)):
+
+```makefile
+BINARY_NAME=job-binary
+DOCKER_IMAGE=job
+
+.PHONY: all build test containerize clean integrationcheck deployment junit coverage
+
+integrationcheck: clean test build
+
+deployment: clean test build containerize
+
+clean:
+	rm -f $(BINARY_NAME)
+	rm -f report.xml
+	rm -f coverage.out
+	rm -f coverage.xml
+
+test: junit coverage
+
+junit:
+	go test -v ./... | go-junit-report > report.xml
+
+coverage:
+	go test -coverprofile=coverage.out ./...
+	gocover-cobertura < coverage.out > coverage.xml
+
+build:
+	go build -o $(BINARY_NAME) .
+
+containerize:
+	docker build -t $(DOCKER_IMAGE) .
+```
+
+### ⚠️ Important: Pipeline-Only Execution
+
+**The Makefiles are designed exclusively for the CI/CD pipeline environment and are NOT intended for local development.**
+
+**Why you shouldn't run `make` commands locally:**
+
+1. **Missing Dependencies**: The pipeline installs specific tools (`go-junit-report`, `gocover-cobertura`) that may not be available locally
+2. **Environment Differences**: The pipeline runs on Ubuntu with specific configurations and Docker daemon
+3. **File Path Assumptions**: Some commands assume the pipeline's directory structure
+4. **Azure Credentials**: Image pushing requires Azure Container Registry credentials only available in the pipeline
+
+### 📊 Pipeline Targets
+
+| Target | Purpose | When Used |
+|--------|---------|-----------|
+| `integrationcheck` | Run tests, coverage, build, and containerize | Every PR and commit |
+| `containerize` | Build Docker images for the service | Part of integration check |
+| `clean` | Remove build artifacts and old images | Before each build |
+| `test` | Run unit tests with coverage reporting | Part of integration check |
+
+### 🔄 Workflow Examples
+
+#### Pull Request Workflow:
+1. Developer creates PR → Pipeline detects changed services
+2. Runs `make integrationcheck` on affected services
+3. Runs go test and build binary on selected Microservice
+4. Reports test results and coverage to Azure DevOps
+5. Blocks merge if tests fail
+
+#### Main Branch Workflow:
+1. Code merged to `main` → Pipeline runs full integration check
+2. Builds Docker images for all changed services
+3. Pushes images to Azure Container Registry with `latest` tag
+4. **Manual deployment still required** using [`/scripts/deploy-to-aca.sh`](scripts/deploy-to-aca.sh)
+
+### 🚨 Important: Manual Deployment Required
+
+**The pipeline only builds Docker. Actual deployment to Azure Container Apps must be done manually using the deployment script.**
+
+After the pipeline completes successfully:
+
+1. Navigate to `/scripts`
+2. Run `./deploy-to-aca.sh` to deploy the newly built images to Azure Container Apps
+
+
+---
+
 # List of approved packages
 
 | Package                                                           | Description                                                                |
