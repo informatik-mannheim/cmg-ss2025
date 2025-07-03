@@ -30,27 +30,43 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleScheduleJob(w http.ResponseWriter, r *http.Request) {
-	var reqSecret string
+	var reqSecret ports.ScheduleRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&reqSecret); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		sendError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	if reqSecret != h.secret {
-		http.Error(w, "Unauthorized: invalid secret", http.StatusUnauthorized)
+	if reqSecret.Secret != h.secret {
+		sendError(w, http.StatusUnauthorized, "Unauthorized: invalid secret")
 		return
 	}
 
 	if err := h.service.ScheduleJob(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		sendError(w, http.StatusInternalServerError, "Failed to schedule job: "+err.Error())
 		return
 	}
 
+	sendSuccess(w, "Job scheduled successfully")
+}
+
+func sendError(w http.ResponseWriter, statusCode int, message string) {
+	w.WriteHeader(statusCode)
+	errorResponse := ports.ScheduleResponse{Error: message}
+	if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
+		// fallback, better than nothing
+		http.Error(w, "Failed to encode error response", http.StatusInternalServerError)
+	}
+}
+
+func sendSuccess(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Job scheduled successfully"))
+	successResponse := ports.ScheduleResponse{Message: message}
+	if err := json.NewEncoder(w).Encode(successResponse); err != nil {
+		http.Error(w, "Failed to encode success response", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) handlePing(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("pong"))
+	sendSuccess(w, "pong")
 }
