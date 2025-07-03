@@ -96,6 +96,7 @@ services:
       - JOB_SERVICE=http://job-service:8080
       - USER_MANAGEMENT_SERVICE=http://user-management:8080
       - LOG_LEVEL=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - JWKS_URL=https://dev-jqhwcu7xuwgdqi56.eu.auth0.com/.well-known/jwks.json
     expose:
       - 8080

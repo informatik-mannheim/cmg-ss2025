@@ -228,6 +228,7 @@ func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 	user := &dummyUserClient{}
 	svc := newTestWorkerGatewayService(reg, job, user)
 
+
 	req := ports.HeartbeatRequest{
 		WorkerID: "worker1",
 		Status:   "AVAILABLE",
@@ -236,6 +237,7 @@ func TestHeartbeat_Available_ErrorFetchingJobs(t *testing.T) {
 	jobs, err := svc.Heartbeat(context.Background(), req, "")
 	if err != nil {
 		t.Fatalf("expected no fatal error (graceful handling), got %v", err)
+
 	}
 	if jobs != nil {
 		t.Errorf("expected nil jobs on fetch error, got %v", jobs)
