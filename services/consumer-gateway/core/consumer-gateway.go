@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
 )
 

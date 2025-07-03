@@ -43,8 +43,14 @@ func (h *Handler) HandleCreateJobRequest(w http.ResponseWriter, r *http.Request)
 		http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
 		return
 	}
+	ctx := r.Context()
 
-	ctx := context.WithValue(r.Context(), "Authorization", r.Header.Get("Authorization"))
+	role := r.Context().Value("role")
+	if role != "consumer" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+
+	}
 
 	resp, err := h.api.CreateJob(ctx, req)
 	if err != nil {

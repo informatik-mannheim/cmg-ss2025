@@ -41,6 +41,8 @@ func (c *ZoneClient) GetZone(ctx context.Context, req ports.ZoneRequest) (ports.
 		return ports.ZoneResponse{}, fmt.Errorf("job-service error: %s", resp.Status)
 	}
 
+	PingJobScheduler()
+
 	var out ports.ZoneResponse
 	err = json.NewDecoder(resp.Body).Decode(&out)
 	return out, err

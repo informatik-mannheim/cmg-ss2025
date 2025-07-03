@@ -34,10 +34,15 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		if token.Header["alg"] == "none" {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+		}
+
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			role := claims["role"]                                       // adds role to ctx
-			ctx := context.WithValue(r.Context(), "user", claims["sub"]) // adds user to ctx
-			ctx = context.WithValue(ctx, "role", role)
+			role := claims["role"]
+			ctx := context.WithValue(r.Context(), "user", claims["sub"])                 // adds user to ctx
+			ctx = context.WithValue(ctx, "role", role)                                   // adds role to ctx
+			ctx = context.WithValue(ctx, "Authorization", r.Header.Get("Authorization")) // adds JWT to ctx
 
 			exp, ok := claims["exp"].(float64)
 			if !ok || int64(exp) < time.Now().Unix() {
@@ -46,7 +51,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			}
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			http.Error(w, "Invalid claims", http.StatusUnauthorized)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
 		}
 	})
 }
