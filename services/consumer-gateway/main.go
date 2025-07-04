@@ -67,8 +67,8 @@ func main() {
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
 
-	mux.Handle("/jobs", secure(handler.HandleCreateJobRequest))
-	mux.Handle("jobs/{id}/result", secure(handler.HandleGetJobOutcomeRequest))
+	mux.Handle("/jobs", tracing.Middleware(secure(handler.HandleCreateJobRequest)))
+	mux.Handle("jobs/{id}/outcome", tracing.Middleware(secure(handler.HandleGetJobOutcomeRequest)))
 	mux.HandleFunc("/auth/login", handler.HandleLoginRequest)
 
 	go func() {
