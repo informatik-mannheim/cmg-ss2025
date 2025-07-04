@@ -17,7 +17,7 @@ func NewCarbonIntensityService(repo ports.Repo) *CarbonIntensityService {
 }
 
 func (s *CarbonIntensityService) GetCarbonIntensityByZone(zone string, ctx context.Context) (ports.CarbonIntensityData, error) {
-	data, err := s.repo.FindById(zone, ctx)
+	data, err := s.repo.Fi..ndById(zone, ctx)
 	if err != nil {
 		return ports.CarbonIntensityData{}, err
 	}
