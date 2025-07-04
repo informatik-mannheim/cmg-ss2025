@@ -2,8 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/informatik-mannheim/cmg-ss2025/services/consumer-gateway/ports"
 )
 
@@ -32,10 +30,6 @@ func (s *ConsumerGatewayService) CreateJob(ctx context.Context, req ports.Create
 }
 
 func (s *ConsumerGatewayService) GetJobOutcome(ctx context.Context, jobID string) (ports.JobOutcomeResponse, error) {
-	user := ctx.Value("user")
-	role := ctx.Value("role")
-	fmt.Println("User im Context:", user)
-	fmt.Println("Rolle im Context:", role)
 	resp, err := s.job.GetJobOutcome(ctx, jobID)
 	if err != nil {
 		return ports.JobOutcomeResponse{}, err

@@ -106,8 +106,7 @@ func TestConsumerGatewayService_Login(t *testing.T) {
 	service := core.NewConsumerService(&mockJobClient{}, &mockZoneClient{}, &mockLoginClient{})
 
 	resp, err := service.Login(context.Background(), ports.ConsumerLoginRequest{
-		Username: "alice",
-		Password: "pw",
+		Secret: "super_secret",
 	})
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -121,8 +120,7 @@ func TestConsumerGatewayService_Login_Unauthorized(t *testing.T) {
 	service := core.NewConsumerService(&mockJobClient{}, &mockZoneClient{}, &mockLoginClient{fail: true})
 
 	_, err := service.Login(context.Background(), ports.ConsumerLoginRequest{
-		Username: "wrong",
-		Password: "bad",
+		Secret: "wrong",
 	})
 	if !errors.Is(err, ports.ErrUnauthorized) {
 		t.Errorf("expected ErrUnauthorized, got %v", err)

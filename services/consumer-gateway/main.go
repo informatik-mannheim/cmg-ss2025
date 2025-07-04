@@ -27,12 +27,12 @@ func main() {
 
 	jaeger := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if jaeger == "" {
-		log.Fatal("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
+		logging.Warn("Environment variable OTEL_EXPORTER_OTLP_ENDPOINT is not set")
 	}
 
 	shutdown, err := tracing.Init("test-service", jaeger) // Init tracer
 	if err != nil {
-		log.Fatal("Tracing init failed:", err)
+		logging.Warn("Tracing init failed:", err)
 	}
 	defer shutdown(context.Background())
 

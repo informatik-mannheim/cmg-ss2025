@@ -16,6 +16,7 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /consumer-cli /app/consumer-cli
 
 ENV GATEWAY_URL=https://consumer-gateway.proudground-db418b69.germanywestcentral.azurecontainerapps.io
+ENV JOB_SCHEDULER_SERVICE=
 
 CMD ["/app/consumer-cli"]
 
