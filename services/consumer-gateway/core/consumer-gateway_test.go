@@ -22,7 +22,10 @@ func (m *mockJobClient) CreateJob(ctx context.Context, req ports.CreateJobReques
 		return ports.CreateJobResponse{}, ports.ErrInvalidInput
 	}
 	return ports.CreateJobResponse{
-		Image:   req.ImageID.Name,
+		Image: ports.ContainerImage{
+			Name:    req.ImageID.Name,
+			Version: req.ImageID.Version,
+		},
 		JobName: req.JobName,
 	}, nil
 }
@@ -72,8 +75,14 @@ func TestConsumerGatewayService_CreateJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if resp.Image != "img1" {
-		t.Errorf("unexpected ImageID: %v", resp.Image)
+
+	expectedImage := ports.ContainerImage{
+		Name:    "img1",
+		Version: "1.0",
+	}
+
+	if resp.Image != expectedImage {
+		t.Errorf("unexpected ImageID: got %+v, want %+v", resp.Image, expectedImage)
 	}
 }
 

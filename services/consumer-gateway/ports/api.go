@@ -18,9 +18,9 @@ type CreateJobRequest struct {
 }
 
 type CreateJobResponse struct {
-	Image        string            `json:"image_id"`
-	JobName      string            `json:"job_name"`
-	CreationZone string            `json:"creation_zone"`
+	Image        ContainerImage    `json:"image"`
+	JobName      string            `json:"jobName"`
+	CreationZone string            `json:"creationZone"`
 	Parameters   map[string]string `json:"parameters"`
 	Status       string            `json:"status"`
 }
@@ -30,13 +30,13 @@ type GetJob struct {
 }
 
 type JobOutcomeResponse struct {
-	JobName         string    `json:"job_name"`
+	JobName         string    `json:"jobName"`
 	Status          JobStatus `json:"status"`
 	Result          string    `json:"result"`
-	ErrorMessage    string    `json:"error_message"`
-	ComputeZone     string    `json:"compute_zone"`
-	CarbonIntensity int       `json:"carbon_intensity"`
-	CarbonSavings   int       `json:"carbon_savings"`
+	ErrorMessage    string    `json:"errorMessage"`
+	ComputeZone     string    `json:"computeZone"`
+	CarbonIntensity int       `json:"carbonIntensity"`
+	CarbonSavings   int       `json:"carbonSavings"`
 }
 
 type ConsumerLoginRequest struct {
